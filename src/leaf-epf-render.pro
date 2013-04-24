@@ -29,7 +29,8 @@ SOURCES += leafepfrender.cpp \
     object_types/cimageobject.cpp \
     object_types/cblockobject.cpp \
     cunsupportedobject.cpp \
-    clayout.cpp
+    clayout.cpp \
+    css/css_style.cpp
 
 HEADERS += leafepfrender.h\
         leaf-epf-render_global.h \
@@ -51,7 +52,9 @@ HEADERS += leafepfrender.h\
     object_types/cblockobject.h \
     cunsupportedobject.h \
     iepfobjectfactory.h \
-    clayout.h
+    clayout.h \
+    css/css_style.h \
+    css/istyleeffect.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

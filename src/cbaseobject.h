@@ -2,16 +2,124 @@
 #define CBASEOBJECT_H
 
 #include <QGraphicsObject>
+#include "css/css_style.h"
+
+class QMouseEvent;
 
 class CBaseObject : public QGraphicsObject
 {
     Q_OBJECT
 public:
-    explicit CBaseObject(QObject *parent = 0);
-    
-signals:
-    
+    CBaseObject(QString id);
+    virtual ~CBaseObject();
+
+    virtual void preload();
+
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    virtual QString getID();
+    virtual const char* type() const;
+    //virtual const QRect rect();
+    //virtual void setRect(const QRect&);
+    virtual void layout(CBaseObject* relative);
+    virtual CBaseObject* getObjectAnchor();
+    virtual QString getObjectAnchorID();
+
+    virtual QString property(QString key);
+    virtual void setProperty(QString key, QString value);
+
+    virtual void mouseDoubleClickEvent ( QMouseEvent * e, QPoint contentpos );
+    virtual void mousePressEvent(QMouseEvent *, QPoint contentpos);
+    virtual void mouseReleaseEvent(QMouseEvent *, QPoint contentpos);
+    virtual void mouseMoveEvent(QMouseEvent *, QPoint contentpos);
+
+    virtual CSS::Stylesheet* style();
+
+    virtual void setCSSOverride(QString css);
+    virtual QString cssOverrides();
+
+    virtual bool visible();
+    virtual void setVisibility(bool);
+
+    virtual QString css();
+
+    virtual int marginTop() const;
+    virtual int marginBottom() const;
+    virtual int marginLeft() const;
+    virtual int marginRight() const;
+
+    void setMargin(int top, int left, int bottom, int right);
+    void setMarginTop(int top);
+    void setMarginLeft(int left);
+    void setMarginBottom(int bottom);
+    void setMarginRight(int right);
+
+    virtual int outerHeight() const;
+    virtual int outerWidth() const;
+
+    virtual int paddingTop() const;
+    virtual int paddingBottom() const;
+    virtual int paddingLeft() const;
+    virtual int paddingRight() const;
+
+    void setPadding(int top, int left, int bottom, int right);
+    void setPaddingTop(int top);
+    void setPaddingLeft(int left);
+    void setPaddingBottom(int bottom);
+    void setPaddingRight(int right);
+
+    virtual int innerHeight() const;
+    virtual int innerWidth() const;
+
 public slots:
+
+    virtual QStringList styleClasses() const;
+    virtual void addStyleClass(QString classname);
+    virtual void removeStyleClass(QString classname);
+
+    virtual QObject* getStyle();
+
+signals:
+
+    void clicked();
+    void onMouseDown(int posx, int posy);
+    void onMouseMove(int posx, int posy);
+    void onMouseUp(int posx, int posy);
+    void onMouseEnter();
+    void onMouseLeave();
+    void onSwipe(int direction);
+    void onFocus();
+    void onLoseFocus();
+
+private:
+
+    //QRect m_rRect;
+    QString m_sID;
+    QMap<QString,QString> m_Props;
+    //CStyleParser* m_pStyle;
+    int m_iVisible;
+    QString m_sCSS;
+    QString m_sCSSOverrides;
+
+    QImage m_qiRenderBuffer;
+    bool m_bNeedsRedraw;
+
+    bool m_bDisabled;
+
+
+
+    int m_iMarginTop;
+    int m_iMarginLeft;
+    int m_iMarginBottom;
+    int m_iMarginRight;
+
+    int m_iPaddingTop;
+    int m_iPaddingLeft;
+    int m_iPaddingBottom;
+    int m_iPaddingRight;
+
+
+    QStringList m_StyleClasses;
     
 };
 
