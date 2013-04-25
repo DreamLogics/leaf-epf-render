@@ -1,12 +1,13 @@
 #ifndef CBASEOBJECT_H
 #define CBASEOBJECT_H
 
+#include "leaf-epf-render_global.h"
 #include <QGraphicsObject>
 #include "css/css_style.h"
 
 class QMouseEvent;
 
-class CBaseObject : public QGraphicsObject
+class LEAFEPFRENDERSHARED_EXPORT CBaseObject : public QGraphicsObject
 {
     Q_OBJECT
 public:
@@ -15,12 +16,14 @@ public:
 
     virtual void preload();
 
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    //virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
     virtual QString getID();
     virtual const char* type() const;
-    //virtual const QRect rect();
-    //virtual void setRect(const QRect&);
+
+    virtual void setBoundingRect(const QRectF&);
+    virtual QRectF boundingRect() const;
+
     virtual void layout(CBaseObject* relative);
     virtual CBaseObject* getObjectAnchor();
     virtual QString getObjectAnchorID();
@@ -56,7 +59,7 @@ public:
 
     virtual int outerHeight() const;
     virtual int outerWidth() const;
-
+/*
     virtual int paddingTop() const;
     virtual int paddingBottom() const;
     virtual int paddingLeft() const;
@@ -69,7 +72,7 @@ public:
     void setPaddingRight(int right);
 
     virtual int innerHeight() const;
-    virtual int innerWidth() const;
+    virtual int innerWidth() const;*/
 
 public slots:
 
@@ -93,7 +96,7 @@ signals:
 
 private:
 
-    //QRect m_rRect;
+    QRectF m_rRect;
     QString m_sID;
     QMap<QString,QString> m_Props;
     //CStyleParser* m_pStyle;
@@ -112,11 +115,11 @@ private:
     int m_iMarginLeft;
     int m_iMarginBottom;
     int m_iMarginRight;
-
+/*
     int m_iPaddingTop;
     int m_iPaddingLeft;
     int m_iPaddingBottom;
-    int m_iPaddingRight;
+    int m_iPaddingRight;*/
 
 
     QStringList m_StyleClasses;

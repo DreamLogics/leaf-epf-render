@@ -1,6 +1,7 @@
 #ifndef CEPFVIEW_H
 #define CEPFVIEW_H
 
+#include "leaf-epf-render_global.h"
 #include <QObject>
 #include <QString>
 #include <QList>
@@ -8,7 +9,7 @@
 class CDocument;
 class CSectionView;
 
-class CEPFView : public QObject
+class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QObject
 {
 public:
     CEPFView();
