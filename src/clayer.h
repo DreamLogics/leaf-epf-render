@@ -6,6 +6,7 @@
 #include <QList>
 
 class CBaseObject;
+class CSection;
 
 class CLayer : public QObject
 {
@@ -17,6 +18,8 @@ public:
 
     CBaseObject* object(int index);
     int objectCount();
+
+    CSection* section();
 
     
 signals:

@@ -13,15 +13,24 @@ namespace CSS
 class CSSProperty
 {
 public:
-    CSSProperty(QString value);
+    CSSProperty(QString value, Stylesheet* css, bool scales, bool null=false);
 
     QString toString();
     int toInt();
     double toDouble();
 
+    bool isNull();
+
+    void setValue(QString val, bool scale=false);
+    void setValue(int val, bool scale=false);
+    void setValue(double val, bool scale=false);
+
+
 private:
     QString m_sValue;
     bool m_bScale;
+    bool m_bNull;
+    Stylesheet* m_pCSS;
 };
 
 class CSSSelector
@@ -48,8 +57,14 @@ public:
     CSSProperty* property(CLayer* l, QString key);
     CSSProperty* property(CSection* s, QString key);
 
+    void setScale(double height_factor, double width_factor);
+    double heightScaleFactor();
+    double widthScaleFactor();
+
 private:
     QMap<QString,CSSSelector*> m_selectors;
+    double m_dHSF;
+    double m_dWSF;
 };
 
 }

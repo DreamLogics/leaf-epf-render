@@ -18,8 +18,10 @@ public:
 
     //virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    virtual QString getID();
+    virtual QString id();
     virtual const char* type() const;
+
+    virtual CLayer* layer();
 
     virtual void setBoundingRect(const QRectF&);
     virtual QRectF boundingRect() const;
