@@ -13,7 +13,7 @@ namespace CSS
 class CSSProperty
 {
 public:
-    CSSProperty(QString value, Stylesheet* css, bool scales, bool null=false);
+    CSSProperty(QString value, Stylesheet* css, bool scales, bool isHeightProp, bool null=false);
 
     QString toString();
     int toInt();
@@ -30,6 +30,7 @@ private:
     QString m_sValue;
     bool m_bScale;
     bool m_bNull;
+    bool m_bHeightProp;
     Stylesheet* m_pCSS;
 };
 
@@ -65,6 +66,7 @@ private:
     QMap<QString,CSSSelector*> m_selectors;
     double m_dHSF;
     double m_dWSF;
+    QStringList m_HeightProps;
 };
 
 }

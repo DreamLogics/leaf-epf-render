@@ -5,6 +5,8 @@ using namespace CSS;
 
 Stylesheet::Stylesheet(QString css)
 {
+    m_HeightProps << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom";
+
     QRegExp newlines("[\n\r]+");
     QRegExp tabs("[\t]+");
     css.replace(newlines,"");
@@ -16,7 +18,7 @@ Stylesheet::Stylesheet(QString css)
     CSSProperty* prop;
 
     int f;
-    bool b;
+    bool b,hp;
 
     QRegExp outerspaces("(^ +| +$)");
 
@@ -47,19 +49,30 @@ Stylesheet::Stylesheet(QString css)
                 f = propvalue.indexOf("!");
                 if (f != -1)
                 {
-                    proprules = propvalue.mid(f);
-                    propvalue = propvalue.left(f);
+                    proprules = propvalue.mid(f).toLower();
+                    propvalue = propvalue.left(f).toLower();
 
                     b = false;
+                    hp = false;
+
+                    if (m_HeightProps.contains(propvalue))
+                        hp = true;
 
                     if (proprules.indexOf("!scale") != -1)
                         b = true;
 
-                    prop = new CSSProperty(propvalue,b);
+                    prop = new CSSProperty(propvalue,this,b,hp);
 
                 }
                 else
-                    prop = new CSSProperty(propvalue,false);
+                {
+                    hp = false;
+
+                    if (m_HeightProps.contains(propvalue))
+                        hp = true;
+
+                    prop = new CSSProperty(propvalue,this,false,hp,false);
+                }
 
                 s->setProperty(propkey,prop);
             }
@@ -82,7 +95,10 @@ CSSProperty* Stylesheet::property(QString selector, QString key)
     if (!m_selectors.contains(selector))
     {
         //create the selector and prop
-        CSSProperty* prop = new CSSProperty("",true);
+        bool hp = false;
+        if (m_HeightProps.contains(key))
+            hp = true;
+        CSSProperty* prop = new CSSProperty("",this,false,hp,true);
         CSSSelector* s = new CSSSelector();
         s->setProperty(key,prop);
         m_selectors.insert(selector,s);
@@ -182,7 +198,7 @@ void CSSSelector::setProperty(QString key, CSSProperty *prop)
     m_props.insert(key,prop);
 }
 
-CSSProperty::CSSProperty(QString value, Stylesheet* css, bool scale, bool null) : m_bNull(null), m_bScale(scale), m_sValue(value), m_pCSS(css)
+CSSProperty::CSSProperty(QString value, Stylesheet* css, bool scale, bool isHeightProp, bool null) : m_bNull(null), m_bScale(scale), m_sValue(value), m_pCSS(css), m_bHeightProp(isHeightProp)
 {
 
 }
@@ -191,6 +207,22 @@ QString CSSProperty::toString()
 {
     if (m_bScale)
     {
+        QRegExp n("[0-9]+\\.*[0-9]*");
+        int o = n.indexIn(m_sValue);
+        double v = n.cap(0).toDouble();
+
+        if (o == -1)
+            return m_sValue;
+
+        if (m_bHeightProp)
+            v *= m_pCSS->heightScaleFactor();
+        else
+            v *= m_pCSS->widthScaleFactor();
+
+        if (n.cap(0).indexOf(".") == -1)
+            return m_sValue.mid(0,o) + QString::number((int)(v)) + m_sValue(o+n.cap(0).size());
+
+        return m_sValue.mid(0,o) + QString::number(v) + m_sValue(o+n.cap(0).size());
 
     }
     return m_sValue;
