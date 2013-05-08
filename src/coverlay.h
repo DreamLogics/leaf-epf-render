@@ -1,3 +1,25 @@
+/****************************************************************************
+**
+** LEAF EPF Render engine
+** http://leaf.dreamlogics.com/
+**
+** Copyright (C) 2013 DreamLogics
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU Lesser General Public License as published
+** by the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU Lesser General Public License for more details.
+**
+** You should have received a copy of the GNU Lesser General Public License
+** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**
+****************************************************************************/
+
 #ifndef COVERLAY_H
 #define COVERLAY_H
 
@@ -10,50 +32,18 @@ class COverlay : public CSection
 public:
     COverlay(QString id,CDocument* doc,bool visible);
     virtual ~COverlay();
-    virtual int getObjectCount();
 
-    void addLayer(IOEPFLayer*,bool active);
-
-    //virtual QList<int> getLayers();
-    virtual int getLayerCount();
-    virtual IOEPFLayer* getLayer(int index);
-    virtual void setActiveLayer(int layer);
-    virtual IOEPFLayer* activeLayer();
-
-    virtual IOEPFObject* objectByID(QString id);
-
-    virtual bool isHidden();
-    virtual QString getID();
-
-    virtual void onEPFEvent(IEPFEvent* e);
-
-    virtual void addConnection(QString event, QString target, IEPFEvent* ev);
-
-    virtual IOEPFDocument* document();
 
 
 public slots:
-
-    QObjectList layers();
-    void setActiveLayer(QObject*);
-    QObject* getActiveLayer();
-
-    QObject* getObjectByID(QString id);
 
     virtual bool isVisible();
     virtual void setVisibility(bool b);
 
 private:
 
-    QList<IOEPFLayer*> m_Layers;
-    QMap<QString,IOEPFObject*> m_ObjectsCatalog;
-    CLayer* m_pActiveLayer;
-
-    QString m_sID;
-    bool m_bHidden;
     bool m_bVisible;
 
-    IOEPFDocument* m_pDoc;
 };
 
 #endif // COVERLAY_H

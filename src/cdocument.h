@@ -1,10 +1,118 @@
+/****************************************************************************
+**
+** LEAF EPF Render engine
+** http://leaf.dreamlogics.com/
+**
+** Copyright (C) 2013 DreamLogics
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU Lesser General Public License as published
+** by the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU Lesser General Public License for more details.
+**
+** You should have received a copy of the GNU Lesser General Public License
+** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**
+****************************************************************************/
+
 #ifndef CDOCUMENT_H
 #define CDOCUMENT_H
 
-class CDocument
+#include <QRect>
+#include <QList>
+#include <QMap>
+#include <QString>
+#include <QStringList>
+#include <QObjectList>
+
+//class COEPFRender;
+
+class CSection;
+class COverlay;
+class CLayout;
+class CAnimation;
+class CEPFView;
+
+class CDocument : public QObject
 {
+    Q_OBJECT
 public:
-    CDocument();
+    CDocument(QStringList platforms, QString language);
+    virtual ~CDocument();
+
+    virtual int sectionCount();
+    virtual CSection* section(int index);
+    virtual CSection* sectionByID(QString);
+    void addSection(CSection* section);
+
+    virtual int overlayCount();
+    virtual COverlay* overlay(int index);
+    virtual COverlay* overlayByID(QString);
+    void addOverlay(COverlay* overlay);
+
+    virtual void setActiveOverlay(COverlay* overlay);
+    virtual COverlay* activeOverlay();
+
+    virtual QString property(QString key);
+    void addProperty(QString key, QString value);
+
+    void addLayout(CLayout* layout);
+
+    virtual CLayout* layoutByID(QString id, bool bMakeCurrent);
+    virtual CLayout* layout(int height, int width, bool bMakeCurrent);
+    virtual CLayout* currentLayout();
+
+    virtual CAnimation* animation(QString id);
+    void addAnimation(QString id, int frames, int fps, QString src);
+
+    CEPFView* renderview();
+    void setRenderview(CEPFView*);
+
+    struct Resource
+    {
+        QString container;
+        qint32 checksum;
+        qint32 offset;
+        qint32 size;
+        qint32 size_compressed;
+    };
+
+    virtual QByteArray resource(QString resource);
+    void addResource(QString resource, QString container_file, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed);
+
+
+public slots:
+
+    QObjectList sections();
+    QObjectList overlays();
+
+    QObject* getSectionByID(QString);
+
+    QObject* currentSection();
+    void setCurrentSection(QString section_id);
+
+    void playAnimation(QString animation, bool loop);
+
+    void setActiveOverlay(QString overlay_id);
+
+private:
+    QList<CSection*> m_Sections;
+    QList<COverlay*> m_Overlays;
+    QMap<QString,QString> m_Props;
+    QMap<QString,struct Resource> m_Resources;
+    QList<CLayout*> m_Layouts;
+    CLayout* m_pCurrentLayout;
+    QStringList m_Platforms;
+    QString m_sLanguage;
+    QMap<QString,CAnimation*> m_Animations;
+    CEPFView* m_pRenderView;
+    COverlay* m_pActiveOverlay;
+
 };
 
 #endif // CDOCUMENT_H
