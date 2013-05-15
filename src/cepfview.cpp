@@ -22,6 +22,8 @@
 
 #include "cepfview.h"
 #include "cdocument.h"
+#include "csectionview.h"
+#include "csection.h"
 
 CEPFView::CEPFView()
 {
@@ -30,6 +32,78 @@ CEPFView::CEPFView()
 void CEPFView::setDocument(CDocument *doc)
 {
     m_pDocument = doc;
+    int i,first=-1;
 
-    doc->
+    for (i=0;i<m_SectionViews.size();i++)
+        delete m_SectionViews[i];
+
+    m_SectionViews.clear();
+    m_SectionIndex.clear();
+
+    CSectionView* view;
+    CSection* section;
+
+    for (i=0;i<doc->sectionCount();i++)
+    {
+        section = doc->section(i);
+        view = new CSectionView(section);
+        m_SectionViews.append(view);
+        m_SectionIndex.append(section->ID());
+
+        view->setGeometry(width(),0,width(),height());
+
+        if (first == -1 && !section->isHidden())
+            first = i;
+    }
+
+    setSection(first);
+}
+
+void CEPFView::setSection(int index)
+{
+    if (index < 0 || index >= m_SectionViews.size())
+        return;
+
+    CSectionView* view = m_SectionViews[index];
+    CSectionView* curview = m_SectionViews[m_iCurrentSection];
+
+    view->move(0,0);
+    curview->move(width(),0);
+
+    m_iCurrentSection = index;
+}
+
+void CEPFView::setSection(QString id)
+{
+    if (!m_SectionIndex.contains(id))
+        return;
+
+    setSection(m_SectionIndex[id]);
+}
+
+void CEPFView::nextSection()
+{
+    int i;
+    for (i=m_SectionIndex+1;i<m_SectionViews.size();i++)
+    {
+        if (!m_SectionIndex[i].sectionObject()->isHidden())
+        {
+            setSection(i);
+            break;
+        }
+    }
+
+}
+
+void CEPFView::previousSection()
+{
+    int i;
+    for (i=m_SectionIndex-1;i<m_SectionViews.size();i--)
+    {
+        if (!m_SectionIndex[i].sectionObject()->isHidden())
+        {
+            setSection(i);
+            break;
+        }
+    }
 }

@@ -22,7 +22,96 @@
 
 #include "csection.h"
 
-CSection::CSection(QObject *parent) :
-    QObject(parent)
+
+CSection::CSection(QString id, CDocument* doc,bool hidden) : m_sID(id), m_pDoc(doc), m_bHidden(hidden)
 {
+
+}
+
+CSection::~CSection()
+{
+
+}
+
+int CSection::objectCount()
+{
+
+}
+
+void CSection::addLayer(CLayer* layer,bool active)
+{
+    m_Layers.append(layer);
+    if (active)
+        m_pActiveLayer = layer;
+}
+
+int CSection::layerCount()
+{
+    return m_Layers.size();
+}
+
+CLayer* CSection::layer(int index)
+{
+    if (index < 0 || index >= m_Layers.size())
+        return 0;
+
+    return m_Layers[index];
+}
+
+void CSection::setActiveLayer(CLayer* layer)
+{
+    m_pActiveLayer = layer;
+}
+
+CLayer* CSection::activeLayer()
+{
+    return m_pActiveLayer;
+}
+
+CBaseObject* CSection::objectByID(QString id)
+{
+    if (!m_ObjectsCatalog.contains(id))
+        return 0;
+
+    return m_ObjectsCatalog[id];
+}
+
+bool CSection::isHidden()
+{
+    return m_bHidden;
+}
+
+QString CSection::ID()
+{
+    return m_sID;
+}
+
+CDocument* CSection::document()
+{
+    return m_pDoc;
+}
+
+QObjectList CSection::layers()
+{
+    QObjectList list;
+    for (int i=0;i<m_Layers.size();i++)
+        list.append(m_Layers[i]);
+    return list;
+}
+
+void CSection::setActiveLayer(QObject* obj)
+{
+    CLayer* layer = dynamic_cast<CLayer*>(obj);
+    if (layer)
+        setActiveLayer(layer);
+}
+
+QObject* CSection::getActiveLayer()
+{
+    return m_pActiveLayer;
+}
+
+QObject* CSection::getObjectByID(QString id)
+{
+    return getObjectByID(id);
 }

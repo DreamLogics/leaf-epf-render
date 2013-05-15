@@ -32,6 +32,8 @@ class CSectionView : public QGraphicsView
     Q_OBJECT
 public:
     explicit CSectionView(CSection* section,QObject *parent = 0);
+
+    CSection* sectionObject();
     
 signals:
     
@@ -40,7 +42,7 @@ public slots:
 
 private:
 
-    //CSection* m_pSection;
+    CSection* m_pSection;
 };
 
 #endif // CSECTIONVIEW_H

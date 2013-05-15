@@ -44,13 +44,13 @@ public:
 
     virtual int layerCount();
     virtual CLayer* layer(int index);
-    virtual void setActiveLayer(int layer);
+    virtual void setActiveLayer(CLayer* layer);
     virtual CLayer* activeLayer();
 
     virtual CBaseObject* objectByID(QString id);
 
     virtual bool isHidden();
-    virtual QString getID();
+    virtual QString ID();
 
     virtual CDocument* document();
 

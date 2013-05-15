@@ -55,7 +55,7 @@ private:
     QList<QString> m_SectionIndex;
     CDocument* m_pDocument;
 
-    CSectionView* m_SectionViews;
+    QList<CSectionView*> m_SectionViews;
 
     int m_iCurrentSection;
     int m_iTOCSection;
