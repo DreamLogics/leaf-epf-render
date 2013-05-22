@@ -34,7 +34,7 @@ class CLayer : public QObject
 {
     Q_OBJECT
 public:
-    CLayer(QString id, QObject *parent = 0);
+    CLayer(QString id, CSection *parent = 0);
 
     QString id();
 
@@ -50,6 +50,8 @@ public slots:
     
 
 private:
+    QString m_sID;
+    CSection* m_pSection;
 
     QList<CBaseObject*> m_Objects;
 };

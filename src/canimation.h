@@ -39,11 +39,13 @@ public:
     virtual void stop();
     virtual void reset();
 
-    virtual void addConnection(QString event, QString target, IEPFEvent* ev);
-
 public slots:
 
     void playNextFrame();
+
+signals:
+
+    void finished();
 
 private:
 
@@ -56,12 +58,10 @@ private:
 
     CAnimFrame* getFrame(QString layout, int frame);
 
-    void finished();
-
 private:
     //QList<CAnimFrame*> m_Frames;
     QMap<QString,QMap<int,CAnimFrame*> > m_Frames;
-    IOEPFDocument* m_pDoc;
+    CDocument* m_pDoc;
 
     QStringList m_ColorProps;
     QStringList m_IntProps;
@@ -72,8 +72,6 @@ private:
     int m_iFrameCount;
 
     bool m_bLoop;
-
-    QMap<QString,QList<QPair<QString,IEPFEvent*> > > m_Connections;
 
     CAnimFrame* m_pGeneratedFrame;
 };

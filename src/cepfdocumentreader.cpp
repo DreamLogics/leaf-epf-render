@@ -24,7 +24,7 @@
 #include <QFile>
 #include <QDataStream>
 #include "czlib.h"
-#include "pugixml/pugixml.hpp"
+#include "pugixml/src/pugixml.hpp"
 #include "csection.h"
 #include "clayer.h"
 #include <QStringList>
@@ -34,6 +34,7 @@
 #include <QFontDatabase>
 #include "cbaseobject.h"
 #include "cunsupportedobject.h"
+#include <QThread>
 
 #include "object_types/cblockobject.h"
 #include "object_types/ctextobject.h"
@@ -52,12 +53,12 @@ CEPFDocumentReader::CEPFDocumentReader()
 
 CEPFDocumentReader::~CEPFDocumentReader()
 {
-    QMap<QString,IOEPFObjectFactory*>::iterator it;
+    QMap<QString,IEPFObjectFactory*>::iterator it;
     for (it=m_ObjectTypes.begin();it != m_ObjectTypes.end();it++)
         delete it.value();
 }
 
-CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error)
+CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QThread* create_in_thread)
 {
     QFile f(filename);
     QByteArray data,container;
@@ -210,7 +211,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error)
             style = QString::fromUtf8(sba.constData(),sba.size());
             //document->setStyle(layout.attribute("id").value(),style);
 
-            lo = new COEPFLayout(layout.attribute("id").value(),layout.attribute("height").as_int(),layout.attribute("width").as_int(),style,layout.attribute("platform").value(), layout.attribute("lang").value());
+            lo = new CLayout(layout.attribute("id").value(),layout.attribute("height").as_int(),layout.attribute("width").as_int(),style,layout.attribute("platform").value(), layout.attribute("lang").value());
             document->addLayout(lo);
 
             //qDebug() << "layout added: "<<layout.attribute("id").value() << "dimension: "<<sz;
@@ -224,10 +225,10 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error)
         pugi::xml_node object;
         pugi::xml_node layer;
 
-        COEPFSection* s;
-        COEPFOverlay* o;
-        COEPFLayer* l;
-        IOEPFObject* obj;
+        CSection* s;
+        COverlay* o;
+        CLayer* l;
+        CBaseObject* obj;
 
         //int renderstyle;
         bool bActive;
@@ -237,7 +238,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error)
         for (pugi::xml_node overlay = overlays.child("overlay"); overlay; overlay = overlay.next_sibling("overlay"))
         {
             //section maken
-            o = new COEPFOverlay(overlay.attribute("id").value(),document,false);
+            o = new COverlay(overlay.attribute("id").value(),document,false);
             sectionmap.insert(overlay.attribute("id").value(),o);
 
             o->setVisibility(overlay.attribute("visible").as_bool());
@@ -245,7 +246,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error)
             for (layer = overlay.child("layer"); layer; layer = layer.next_sibling("layer"))
             {
 
-                l = new COEPFLayer(document);
+                l = new CLayer(document);
 
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
@@ -278,20 +279,20 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error)
         for (pugi::xml_node section = sections.child("section"); section; section = section.next_sibling("section"))
         {
             //section maken
-            s = new COEPFSection(section.attribute("id").value(),document,section.attribute("hidden").as_bool());
+            s = new CSection(section.attribute("id").value(),document,section.attribute("hidden").as_bool());
             sectionmap.insert(section.attribute("id").value(),o);
 
             for (layer = section.child("layer"); layer; layer = layer.next_sibling("layer"))
             {
 
-                l = new COEPFLayer(document);
+                l = new CLayer(document);
 
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
                 {
                     obj = createObject(object.attribute("type").value(),object.attribute("id").value(),object.attribute("properties").value(),object.value(),object.attribute("styles").value());
-                    obj->setSection(s);
-                    obj->setDocument(document);
+                    //obj->setSection(s);
+                    //obj->setDocument(document);
                     objectmap.insert(QString(section.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
                     qDebug() << "object made of type("<< obj->type() <<"): "<<object.attribute("id").value();
@@ -355,6 +356,10 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error)
             }
         }
 
+        if (create_in_thread)
+            document->moveToThread(create_in_thread);
+
+
         return document;
 
     }
@@ -364,7 +369,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error)
 
 }
 
-void CEPFDocumentReader::registerObjectType(QString type, IOEPFObjectFactory *factory)
+void CEPFDocumentReader::registerObjectType(QString type, IEPFObjectFactory *factory)
 {
     m_ObjectTypes.insert(type,factory);
 }

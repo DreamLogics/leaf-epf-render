@@ -30,12 +30,12 @@ class CLayout
 public:
     CLayout(QString id, int height, int width, QString style, QString platform, QString language);
 
-    virtual QString getID();
-    virtual int height();
-    virtual int width();
-    virtual QString getStyle();
-    virtual QString platform();
-    virtual QString language();
+    QString id();
+    int height();
+    int width();
+    QString getStyle();
+    QString platform();
+    QString language();
 
 private:
 

@@ -31,7 +31,7 @@ class CSectionView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    explicit CSectionView(CSection* section,QObject *parent = 0);
+    explicit CSectionView(CSection* section);
 
     CSection* sectionObject();
     

@@ -22,6 +22,22 @@
 
 #include "coverlay.h"
 
-COverlay::COverlay()
+COverlay::COverlay(QString id,CDocument* doc,bool visible) : CSection(id,doc,true), m_bVisible(visible)
 {
+
+}
+
+COverlay::~COverlay()
+{
+
+}
+
+bool COverlay::isVisible()
+{
+    return m_bVisible;
+}
+
+void COverlay::setVisibility(bool b)
+{
+    m_bVisible = b;
 }

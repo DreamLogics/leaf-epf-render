@@ -22,6 +22,11 @@
 
 #include "cblockobject.h"
 
+CBaseObject* CBlockObjectFactory::create(QString id, CLayer *layer)
+{
+    return new CBaseObject(id,layer);
+}
+
 CBlockObject::CBlockObject(QObject *parent) :
     CBaseObject(parent)
 {

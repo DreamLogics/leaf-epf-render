@@ -27,16 +27,20 @@
 #include <QObject>
 #include <QString>
 #include <QList>
+#include <QWidget>
 
 class CDocument;
 class CSectionView;
 
-class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QObject
+class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QWidget//QObject
 {
+    Q_OBJECT
 public:
     CEPFView();
 
+
     void setDocument(CDocument* doc);
+    int currentSection();
 
 public slots:
 

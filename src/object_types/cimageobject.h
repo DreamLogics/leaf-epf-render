@@ -23,6 +23,14 @@
 #ifndef CIMAGEOBJECT_H
 #define CIMAGEOBJECT_H
 
+#include "cbaseobject.h"
+#include "iepfobjectfactory.h"
+
+class CImageObjectFactory : public IEPFObjectFactory
+{
+    virtual CBaseObject* create(QString id, CLayer *layer);
+};
+
 class CImageObject : public CBaseObject
 {
 public:

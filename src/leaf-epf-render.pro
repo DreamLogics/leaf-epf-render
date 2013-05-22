@@ -11,8 +11,7 @@ TEMPLATE = lib
 
 DEFINES += LEAFEPFRENDER_LIBRARY
 
-SOURCES += leafepfrender.cpp \
-    cdocument.cpp \
+SOURCES += cdocument.cpp \
     cepfview.cpp \
     csectionview.cpp \
     csection.cpp \
@@ -30,10 +29,11 @@ SOURCES += leafepfrender.cpp \
     object_types/cblockobject.cpp \
     cunsupportedobject.cpp \
     clayout.cpp \
-    css/css_style.cpp
+    css/css_style.cpp \
+    pugixml/src/pugixml.cpp \
+    czlib.cpp
 
-HEADERS += leafepfrender.h\
-        leaf-epf-render_global.h \
+HEADERS += leaf-epf-render_global.h \
     cdocument.h \
     cepfview.h \
     csectionview.h \
@@ -54,7 +54,10 @@ HEADERS += leafepfrender.h\
     iepfobjectfactory.h \
     clayout.h \
     css/css_style.h \
-    css/istyleeffect.h
+    css/istyleeffect.h \
+    pugixml/src/pugixml.hpp \
+    pugixml/src/pugiconfig.hpp \
+    czlib.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

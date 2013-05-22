@@ -23,6 +23,14 @@
 #ifndef CTEXTOBJECT_H
 #define CTEXTOBJECT_H
 
+#include "cbaseobject.h"
+#include "iepfobjectfactory.h"
+
+class CTextObjectFactory : public IEPFObjectFactory
+{
+    virtual CBaseObject* create(QString id, CLayer *layer);
+};
+
 class CTextObject : public CBaseObject
 {
     Q_OBJECT

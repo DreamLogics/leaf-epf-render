@@ -23,8 +23,7 @@
 #include "csectionview.h"
 #include "csection.h"
 
-CSectionView::CSectionView(CSection* section, QObject *parent) :
-    QGraphicsView(parent), m_pSection(section)
+CSectionView::CSectionView(CSection* section) : m_pSection(section)
 {
     setScene(section);
 }

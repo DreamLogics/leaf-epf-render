@@ -22,6 +22,38 @@
 
 #include "clayout.h"
 
-CLayout::CLayout()
+CLayout::CLayout(QString id, int height, int width, QString style, QString platform, QString language) : m_sID(id), m_iHeight(height),
+    m_iWidth(width), m_sStyle(style), m_sPlatform(platform), m_sLanguage(language)
 {
+
+}
+
+QString CLayout::id()
+{
+    return m_sID;
+}
+
+int CLayout::height()
+{
+    return m_iHeight;
+}
+
+int CLayout::width()
+{
+    return m_iWidth;
+}
+
+QString CLayout::getStyle()
+{
+    return m_sStyle;
+}
+
+QString CLayout::platform()
+{
+    return m_sPlatform;
+}
+
+QString CLayout::language()
+{
+    return m_sLanguage;
 }

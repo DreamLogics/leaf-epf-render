@@ -22,7 +22,30 @@
 
 #include "clayer.h"
 
-CLayer::CLayer(QObject *parent) :
-    QObject(parent)
+CLayer::CLayer(QString id, CSection* s) :
+    QObject(s), m_sID(id), m_pSection(s)
 {
+}
+
+QString CLayer::id()
+{
+    return m_sID;
+}
+
+CBaseObject* CLayer::object(int index)
+{
+    if (index < 0 || index >= m_Objects.size())
+        return 0;
+
+    return m_Objects[index];
+}
+
+int CLayer::objectCount()
+{
+    return m_Objects.size();
+}
+
+CSection* CLayer::section()
+{
+    return m_pSection;
 }

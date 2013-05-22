@@ -23,6 +23,14 @@
 #ifndef CMEDIAOBJECT_H
 #define CMEDIAOBJECT_H
 
+#include "cbaseobject.h"
+#include "iepfobjectfactory.h"
+
+class CMediaObjectFactory : public IEPFObjectFactory
+{
+    virtual CBaseObject* create(QString id, CLayer *layer);
+};
+
 class CMediaObject : public CBaseObject
 {
 public:

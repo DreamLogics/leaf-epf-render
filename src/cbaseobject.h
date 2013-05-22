@@ -33,7 +33,7 @@ class LEAFEPFRENDERSHARED_EXPORT CBaseObject : public QGraphicsObject
 {
     Q_OBJECT
 public:
-    CBaseObject(QString id);
+    CBaseObject(QString id, CLayer* layer);
     virtual ~CBaseObject();
 
     virtual void preload();
@@ -41,7 +41,7 @@ public:
     //virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
     virtual QString id();
-    virtual const char* type() const;
+    virtual const char* objectType() const;
 
     virtual CLayer* layer();
 
@@ -147,6 +147,7 @@ private:
 
 
     QStringList m_StyleClasses;
+    CLayer* m_pLayer;
     
 };
 

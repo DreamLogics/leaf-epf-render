@@ -27,10 +27,13 @@
 #include <QFontDatabase>
 #include "canimation.h"
 #include "cepfview.h"
+#include "clayout.h"
+#include "csection.h"
+#include "coverlay.h"
 
-CDocument::CDocument(QStringList platforms, QString language) : m_pCurrentLayout(0), m_sLanguage(language)
+CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
 {
-    m_Platforms = platforms;
+    m_pCurrentLayout = 0;
     m_pRenderView = 0;
     m_pActiveOverlay = 0;
 }
@@ -62,9 +65,9 @@ CSection* CDocument::section(int index)
 
 CSection* CDocument::sectionByID(QString id)
 {
-    for (int i = 0;i<getSectionCount();i++)
+    for (int i = 0;i<sectionCount();i++)
     {
-        if (section(i)->getID() == id)
+        if (section(i)->id() == id)
             return section(i);
     }
     return 0;
@@ -88,9 +91,9 @@ COverlay* CDocument::overlay(int index)
 
 COverlay* CDocument::overlayByID(QString id)
 {
-    for (int i = 0;i<getSectionCount();i++)
+    for (int i = 0;i<sectionCount();i++)
     {
-        if (overlay(i)->getID() == id)
+        if (overlay(i)->id() == id)
             return overlay(i);
     }
     return 0;
@@ -117,7 +120,7 @@ CLayout* CDocument::layoutByID(QString id,bool b)
 {
     for (int i=0;i<m_Layouts.size();i++)
     {
-        if (m_Layouts[i]->getID() == id)
+        if (m_Layouts[i]->id() == id)
         {
             if (b)
                 m_pCurrentLayout = m_Layouts[i];
@@ -300,7 +303,7 @@ CAnimation* CDocument::animation(QString id)
     return m_Animations[id];
 }
 
-void CDocument::setRenderview(COEPFRender *r)
+void CDocument::setRenderview(CEPFView *r)
 {
     m_pRenderView = r;
 }
@@ -336,9 +339,9 @@ QObjectList CDocument::overlays()
     return list;
 }
 
-QObject* CDocument::currentSection()
+QObject* CDocument::getCurrentSection()
 {
-    return (QObject*)(m_pRenderView->currentSection());
+    return (QObject*)(m_Sections[m_pRenderView->currentSection()]);
 }
 
 void CDocument::setCurrentSection(QString section_id)
@@ -346,12 +349,12 @@ void CDocument::setCurrentSection(QString section_id)
     m_pRenderView->setSection(section_id);
 }
 
-void CDocument::playAnimation(QString animation, bool loop)
+void CDocument::playAnimation(QString strAnimation, bool bLoop)
 {
-    CAnimation* ani = getAnimation(animation);
+    CAnimation* ani = animation(strAnimation);
     if (ani)
     {
-        ani->play(loop);
+        ani->play(bLoop);
     }
 }
 

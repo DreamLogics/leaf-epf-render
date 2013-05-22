@@ -23,6 +23,14 @@
 #ifndef CBLOCKOBJECT_H
 #define CBLOCKOBJECT_H
 
+#include "cbaseobject.h"
+#include "iepfobjectfactory.h"
+
+class CBlockObjectFactory : public IEPFObjectFactory
+{
+    virtual CBaseObject* create(QString id, CLayer *layer);
+};
+
 class CBlockObject : public CBaseObject
 {
     Q_OBJECT

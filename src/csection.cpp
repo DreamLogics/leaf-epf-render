@@ -23,9 +23,9 @@
 #include "csection.h"
 
 
-CSection::CSection(QString id, CDocument* doc,bool hidden) : m_sID(id), m_pDoc(doc), m_bHidden(hidden)
+CSection::CSection(QString id, CDocument* doc,bool hidden) : /*QObject(doc), */m_sID(id), m_pDoc(doc), m_bHidden(hidden)
 {
-
+    setParent(doc);
 }
 
 CSection::~CSection()
@@ -35,7 +35,7 @@ CSection::~CSection()
 
 int CSection::objectCount()
 {
-
+    return m_ObjectsCatalog.size();
 }
 
 void CSection::addLayer(CLayer* layer,bool active)
@@ -81,7 +81,7 @@ bool CSection::isHidden()
     return m_bHidden;
 }
 
-QString CSection::ID()
+QString CSection::id()
 {
     return m_sID;
 }

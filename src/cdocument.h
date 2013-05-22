@@ -43,31 +43,31 @@ class CDocument : public QObject
     Q_OBJECT
 public:
     CDocument(QStringList platforms, QString language);
-    virtual ~CDocument();
+    ~CDocument();
 
-    virtual int sectionCount();
-    virtual CSection* section(int index);
-    virtual CSection* sectionByID(QString);
+    int sectionCount();
+    CSection* section(int index);
+    CSection* sectionByID(QString);
     void addSection(CSection* section);
 
-    virtual int overlayCount();
-    virtual COverlay* overlay(int index);
-    virtual COverlay* overlayByID(QString);
+    int overlayCount();
+    COverlay* overlay(int index);
+    COverlay* overlayByID(QString);
     void addOverlay(COverlay* overlay);
 
-    virtual void setActiveOverlay(COverlay* overlay);
-    virtual COverlay* activeOverlay();
+    void setActiveOverlay(COverlay* overlay);
+    COverlay* activeOverlay();
 
-    virtual QString property(QString key);
+    QString property(QString key);
     void addProperty(QString key, QString value);
 
     void addLayout(CLayout* layout);
 
-    virtual CLayout* layoutByID(QString id, bool bMakeCurrent);
-    virtual CLayout* layout(int height, int width, bool bMakeCurrent);
-    virtual CLayout* currentLayout();
+    CLayout* layoutByID(QString id, bool bMakeCurrent);
+    CLayout* layout(int height, int width, bool bMakeCurrent);
+    CLayout* currentLayout();
 
-    virtual CAnimation* animation(QString id);
+    CAnimation* animation(QString id);
     void addAnimation(QString id, int frames, int fps, QString src);
 
     CEPFView* renderview();
@@ -82,9 +82,12 @@ public:
         qint32 size_compressed;
     };
 
-    virtual QByteArray resource(QString resource);
+    QByteArray resource(QString resource);
     void addResource(QString resource, QString container_file, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed);
 
+signals:
+
+    void finishedLoading();
 
 public slots:
 
@@ -93,12 +96,14 @@ public slots:
 
     QObject* getSectionByID(QString);
 
-    QObject* currentSection();
+    QObject* getCurrentSection();
     void setCurrentSection(QString section_id);
 
     void playAnimation(QString animation, bool loop);
 
     void setActiveOverlay(QString overlay_id);
+
+    void load();
 
 private:
     QList<CSection*> m_Sections;

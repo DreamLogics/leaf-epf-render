@@ -21,10 +21,9 @@
 ****************************************************************************/
 
 #include "canimation.h"
-#include "cstyleparser.h"
+#include "css/css_style.h"
 #include <QColor>
 #include <QDebug>
-#include "cssglobals.h"
 #include <QTime>
 #include "cdocument.h"
 #include "csection.h"
@@ -282,7 +281,7 @@ void CAnimation::playNextFrame()
         if (!m_bLoop)
         {
             m_pTimer->stop();
-            finished();
+            emit finished();
         }
     }
 }
@@ -307,12 +306,12 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
         delete m_pGeneratedFrame;
 
     QMap<int,CAnimFrame*> frames = m_Frames[layout];
-    QMap<IOEPFObject*,QMap<QString,QString> > objpropmapend,objpropmapstart;
+    QMap<CBaseObject*,QMap<QString,QString> > objpropmapend,objpropmapstart;
     QList<int> frameind = frames.keys();
-    QList<IOEPFObject*> objs;
+    QList<CBaseObject*> objs;
     int endframe,startframe,i;
     CAnimFrame* endframep ,*animframe;
-    IOEPFObject* obj;
+    CBaseObject* obj;
     QMap<QString,QString> endpropmap,startpropmap,propmapnew;
     QStringList props;
     QString newpropval,propval1;
@@ -453,10 +452,4 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
     m_pGeneratedFrame = animframe;
 
     return animframe;
-}
-
-
-void CAnimation::finished()
-{
-
 }

@@ -25,12 +25,13 @@
 
 #include <QObject>
 #include <QGraphicsScene>
+#include <QString>
 
 class CDocument;
 class CLayer;
 class CBaseObject;
 
-class CSection : public QObject, public QGraphicsScene
+class CSection : /*public QObject, */public QGraphicsScene
 {
     Q_OBJECT
 public:
@@ -50,7 +51,7 @@ public:
     virtual CBaseObject* objectByID(QString id);
 
     virtual bool isHidden();
-    virtual QString ID();
+    virtual QString id();
 
     virtual CDocument* document();
 

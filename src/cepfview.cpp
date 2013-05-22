@@ -24,6 +24,8 @@
 #include "cdocument.h"
 #include "csectionview.h"
 #include "csection.h"
+#include "clayer.h"
+#include "cbaseobject.h"
 
 CEPFView::CEPFView()
 {
@@ -32,7 +34,7 @@ CEPFView::CEPFView()
 void CEPFView::setDocument(CDocument *doc)
 {
     m_pDocument = doc;
-    int i,first=-1;
+    int i,n,l,first=-1;
 
     for (i=0;i<m_SectionViews.size();i++)
         delete m_SectionViews[i];
@@ -42,13 +44,23 @@ void CEPFView::setDocument(CDocument *doc)
 
     CSectionView* view;
     CSection* section;
+    CLayer* layer;
 
     for (i=0;i<doc->sectionCount();i++)
     {
         section = doc->section(i);
+
+        //preload
+        for (n=0;n<section->layerCount();n++)
+        {
+            layer = section->layer(n);
+            for (l=0;l<layer->objectCount();l++)
+                layer->object(l)->preload();
+        }
+
         view = new CSectionView(section);
         m_SectionViews.append(view);
-        m_SectionIndex.append(section->ID());
+        m_SectionIndex.append(section->id());
 
         view->setGeometry(width(),0,width(),height());
 
@@ -78,15 +90,15 @@ void CEPFView::setSection(QString id)
     if (!m_SectionIndex.contains(id))
         return;
 
-    setSection(m_SectionIndex[id]);
+    setSection(m_SectionIndex.indexOf(id));
 }
 
 void CEPFView::nextSection()
 {
     int i;
-    for (i=m_SectionIndex+1;i<m_SectionViews.size();i++)
+    for (i=m_iCurrentSection+1;i<m_SectionViews.size();i++)
     {
-        if (!m_SectionIndex[i].sectionObject()->isHidden())
+        if (!m_pDocument->section(i)->isHidden())
         {
             setSection(i);
             break;
@@ -98,12 +110,17 @@ void CEPFView::nextSection()
 void CEPFView::previousSection()
 {
     int i;
-    for (i=m_SectionIndex-1;i<m_SectionViews.size();i--)
+    for (i=m_iCurrentSection-1;i<m_SectionViews.size();i--)
     {
-        if (!m_SectionIndex[i].sectionObject()->isHidden())
+        if (!m_pDocument->section(i)->isHidden())
         {
             setSection(i);
             break;
         }
     }
+}
+
+int CEPFView::currentSection()
+{
+    return m_iCurrentSection;
 }

@@ -22,14 +22,19 @@
 
 #include "cbaseobject.h"
 
-CBaseObject::CBaseObject(QString id, QObject *parent) :
-    QGraphicsObject(parent), m_sID(id)
+CBaseObject::CBaseObject(QString id, CLayer* layer) :
+    QGraphicsObject(layer), m_sID(id), m_pLayer(layer)
 {
 }
 
 CBaseObject::~CBaseObject()
 {
 
+}
+
+CLayer* CBaseObject::layer()
+{
+    return m_pLayer;
 }
 
 void CBaseObject::setBoundingRect(const QRectF &r)

@@ -23,6 +23,14 @@
 #ifndef CSCRIPTOBJECT_H
 #define CSCRIPTOBJECT_H
 
+#include "cbaseobject.h"
+#include "iepfobjectfactory.h"
+
+class CScriptObjectFactory : public IEPFObjectFactory
+{
+    virtual CBaseObject* create(QString id, CLayer *layer);
+};
+
 class CScriptObject : public CBaseObject
 {
 public:
