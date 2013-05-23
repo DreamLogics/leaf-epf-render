@@ -35,7 +35,7 @@ class CBlockObject : public CBaseObject
 {
     Q_OBJECT
 public:
-    explicit CBlockObject(QObject *parent = 0);
+    CBlockObject(QString id, CLayer* layer);
     
 signals:
     

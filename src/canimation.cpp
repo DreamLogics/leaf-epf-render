@@ -29,13 +29,15 @@
 #include "csection.h"
 #include "cbaseobject.h"
 #include "clayout.h"
+#include "canimframe.h"
+#include "cepfview.h"
 
 CAnimation::CAnimation(int frames, int fps, QString src, CDocument* doc)
 {
     //10:ipad:section-sorting-new:menu-sorting-new-active{top: 120px;}
     m_pDoc = doc;
 
-    QByteArray data = doc->getResource(src);
+    QByteArray data = doc->resource(src);
     QString animdata = QString::fromUtf8(data.constData(),data.size());
     animdata = animdata.replace(QRegExp("[\t\n\r]+"),"");
     QRegExp anireg("([0-9]+):([^:]+):([^\\{]+)\\{([^\\}]+)\\}");
@@ -64,7 +66,7 @@ CAnimation::CAnimation(int frames, int fps, QString src, CDocument* doc)
         selector = anireg.cap(3);
         propsdata = anireg.cap(4);
 
-        layout = doc->getLayoutByID(layoutid);
+        layout = doc->layoutByID(layoutid);
         if (!layout)
             continue;
 
@@ -266,13 +268,13 @@ void CAnimation::playNextFrame()
         return;
     }*/
 
-    if (!m_Frames.contains(m_pDoc->currentLayout()->getID()))
+    if (!m_Frames.contains(m_pDoc->currentLayout()->id()))
     {
-        qDebug() << "No animation found for layout "<<m_pDoc->currentLayout()->getID();
+        qDebug() << "No animation found for layout "<<m_pDoc->currentLayout()->id();
         m_pTimer->stop();
         return;
     }
-    getFrame(m_pDoc->currentLayout()->getID(),m_iCurFrame)->apply();
+    getFrame(m_pDoc->currentLayout()->id(),m_iCurFrame)->apply();
     //m_Frames[m_pDoc->currentLayout()->getID()][m_iCurFrame]->apply();
     m_iCurFrame++;
     if (m_iCurFrame > m_iFrameCount)
@@ -365,10 +367,16 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
         {
             obj = objs[i];
             startpropmap.clear();
-            IOEPFLayout* lay = m_pDoc->getLayoutByID(layout);
-            CStyleParser sp(lay,obj->getID(),endframep->section()->getID(),lay->height(),lay->width(),obj->styleClasses());
-            sp.setOverrides(obj->cssOverrides());
-            QStringList sl = sp.keys();
+            CLayout* lay = m_pDoc->layoutByID(layout);
+            //CStyleParser sp(lay,obj->getID(),endframep->section()->getID(),lay->height(),lay->width(),obj->styleClasses());
+            QString css;
+            css = "#" + obj->id() + "{";
+            css += obj->cssOverrides();
+            css += "}";
+            CSS::Stylesheet sp(lay,m_pDoc->renderview()->height(),m_pDoc->renderview()->width());
+            sp.addCSS(css);
+            //sp.setOverrides(obj->cssOverrides());
+            QStringList sl = sp.properties(obj);
 
             for (int ii=0;ii<sl.size();ii++)
             {

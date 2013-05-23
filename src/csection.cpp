@@ -21,11 +21,11 @@
 ****************************************************************************/
 
 #include "csection.h"
-
+#include "clayer.h"
 
 CSection::CSection(QString id, CDocument* doc,bool hidden) : /*QObject(doc), */m_sID(id), m_pDoc(doc), m_bHidden(hidden)
 {
-    setParent(doc);
+    setParent((QObject*)doc);
 }
 
 CSection::~CSection()
@@ -95,7 +95,7 @@ QObjectList CSection::layers()
 {
     QObjectList list;
     for (int i=0;i<m_Layers.size();i++)
-        list.append(m_Layers[i]);
+        list.append((QObject*)m_Layers[i]);
     return list;
 }
 

@@ -33,8 +33,9 @@ class CMediaObjectFactory : public IEPFObjectFactory
 
 class CMediaObject : public CBaseObject
 {
+    Q_OBJECT
 public:
-    CMediaObject();
+    CMediaObject(QString id, CLayer* layer);
 };
 
 #endif // CMEDIAOBJECT_H

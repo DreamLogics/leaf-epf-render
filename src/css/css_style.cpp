@@ -28,80 +28,21 @@ using namespace CSS;
 Stylesheet::Stylesheet(QString css)
 {
     m_HeightProps << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom";
+    parse(css);
+}
 
-    QRegExp newlines("[\n\r]+");
-    QRegExp tabs("[\t]+");
-    css.replace(newlines,"");
-    css.replace(tabs," ");
+Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width)
+{
+    double w,h;
+    w = layout->width();
+    h = layout->height();
 
-    QString selector,propdata,propkey,propvalue,proprules;
-    QStringList proplist,proper;
-    CSSSelector* s;
-    CSSProperty* prop;
+    w = target_width / w;
+    h = target_height / h;
 
-    int f;
-    bool b,hp;
-
-    QRegExp outerspaces("(^ +| +$)");
-
-    QRegExp propgroupfinder("([^\\{]+)\\{([^\\}]+)\\}");
-
-    int offset = 0;
-
-
-    while (css.indexOf(propgroupfinder,offset) != -1)
-    {
-        selector = propgroupfinder.cap(1).replace(outerspaces,"");
-        propdata = propgroupfinder.cap(2);
-
-        if (m_selectors.contains(selector))
-            s = m_selectors[selector];
-        else
-            s = new CSSSelector();
-
-        proplist = propdata.split(";");
-
-        for (int i=0;i<proplist.size();i++)
-        {
-            proper = proplist[i].split(":");
-            if (proper.size() == 2)
-            {
-                propkey = proper[0].replace(outerspaces,"");
-                propvalue = proper[1].replace(outerspaces,"");
-                f = propvalue.indexOf("!");
-                if (f != -1)
-                {
-                    proprules = propvalue.mid(f).toLower();
-                    propvalue = propvalue.left(f).toLower();
-
-                    b = false;
-                    hp = false;
-
-                    if (m_HeightProps.contains(propvalue))
-                        hp = true;
-
-                    if (proprules.indexOf("!scale") != -1)
-                        b = true;
-
-                    prop = new CSSProperty(propvalue,this,b,hp);
-
-                }
-                else
-                {
-                    hp = false;
-
-                    if (m_HeightProps.contains(propvalue))
-                        hp = true;
-
-                    prop = new CSSProperty(propvalue,this,false,hp,false);
-                }
-
-                s->setProperty(propkey,prop);
-            }
-        }
-
-        offset += propgroupfinder.cap(0).size();
-    }
+    setScale(h,w);
+    m_HeightProps << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom";
+    parse(layout->getStyle());
 }
 
 Stylesheet::~Stylesheet()
@@ -258,4 +199,145 @@ int CSSProperty::toInt()
 double CSSProperty::toDouble()
 {
     return toString().toDouble();
+}
+
+void Stylesheet::parse(QString css)
+{
+
+
+    QRegExp newlines("[\n\r]+");
+    QRegExp tabs("[\t]+");
+    css.replace(newlines,"");
+    css.replace(tabs," ");
+
+    QString selector,propdata,propkey,propvalue,proprules;
+    QStringList proplist,proper;
+    CSSSelector* s;
+    CSSProperty* prop;
+
+    int f;
+    bool b,hp;
+
+    QRegExp outerspaces("(^ +| +$)");
+
+    QRegExp propgroupfinder("([^\\{]+)\\{([^\\}]+)\\}");
+
+    int offset = 0;
+
+
+    while (css.indexOf(propgroupfinder,offset) != -1)
+    {
+        selector = propgroupfinder.cap(1).replace(outerspaces,"");
+        propdata = propgroupfinder.cap(2);
+
+        if (m_selectors.contains(selector))
+            s = m_selectors[selector];
+        else
+            s = new CSSSelector();
+
+        proplist = propdata.split(";");
+
+        for (int i=0;i<proplist.size();i++)
+        {
+            proper = proplist[i].split(":");
+            if (proper.size() == 2)
+            {
+                propkey = proper[0].replace(outerspaces,"");
+                propvalue = proper[1].replace(outerspaces,"");
+                f = propvalue.indexOf("!");
+                if (f != -1)
+                {
+                    proprules = propvalue.mid(f).toLower();
+                    propvalue = propvalue.left(f).toLower();
+
+                    b = false;
+                    hp = false;
+
+                    if (m_HeightProps.contains(propvalue))
+                        hp = true;
+
+                    if (proprules.indexOf("!scale") != -1)
+                        b = true;
+
+                    prop = new CSSProperty(propvalue,this,b,hp);
+
+                }
+                else
+                {
+                    hp = false;
+
+                    if (m_HeightProps.contains(propvalue))
+                        hp = true;
+
+                    prop = new CSSProperty(propvalue,this,false,hp,false);
+                }
+
+                s->setProperty(propkey,prop);
+            }
+        }
+
+        offset += propgroupfinder.cap(0).size();
+    }
+}
+
+void Stylesheet::addCSS(QString css)
+{
+    //TODO check valid
+    parse(css);
+}
+
+QStringList Stylesheet::properties(QString selector)
+{
+    if (!m_selectors.contains(selector))
+        return QStringList();
+
+    return m_selectors[selector]->properties();
+}
+
+QStringList Stylesheet::properties(CBaseObject* obj)
+{
+    QStringList props;
+    QString selector;
+    QStringList classes = obj->styleClasses();
+    QMap<QString,CSSSelector*>::Iterator it;
+
+    for (int i=0;i<classes.size();i++)
+    {
+        for (it=m_selectors.begin();it != m_selectors.end();it++)
+        {
+            selector = it.key();
+            if (selector == "#"+obj->id()+"."+classes[i] || selector == classes[i]
+                    || selector == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
+                    || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
+            {
+                props += properties(selector);
+            }
+        }
+    }
+
+    for (it=m_selectors.begin();it != m_selectors.end();it++)
+    {
+        selector = it.key();
+        if (selector == "#"+obj->id()
+                || selector == "#" + obj->layer()->id() + " #"+obj->id()
+                || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
+        {
+            props += properties(selector);
+        }
+    }
+
+
+    props.removeDuplicates();
+
+    return props;
+}
+
+QList<QString> Stylesheet::properties(CLayer* l)
+{
+
+}
+
+QList<QString> Stylesheet::properties(CSection* s)
+{
+
 }

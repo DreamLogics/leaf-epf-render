@@ -22,7 +22,7 @@
 
 #include "cunsupportedobject.h"
 
-CUnsupportedObject::CUnsupportedObject()
+CUnsupportedObject::CUnsupportedObject(QString id, CLayer* layer) : CBaseObject(id,layer)
 {
 }
 

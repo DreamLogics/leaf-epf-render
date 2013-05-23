@@ -23,7 +23,7 @@
 #include "clayer.h"
 
 CLayer::CLayer(QString id, CSection* s) :
-    QObject(s), m_sID(id), m_pSection(s)
+    QObject((QObject*)s), m_sID(id), m_pSection(s)
 {
 }
 

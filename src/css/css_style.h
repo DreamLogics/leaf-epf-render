@@ -28,6 +28,7 @@
 #include "cbaseobject.h"
 #include "clayer.h"
 #include "csection.h"
+#include "clayout.h"
 
 namespace CSS
 {
@@ -66,6 +67,7 @@ public:
 
     CSSProperty* property(QString key);
     void setProperty(QString key, CSSProperty* prop);
+    QStringList properties();
 
 private:
     QMap<QString,CSSProperty*> m_props;
@@ -75,6 +77,7 @@ class Stylesheet
 {
 public:
     Stylesheet(QString css);
+    Stylesheet(CLayout* layout, int target_height, int target_width);
     ~Stylesheet();
 
     CSSProperty* property(QString selector, QString key);
@@ -82,9 +85,20 @@ public:
     CSSProperty* property(CLayer* l, QString key);
     CSSProperty* property(CSection* s, QString key);
 
+    QStringList properties(QString selector);
+    QStringList properties(CBaseObject* obj);
+    QStringList properties(CLayer* l);
+    QStringList properties(CSection* s);
+
     void setScale(double height_factor, double width_factor);
     double heightScaleFactor();
     double widthScaleFactor();
+
+    void addCSS(QString css);
+
+private:
+
+    void parse(QString css);
 
 private:
     QMap<QString,CSSSelector*> m_selectors;

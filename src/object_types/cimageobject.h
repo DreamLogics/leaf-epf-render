@@ -33,8 +33,9 @@ class CImageObjectFactory : public IEPFObjectFactory
 
 class CImageObject : public CBaseObject
 {
+    Q_OBJECT
 public:
-    CImageObject();
+    CImageObject(QString id, CLayer* layer);
 };
 
 #endif // CIMAGEOBJECT_H

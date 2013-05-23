@@ -35,6 +35,7 @@
 #include "cbaseobject.h"
 #include "cunsupportedobject.h"
 #include <QThread>
+#include <QObject>
 
 #include "object_types/cblockobject.h"
 #include "object_types/ctextobject.h"
@@ -190,7 +191,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         pugi::xml_node fonts = containerxml.child("OEPF").child("fonts");
         for (pugi::xml_node font = fonts.child("font"); font; font = font.next_sibling("font"))
         {
-            if (QFontDatabase::addApplicationFontFromData(document->getResource(font.attribute("src").value())) == -1)
+            if (QFontDatabase::addApplicationFontFromData(document->resource(font.attribute("src").value())) == -1)
                 qDebug() << "Could not load font:" << font.attribute("src").value();
         }
 
@@ -207,7 +208,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
 
             //load resource
-            sba = document->getResource(layout.attribute("src").value());
+            sba = document->resource(layout.attribute("src").value());
             style = QString::fromUtf8(sba.constData(),sba.size());
             //document->setStyle(layout.attribute("id").value(),style);
 
@@ -217,8 +218,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             //qDebug() << "layout added: "<<layout.attribute("id").value() << "dimension: "<<sz;
         }
 
-        QMap<QString,IOEPFObject*> objectmap;
-        QMap<QString,IOEPFSection*> sectionmap;
+        QMap<QString,CBaseObject*> objectmap;
+        QMap<QString,CSection*> sectionmap;
 
         pugi::xml_node sections = containerxml.child("OEPF").child("sections");
         pugi::xml_node overlays = containerxml.child("OEPF").child("overlays");
@@ -246,14 +247,12 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             for (layer = overlay.child("layer"); layer; layer = layer.next_sibling("layer"))
             {
 
-                l = new CLayer(document);
+                l = new CLayer(layer.attribute("id").value(),o);
 
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
                 {
-                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),object.attribute("properties").value(),object.value(),object.attribute("styles").value());
-                    obj->setSection(o);
-                    obj->setDocument(document);
+                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
                     objectmap.insert(QString(overlay.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
                     qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
@@ -285,14 +284,12 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             for (layer = section.child("layer"); layer; layer = layer.next_sibling("layer"))
             {
 
-                l = new CLayer(document);
+                l = new CLayer(layer.attribute("id").value(),s);
 
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
                 {
-                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),object.attribute("properties").value(),object.value(),object.attribute("styles").value());
-                    //obj->setSection(s);
-                    //obj->setDocument(document);
+                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
                     objectmap.insert(QString(section.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
                     qDebug() << "object made of type("<< obj->type() <<"): "<<object.attribute("id").value();
@@ -335,24 +332,34 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             func = connection.attribute("function").value();
             if (funcreg.indexIn(func) != -1)
             {
-                func = funcreg.cap(1);
+                /*func = funcreg.cap(1);
                 param = funcreg.cap(2);
+                QObject* src_obj=0;
+                QObject* dst_obj=0;
+
                 if (objectmap.contains(connection.attribute("source").value()))
-                {
-                    ev = new CEPFEvent(func,param);
-                    objectmap[connection.attribute("source").value()]->addConnection(connection.attribute("event").value(),connection.attribute("target").value(),ev);
-                }
+                    src_obj = (QObject*)objectmap[connection.attribute("source").value()];
                 else if (sectionmap.contains(connection.attribute("source").value()))
-                {
-                    ev = new CEPFEvent(func,param);
-                    sectionmap[connection.attribute("source").value()]->addConnection(connection.attribute("event").value(),connection.attribute("target").value(),ev);
-                }
+                    src_obj = (QObject*)objectmap[connection.attribute("source").value()];
                 else if (anims.contains(connection.attribute("source").value()))
+                    src_obj = (QObject*)objectmap[connection.attribute("source").value()];
+                else if (!strcmp(connection.attribute("source").value(),"document"))
+                    src_obj = (QObject*)document;
+
+                if (objectmap.contains(connection.attribute("target").value()))
+                    dst_obj = (QObject*)objectmap[connection.attribute("target").value()];
+                else if (sectionmap.contains(connection.attribute("target").value()))
+                    dst_obj = (QObject*)objectmap[connection.attribute("target").value()];
+                else if (anims.contains(connection.attribute("target").value()))
+                    dst_obj = (QObject*)objectmap[connection.attribute("target").value()];
+                else if (!strcmp(connection.attribute("target").value(),"document"))
+                    dst_obj = (QObject*)document;
+
+                if (src_obj && dst_obj)
                 {
-                    IOEPFAnimation* ani = document->getAnimation(connection.attribute("source").value());
-                    ev = new CEPFEvent(func,param);
-                    ani->addConnection(connection.attribute("event").value(),connection.attribute("target").value(),ev);
-                }
+                    QObject::connect(src_obj,SIGNAL());
+                    SLOT(tset);
+                }*/
             }
         }
 
@@ -399,7 +406,7 @@ CBaseObject* CEPFDocumentReader::createObject(QString type, QString id, CLayer* 
 
         return obj;
     }
-    return new CUnsupportedObject(id);
+    return new CUnsupportedObject(id,layer);
 }
 
 void CEPFDocumentReader::addPlatform(QString platform)

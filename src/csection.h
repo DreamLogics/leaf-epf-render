@@ -26,6 +26,7 @@
 #include <QObject>
 #include <QGraphicsScene>
 #include <QString>
+#include <QMap>
 
 class CDocument;
 class CLayer;

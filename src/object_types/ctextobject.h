@@ -35,7 +35,7 @@ class CTextObject : public CBaseObject
 {
     Q_OBJECT
 public:
-    explicit CTextObject(QObject *parent = 0);
+    CTextObject(QString id, CLayer* layer);
     
 signals:
     

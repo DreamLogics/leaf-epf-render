@@ -21,10 +21,15 @@
 ****************************************************************************/
 
 #include "cbaseobject.h"
+#include "css/css_style.h"
+#include "clayer.h"
+#include "csection.h"
+#include "cdocument.h"
 
 CBaseObject::CBaseObject(QString id, CLayer* layer) :
-    QGraphicsObject(layer), m_sID(id), m_pLayer(layer)
+    m_sID(id), m_pLayer(layer)
 {
+    setParent((QObject*)layer);
 }
 
 CBaseObject::~CBaseObject()
@@ -57,14 +62,14 @@ void CBaseObject::preload()
 
 }
 
-QString CBaseObject::getID()
+QString CBaseObject::id()
 {
     return m_sID;
 }
-const char* CBaseObject::type() const
+
+const char* CBaseObject::objectType() const
 {
-
-
+    return "base";
 }
 
 void CBaseObject::layout(CBaseObject* relative)
@@ -280,4 +285,14 @@ void CBaseObject::removeStyleClass(QString classname)
 {
 
 
+}
+
+CSection* CBaseObject::section()
+{
+    return m_pLayer->section();
+}
+
+CDocument* CBaseObject::document()
+{
+    return section()->document();
 }

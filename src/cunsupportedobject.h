@@ -28,7 +28,7 @@
 class CUnsupportedObject : public CBaseObject
 {
 public:
-    CUnsupportedObject();
+    CUnsupportedObject(QString id, CLayer* layer);
 
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 };

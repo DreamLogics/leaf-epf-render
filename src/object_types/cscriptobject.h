@@ -33,8 +33,9 @@ class CScriptObjectFactory : public IEPFObjectFactory
 
 class CScriptObject : public CBaseObject
 {
+    Q_OBJECT
 public:
-    CScriptObject();
+    CScriptObject(QString id, CLayer* layer);
 };
 
 #endif // CSCRIPTOBJECT_H

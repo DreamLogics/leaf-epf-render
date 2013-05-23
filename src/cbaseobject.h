@@ -25,9 +25,16 @@
 
 #include "leaf-epf-render_global.h"
 #include <QGraphicsObject>
-#include "css/css_style.h"
+
+namespace CSS
+{
+    class Stylesheet;
+}
 
 class QMouseEvent;
+class CLayer;
+class CSection;
+class CDocument;
 
 class LEAFEPFRENDERSHARED_EXPORT CBaseObject : public QGraphicsObject
 {
@@ -43,7 +50,9 @@ public:
     virtual QString id();
     virtual const char* objectType() const;
 
-    virtual CLayer* layer();
+    CLayer* layer();
+    CSection* section();
+    CDocument* document();
 
     virtual void setBoundingRect(const QRectF&);
     virtual QRectF boundingRect() const;

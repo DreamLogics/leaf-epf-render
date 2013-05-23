@@ -63,8 +63,8 @@ public:
 
     void addLayout(CLayout* layout);
 
-    CLayout* layoutByID(QString id, bool bMakeCurrent);
-    CLayout* layout(int height, int width, bool bMakeCurrent);
+    CLayout* layoutByID(QString id, bool bMakeCurrent = false);
+    CLayout* layout(int height, int width, bool bMakeCurrent = false);
     CLayout* currentLayout();
 
     CAnimation* animation(QString id);

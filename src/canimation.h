@@ -24,6 +24,9 @@
 #define CANIMATION_H
 
 #include <QObject>
+#include <QMap>
+#include <QStringList>
+#include <QTimer>
 
 class CDocument;
 class CAnimFrame;

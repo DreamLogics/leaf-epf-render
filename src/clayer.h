@@ -40,6 +40,7 @@ public:
 
     CBaseObject* object(int index);
     int objectCount();
+    void addObject(CBaseObject* obj);
 
     CSection* section();
 

@@ -23,8 +23,9 @@
 #ifndef IEPFOBJECTFACTORY_H
 #define IEPFOBJECTFACTORY_H
 
+#include <QString>
+
 class CBaseObject;
-class QString;
 class CLayer;
 
 class IEPFObjectFactory
@@ -32,7 +33,7 @@ class IEPFObjectFactory
     public:
     ~IEPFObjectFactory() {}
 
-    CBaseObject* create(QString id, CLayer* layer) = 0;
+    virtual CBaseObject* create(QString id, CLayer* layer) = 0;
 
 };
 
