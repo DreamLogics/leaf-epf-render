@@ -30,6 +30,8 @@
 #include "clayout.h"
 #include "csection.h"
 #include "coverlay.h"
+#include "clayer.h"
+#include "cbaseobject.h"
 
 CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
 {
@@ -366,4 +368,24 @@ QObject* CDocument::getSectionByID(QString id)
 void CDocument::setActiveOverlay(QString overlay_id)
 {
     setActiveOverlay(overlayByID(overlay_id));
+}
+
+void CDocument::load()
+{
+    CSection* s;
+    CLayer* layer;
+
+    for (int i=0;i<sectionCount();i++)
+    {
+        s = section(i);
+
+        //preload
+        for (int n=0;n<s->layerCount();n++)
+        {
+            layer = s->layer(n);
+            for (int l=0;l<layer->objectCount();l++)
+                layer->object(l)->preload();
+        }
+    }
+    emit finishedLoading();
 }

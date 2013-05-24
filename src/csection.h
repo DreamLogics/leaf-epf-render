@@ -27,6 +27,7 @@
 #include <QGraphicsScene>
 #include <QString>
 #include <QMap>
+#include <QImage>
 
 class CDocument;
 class CLayer;
@@ -56,12 +57,16 @@ public:
 
     virtual CDocument* document();
 
+    QImage& rendered();
+
 public slots:
 
     QObjectList layers();
     void setActiveLayer(QObject*);
     QObject* getActiveLayer();
     QObject* getObjectByID(QString id);
+
+    void updateRendered( const QList<QRectF> &region );
 
 private:
     QList<CLayer*> m_Layers;
@@ -72,6 +77,7 @@ private:
     bool m_bHidden;
 
     CDocument* m_pDoc;
+    QImage m_imgRendered;
     
 };
 

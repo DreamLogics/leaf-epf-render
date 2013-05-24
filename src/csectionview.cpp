@@ -22,13 +22,29 @@
 
 #include "csectionview.h"
 #include "csection.h"
+#include <QPainter>
 
 CSectionView::CSectionView(CSection* section) : m_pSection(section)
 {
-    setScene(section);
+    connect(section,SIGNAL(changed(QList<QRectF>)),this,SLOT(sectionChanged()),Qt::QueuedConnection);
 }
 
 CSection* CSectionView::sectionObject()
 {
     return m_pSection;
+}
+
+void CSectionView::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    painter->drawImage(0,0,m_pSection->rendered());
+}
+
+void CSectionView::sectionChanged()
+{
+    update();
+}
+
+QRectF CSectionView::boundingRect() const
+{
+    return QRectF(0,0,m_pSection->rendered().width(),m_pSection->rendered().height());
 }

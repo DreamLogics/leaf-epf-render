@@ -21,6 +21,10 @@
 ****************************************************************************/
 
 #include "canimframe.h"
+#include "cbaseobject.h"
+#include "csection.h"
+#include "cdocument.h"
+#include "cepfview.h"
 //#include "css/css_style.h"
 
 CAnimFrame::CAnimFrame(CSection* section) : m_pSection(section)//CSectionRender *sr) : m_pSR(sr)
@@ -59,7 +63,7 @@ void CAnimFrame::apply()
     //update view
     //m_pSR->updateView();
     //m_pSection->renderer()->updateView();
-    m_pSection->document()->renderview()->update();
+    //m_pSection->document()->renderview()->update();
 }
 
 bool CAnimFrame::hasObjectProps(CBaseObject *obj)

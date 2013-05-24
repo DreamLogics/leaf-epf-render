@@ -22,10 +22,13 @@
 
 #include "csection.h"
 #include "clayer.h"
+#include <QPainter>
 
 CSection::CSection(QString id, CDocument* doc,bool hidden) : /*QObject(doc), */m_sID(id), m_pDoc(doc), m_bHidden(hidden)
 {
     setParent((QObject*)doc);
+
+    connect(this,SIGNAL(changed(QList<QRectF>)),this,SLOT(updateRendered(QList<QRectF>)));
 }
 
 CSection::~CSection()
@@ -114,4 +117,33 @@ QObject* CSection::getActiveLayer()
 QObject* CSection::getObjectByID(QString id)
 {
     return getObjectByID(id);
+}
+
+QImage& CSection::rendered()
+{
+    return m_imgRendered;
+}
+
+void CSection::updateRendered(const QList<QRectF> &region)
+{
+    if (m_imgRendered.isNull() || m_imgRendered.height() != height() || m_imgRendered.width() != width())
+    {
+        m_imgRendered = QImage(width(),height(),QImage::Format_RGB32);
+        m_imgRendered.fill(Qt::black);
+
+        QPainter p;
+        p.begin(&m_imgRendered);
+        render(&p);
+        p.end();
+        return;
+    }
+
+    QPainter p;
+    p.begin(&m_imgRendered);
+    for (int i=0;i<region.size();i++)
+    {
+        render(&p,region[i],region[i]);
+    }
+    p.end();
+
 }

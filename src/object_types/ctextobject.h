@@ -26,6 +26,10 @@
 #include "cbaseobject.h"
 #include "iepfobjectfactory.h"
 
+class QPainter;
+class QStyleOptionGraphicsItem;
+class QWidget;
+
 class CTextObjectFactory : public IEPFObjectFactory
 {
     virtual CBaseObject* create(QString id, CLayer *layer);
@@ -36,6 +40,9 @@ class CTextObject : public CBaseObject
     Q_OBJECT
 public:
     CTextObject(QString id, CLayer* layer);
+
+    virtual void preload();
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     
 signals:
     

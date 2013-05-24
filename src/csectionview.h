@@ -23,22 +23,27 @@
 #ifndef CSECTIONVIEW_H
 #define CSECTIONVIEW_H
 
-#include <QGraphicsView>
+#include <QGraphicsObject>
 
 class CSection;
 
-class CSectionView : public QGraphicsView
+class CSectionView : public QGraphicsObject
 {
     Q_OBJECT
 public:
     explicit CSectionView(CSection* section);
 
     CSection* sectionObject();
+
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    virtual QRectF boundingRect() const;
     
 signals:
     
 public slots:
     
+    void sectionChanged();
 
 private:
 

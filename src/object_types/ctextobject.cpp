@@ -21,8 +21,28 @@
 ****************************************************************************/
 
 #include "ctextobject.h"
+#include <QPainter>
+#include <QStyleOptionGraphicsItem>
+#include <QWidget>
+#include <QTextDocument>
 
-CTextObject::CTextObject(QObject *parent) :
-    CBaseObject(parent)
+
+CBaseObject* CTextObjectFactory::create(QString id, CLayer *layer)
 {
+    return new CTextObject(id,layer);
+}
+
+CTextObject::CTextObject(QString id, CLayer* layer) :
+    CBaseObject(id,layer)
+{
+}
+
+void CTextObject::preload()
+{
+
+}
+
+void CTextObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+
 }

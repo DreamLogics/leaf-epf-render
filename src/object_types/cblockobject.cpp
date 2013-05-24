@@ -21,6 +21,9 @@
 ****************************************************************************/
 
 #include "cblockobject.h"
+#include <QPainter>
+#include <QStyleOptionGraphicsItem>
+#include <QWidget>
 
 CBaseObject* CBlockObjectFactory::create(QString id, CLayer *layer)
 {
@@ -30,4 +33,14 @@ CBaseObject* CBlockObjectFactory::create(QString id, CLayer *layer)
 CBlockObject::CBlockObject(QObject *parent) :
     CBaseObject(parent)
 {
+}
+
+void CBlockObject::preload()
+{
+
+}
+
+void CBlockObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+
 }

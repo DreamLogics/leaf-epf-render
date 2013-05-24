@@ -26,15 +26,19 @@
 #include "csection.h"
 #include "clayer.h"
 #include "cbaseobject.h"
+#include <QGraphicsScene>
 
 CEPFView::CEPFView()
 {
+    m_pDocScene = new QGraphicsScene();
+    setScene(m_pDocScene);
+    m_bIsLoading = false;
 }
 
 void CEPFView::setDocument(CDocument *doc)
 {
     m_pDocument = doc;
-    int i,n,l,first=-1;
+    int i,first=-1;
 
     for (i=0;i<m_SectionViews.size();i++)
         delete m_SectionViews[i];
@@ -44,31 +48,31 @@ void CEPFView::setDocument(CDocument *doc)
 
     CSectionView* view;
     CSection* section;
-    CLayer* layer;
 
     for (i=0;i<doc->sectionCount();i++)
     {
         section = doc->section(i);
 
-        //preload
-        for (n=0;n<section->layerCount();n++)
-        {
-            layer = section->layer(n);
-            for (l=0;l<layer->objectCount();l++)
-                layer->object(l)->preload();
-        }
-
         view = new CSectionView(section);
         m_SectionViews.append(view);
         m_SectionIndex.append(section->id());
 
-        view->setGeometry(width(),0,width(),height());
+        m_pDocScene->addItem(view);
+
+        //view->setGeometry(width(),0,width(),height());
+        view->setX(width());
 
         if (first == -1 && !section->isHidden())
             first = i;
     }
 
     setSection(first);
+    m_bIsLoading = true;
+
+    disconnect(this,SIGNAL(loadDocument()),0,0);
+    connect(this,SIGNAL(loadDocument()),doc,SLOT(load()));
+
+    emit loadDocument();
 }
 
 void CEPFView::setSection(int index)
@@ -79,8 +83,10 @@ void CEPFView::setSection(int index)
     CSectionView* view = m_SectionViews[index];
     CSectionView* curview = m_SectionViews[m_iCurrentSection];
 
-    view->move(0,0);
-    curview->move(width(),0);
+    //view->move(0,0);
+    view->setX(0);
+    //curview->move(width(),0);
+    curview->setX(width());
 
     m_iCurrentSection = index;
 }
@@ -123,4 +129,9 @@ void CEPFView::previousSection()
 int CEPFView::currentSection()
 {
     return m_iCurrentSection;
+}
+
+void CEPFView::ready()
+{
+
 }

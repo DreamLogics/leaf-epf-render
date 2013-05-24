@@ -24,6 +24,7 @@
 #define CANIMFRAME_H
 
 #include <QObject>
+#include <QMap>
 
 class CSection;
 class CBaseObject;

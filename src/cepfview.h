@@ -27,12 +27,13 @@
 #include <QObject>
 #include <QString>
 #include <QList>
-#include <QWidget>
+#include <QGraphicsView>
 
 class CDocument;
+class QGraphicsScene;
 class CSectionView;
 
-class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QWidget//QObject
+class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QGraphicsView//QObject
 {
     Q_OBJECT
 public:
@@ -50,11 +51,22 @@ public slots:
     void previousSection();
     void tocSection();
 
+    void ready();
+
+signals:
+
+    void loadDocument();
+
+protected:
+
+    virtual void drawForeground(QPainter *painter, const QRectF &rect);
+
 private:
 
     int indexForSection(QString id);
 
 private:
+    bool m_bIsLoading;
 
     QList<QString> m_SectionIndex;
     CDocument* m_pDocument;
@@ -63,6 +75,8 @@ private:
 
     int m_iCurrentSection;
     int m_iTOCSection;
+
+    QGraphicsScene* m_pDocScene;
 };
 
 #endif // CEPFVIEW_H

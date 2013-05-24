@@ -380,7 +380,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
 
             for (int ii=0;ii<sl.size();ii++)
             {
-                startpropmap.insert(sl[ii],sp.property(sl[ii]));
+                startpropmap.insert(sl[ii],sp.property(obj,sl[ii])->toString());
                 //qDebug() << sl[ii] << sp.property(sl[ii]);
             }
             objpropmapstart.insert(obj,startpropmap);
@@ -422,19 +422,19 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
                 //niet hoort niet!
                 propval1 = "0";
             }
-            if (css_props::color_props().contains(props[pi]))
+            if (CSS::color_props.contains(props[pi]))
             {
                 //newpropval = mixColor(propval1,startpropmap[props[pi]],(double)(frame-startframe)/(double)(endframe-startframe-1));
                 newpropval = mixColor(startpropmap[props[pi]],propval1,(double)(frame-startframe)/(double)(endframe-startframe-1));
                 propmapnew.insert(props[pi],newpropval);
             }
-            else if (css_props::int_props().contains(props[pi]))
+            else if (CSS::int_props.contains(props[pi]))
             {
                 //newpropval = mixInt(propval1,startpropmap[props[pi]],(double)(frame-startframe)/(double)(endframe-startframe-1));
                 newpropval = mixInt(startpropmap[props[pi]],propval1,(double)(frame-startframe)/(double)(endframe-startframe-1));
                 propmapnew.insert(props[pi],newpropval);
             }
-            else if (css_props::double_props().contains(props[pi]))
+            else if (CSS::double_props.contains(props[pi]))
             {
                 newpropval = mixDouble(startpropmap[props[pi]],propval1,(double)(frame-startframe)/(double)(endframe-startframe-1));
                 propmapnew.insert(props[pi],newpropval);

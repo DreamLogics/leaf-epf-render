@@ -22,6 +22,7 @@
 
 #include "css_style.h"
 #include <QRegExp>
+#include <QStringList>
 
 using namespace CSS;
 

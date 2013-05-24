@@ -26,6 +26,10 @@
 #include "cbaseobject.h"
 #include "iepfobjectfactory.h"
 
+class QPainter;
+class QStyleOptionGraphicsItem;
+class QWidget;
+
 class CBlockObjectFactory : public IEPFObjectFactory
 {
     virtual CBaseObject* create(QString id, CLayer *layer);
@@ -37,6 +41,9 @@ class CBlockObject : public CBaseObject
 public:
     CBlockObject(QString id, CLayer* layer);
     
+    virtual void preload();
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
 signals:
     
 public slots:
