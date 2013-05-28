@@ -97,6 +97,12 @@ public:
     QStringList properties(CLayer* l);
     QStringList properties(CSection* s);
 
+    CSSSelector* selector(QString selector);
+
+    QList<CSSSelector*> selectors(CBaseObject* obj);
+    QList<CSSSelector*> selectors(CLayer* l);
+    QList<CSSSelector*> selectors(CSection* s);
+
     void setScale(double height_factor, double width_factor);
     double heightScaleFactor();
     double widthScaleFactor();

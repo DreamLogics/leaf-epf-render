@@ -211,7 +211,7 @@ void Stylesheet::parse(QString css)
     css.replace(newlines,"");
     css.replace(tabs," ");
 
-    QString selector,propdata,propkey,propvalue,proprules;
+    QString ss,propdata,propkey,propvalue,proprules;
     QStringList proplist,proper;
     CSSSelector* s;
     CSSProperty* prop;
@@ -228,11 +228,11 @@ void Stylesheet::parse(QString css)
 
     while (css.indexOf(propgroupfinder,offset) != -1)
     {
-        selector = propgroupfinder.cap(1).replace(outerspaces,"");
+        ss = propgroupfinder.cap(1).replace(outerspaces,"");
         propdata = propgroupfinder.cap(2);
 
-        if (m_selectors.contains(selector))
-            s = m_selectors[selector];
+        if (m_selectors.contains(ss))
+            s = m_selectors[ss];
         else
             s = new CSSSelector();
 
@@ -298,7 +298,7 @@ QStringList Stylesheet::properties(QString selector)
 QStringList Stylesheet::properties(CBaseObject* obj)
 {
     QStringList props;
-    QString selector;
+    QString s;
     QStringList classes = obj->styleClasses();
     QMap<QString,CSSSelector*>::Iterator it;
 
@@ -306,22 +306,22 @@ QStringList Stylesheet::properties(CBaseObject* obj)
     {
         for (it=m_selectors.begin();it != m_selectors.end();it++)
         {
-            selector = it.key();
-            if (selector == "#"+obj->id()+"."+classes[i] || selector == classes[i]
-                    || selector == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
-                    || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
+            s = it.key();
+            if (s == "#"+obj->id()+"."+classes[i] || s == classes[i]
+                    || s == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
+                    || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
             {
-                props += properties(selector);
+                props += properties(s);
             }
         }
     }
 
     for (it=m_selectors.begin();it != m_selectors.end();it++)
     {
-        selector = it.key();
-        if (selector == "#"+obj->id()
-                || selector == "#" + obj->layer()->id() + " #"+obj->id()
-                || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
+        s = it.key();
+        if (s == "#"+obj->id()
+                || s == "#" + obj->layer()->id() + " #"+obj->id()
+                || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
         {
             props += properties(selector);
         }
@@ -333,12 +333,65 @@ QStringList Stylesheet::properties(CBaseObject* obj)
     return props;
 }
 
-QList<QString> Stylesheet::properties(CLayer* l)
+QStringList Stylesheet::properties(CLayer* l)
 {
 
 }
 
-QList<QString> Stylesheet::properties(CSection* s)
+QStringList Stylesheet::properties(CSection* s)
+{
+
+}
+
+CSSSelector* Stylesheet::selector(QString selector)
+{
+    if (!m_selectors.contains(selector))
+        return 0;
+
+    return m_selectors[selector];
+}
+
+QList<CSSSelector*> Stylesheet::selectors(CBaseObject* obj)
+{
+    QList<CSSSelector*> list;
+    QString s;
+    QStringList classes = obj->styleClasses();
+    QMap<QString,CSSSelector*>::Iterator it;
+
+    for (int i=0;i<classes.size();i++)
+    {
+        for (it=m_selectors.begin();it != m_selectors.end();it++)
+        {
+            s = it.key();
+            if (s == "#"+obj->id()+"."+classes[i] || s == classes[i]
+                    || s == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
+                    || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
+            {
+                list.append(selector(s));
+            }
+        }
+    }
+
+    for (it=m_selectors.begin();it != m_selectors.end();it++)
+    {
+        s = it.key();
+        if (s == "#"+obj->id()
+                || s == "#" + obj->layer()->id() + " #"+obj->id()
+                || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
+        {
+            list.append(selector(s));
+        }
+    }
+
+    return list;
+}
+
+QList<CSSSelector*> Stylesheet::selectors(CLayer* l)
+{
+
+}
+
+QList<CSSSelector*> Stylesheet::selectors(CSection* s)
 {
 
 }

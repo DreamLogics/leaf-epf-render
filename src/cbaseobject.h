@@ -69,7 +69,7 @@ public:
     virtual void mouseReleaseEvent(QMouseEvent *, QPoint contentpos);
     virtual void mouseMoveEvent(QMouseEvent *, QPoint contentpos);
 
-    virtual CSS::Stylesheet* style();
+    //virtual CSS::Stylesheet* style();
 
     virtual void setCSSOverride(QString css);
     virtual QString cssOverrides();
@@ -77,7 +77,7 @@ public:
     virtual bool visible();
     virtual void setVisibility(bool);
 
-    virtual QString css();
+    //virtual QString css();
 
     virtual int marginTop() const;
     virtual int marginBottom() const;

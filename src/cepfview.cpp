@@ -49,6 +49,13 @@ void CEPFView::setDocument(CDocument *doc)
     CSectionView* view;
     CSection* section;
 
+    doc->setRenderview(this);
+    if (!doc->layout(height(),width(),true))
+    {
+        qDebug() << "EPFView::setDocument(doc) > No layout!";
+        return;
+    }
+
     for (i=0;i<doc->sectionCount();i++)
     {
         section = doc->section(i);

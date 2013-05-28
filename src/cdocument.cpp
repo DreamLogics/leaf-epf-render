@@ -32,6 +32,7 @@
 #include "coverlay.h"
 #include "clayer.h"
 #include "cbaseobject.h"
+#include "css/css_style.h"
 
 CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
 {
@@ -125,7 +126,12 @@ CLayout* CDocument::layoutByID(QString id,bool b)
         if (m_Layouts[i]->id() == id)
         {
             if (b)
+            {
                 m_pCurrentLayout = m_Layouts[i];
+                if (m_pStylesheet)
+                    delete m_pStylesheet;
+                m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,m_pRenderView->height(),m_pRenderView->width());
+            }
             return m_Layouts[i];
         }
     }
@@ -235,7 +241,12 @@ CLayout* CDocument::layout(int height, int width,bool bMakeCurrent)
     }
 
     if (bMakeCurrent)
+    {
         m_pCurrentLayout = m_Layouts[match];
+        if (m_pStylesheet)
+            delete m_pStylesheet;
+        m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,height,width);
+    }
 
     return m_Layouts[match];
 }
@@ -388,4 +399,9 @@ void CDocument::load()
         }
     }
     emit finishedLoading();
+}
+
+CSS::Stylesheet* CDocument::stylesheet()
+{
+    return m_pStylesheet;
 }

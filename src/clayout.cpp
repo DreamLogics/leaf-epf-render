@@ -43,7 +43,7 @@ int CLayout::width()
     return m_iWidth;
 }
 
-QString CLayout::getStyle()
+QString CLayout::css()
 {
     return m_sStyle;
 }

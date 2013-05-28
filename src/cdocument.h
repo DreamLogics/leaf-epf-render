@@ -32,6 +32,11 @@
 
 //class COEPFRender;
 
+namespace CSS
+{
+    class Stylesheet;
+}
+
 class CSection;
 class COverlay;
 class CLayout;
@@ -54,6 +59,8 @@ public:
     COverlay* overlay(int index);
     COverlay* overlayByID(QString);
     void addOverlay(COverlay* overlay);
+
+    CSS::Stylesheet* stylesheet();
 
     void setActiveOverlay(COverlay* overlay);
     COverlay* activeOverlay();
@@ -117,7 +124,7 @@ private:
     QMap<QString,CAnimation*> m_Animations;
     CEPFView* m_pRenderView;
     COverlay* m_pActiveOverlay;
-
+    CSS::Stylesheet* m_pStylesheet;
 };
 
 #endif // CDOCUMENT_H

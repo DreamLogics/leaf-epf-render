@@ -33,7 +33,7 @@ public:
     QString id();
     int height();
     int width();
-    QString getStyle();
+    QString css();
     QString platform();
     QString language();
 
