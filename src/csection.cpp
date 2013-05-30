@@ -46,6 +46,7 @@ void CSection::addLayer(CLayer* layer,bool active)
     m_Layers.append(layer);
     if (active)
         m_pActiveLayer = layer;
+    addItem(layer);
 }
 
 int CSection::layerCount()

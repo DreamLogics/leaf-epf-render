@@ -49,3 +49,18 @@ CSection* CLayer::section()
 {
     return m_pSection;
 }
+
+void CLayer::addObject(CBaseObject *obj)
+{
+    m_Objects.append(obj);
+}
+
+QRectF CLayer::boundingRect()
+{
+    return childrenBoundingRect();
+}
+
+void CLayer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+
+}

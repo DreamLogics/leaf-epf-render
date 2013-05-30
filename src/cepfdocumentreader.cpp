@@ -270,6 +270,15 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
             }
 
+            //set object parents
+
+            for (int i=0;i<o->layerCount();i++)
+            {
+                l = o->layer(i);
+                for (int n=0;n<l->objectCount();n++)
+                    l->object(n)->setParents();
+            }
+
             document->addOverlay(o);
         }
 
@@ -307,8 +316,20 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
             }
 
+            //set object parents
+
+            for (int i=0;i<s->layerCount();i++)
+            {
+                l = s->layer(i);
+                for (int n=0;n<l->objectCount();n++)
+                    l->object(n)->setParents();
+            }
+
             document->addSection(s);
         }
+
+
+
 
         QStringList anims;
 

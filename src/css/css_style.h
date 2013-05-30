@@ -39,13 +39,14 @@ static QStringList int_props = (QStringList() << "top" << "bottom" << "left" << 
 static QStringList double_props = (QStringList() << "opacity");
 static QStringList redraw_props = (QStringList() << "height" << "width" << "background-image" << "opacity");
 
+static QStringList combined_props = (QStringList() << "margin" << "padding");
 
 class Stylesheet;
 
-class CSSProperty
+class Property
 {
 public:
-    CSSProperty(QString value, Stylesheet* css, bool scales, bool isHeightProp, bool null=false);
+    Property(QString value, Stylesheet* css, bool scales, bool isHeightProp, bool null=false);
 
     QString toString();
     int toInt();
@@ -66,18 +67,18 @@ private:
     Stylesheet* m_pCSS;
 };
 
-class CSSSelector
+class Selector
 {
 public:
-    CSSSelector();
-    ~CSSSelector();
+    Selector();
+    ~Selector();
 
-    CSSProperty* property(QString key);
-    void setProperty(QString key, CSSProperty* prop);
+    Property* property(QString key);
+    void setProperty(QString key, Property* prop);
     QStringList properties();
 
 private:
-    QMap<QString,CSSProperty*> m_props;
+    QMap<QString,Property*> m_props;
 };
 
 class Stylesheet
@@ -87,21 +88,21 @@ public:
     Stylesheet(CLayout* layout, int target_height, int target_width);
     ~Stylesheet();
 
-    CSSProperty* property(QString selector, QString key);
-    CSSProperty* property(CBaseObject* obj, QString key);
-    CSSProperty* property(CLayer* l, QString key);
-    CSSProperty* property(CSection* s, QString key);
+    Property* property(QString selector, QString key);
+    Property* property(CBaseObject* obj, QString key);
+    Property* property(CLayer* l, QString key);
+    Property* property(CSection* s, QString key);
 
     QStringList properties(QString selector);
     QStringList properties(CBaseObject* obj);
     QStringList properties(CLayer* l);
     QStringList properties(CSection* s);
 
-    CSSSelector* selector(QString selector);
+    Selector* selector(QString selector);
 
-    QList<CSSSelector*> selectors(CBaseObject* obj);
-    QList<CSSSelector*> selectors(CLayer* l);
-    QList<CSSSelector*> selectors(CSection* s);
+    QList<Selector*> selectors(CBaseObject* obj);
+    QList<Selector*> selectors(CLayer* l);
+    QList<Selector*> selectors(CSection* s);
 
     void setScale(double height_factor, double width_factor);
     double heightScaleFactor();
@@ -114,7 +115,7 @@ private:
     void parse(QString css);
 
 private:
-    QMap<QString,CSSSelector*> m_selectors;
+    QMap<QString,Selector*> m_selectors;
     double m_dHSF;
     double m_dWSF;
     QStringList m_HeightProps;

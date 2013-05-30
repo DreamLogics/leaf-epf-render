@@ -48,13 +48,13 @@ Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width)
 
 Stylesheet::~Stylesheet()
 {
-    QMap<QString,CSSSelector*>::Iterator it;
+    QMap<QString,Selector*>::Iterator it;
     for (it=m_selectors.begin();it != m_selectors.end();it++)
         delete it.value();
 
 }
 
-CSSProperty* Stylesheet::property(QString selector, QString key)
+Property* Stylesheet::property(QString selector, QString key)
 {
     if (!m_selectors.contains(selector))
     {
@@ -62,8 +62,8 @@ CSSProperty* Stylesheet::property(QString selector, QString key)
         bool hp = false;
         if (m_HeightProps.contains(key))
             hp = true;
-        CSSProperty* prop = new CSSProperty("",this,false,hp,true);
-        CSSSelector* s = new CSSSelector();
+        Property* prop = new Property("",this,false,hp,true);
+        Selector* s = new Selector();
         s->setProperty(key,prop);
         m_selectors.insert(selector,s);
         return prop;
@@ -72,12 +72,12 @@ CSSProperty* Stylesheet::property(QString selector, QString key)
     return m_selectors[selector]->property(key);
 }
 
-CSSProperty* Stylesheet::property(CBaseObject *obj, QString key)
+Property* Stylesheet::property(CBaseObject *obj, QString key)
 {
-    CSSProperty* prop = 0;
+    Property* prop = 0;
     QString selector;
     QStringList classes = obj->styleClasses();
-    QMap<QString,CSSSelector*>::Iterator it;
+    QMap<QString,Selector*>::Iterator it;
 
     for (int i=0;i<classes.size();i++)
     {
@@ -117,40 +117,40 @@ CSSProperty* Stylesheet::property(CBaseObject *obj, QString key)
     return prop;
 }
 
-CSSProperty* Stylesheet::property(CLayer *l, QString key)
+Property* Stylesheet::property(CLayer *l, QString key)
 {
     return 0;
 }
 
-CSSProperty* Stylesheet::property(CSection *s, QString key)
+Property* Stylesheet::property(CSection *s, QString key)
 {
     return 0;
 }
 
-CSSSelector::CSSSelector()
+Selector::Selector()
 {
 
 }
 
-CSSSelector::~CSSSelector()
+Selector::~Selector()
 {
-    QMap<QString,CSSProperty*>::Iterator it;
+    QMap<QString,Property*>::Iterator it;
     for (it=m_props.begin();it != m_props.end();it++)
         delete it.value();
 }
 
-CSSProperty* CSSSelector::property(QString key)
+Property* Selector::property(QString key)
 {
     if (m_props.contains(key))
         return m_props[key];
 
     //create prop
-    CSSProperty* prop = new CSSProperty("",true);
+    Property* prop = new Property("",true);
     m_props.insert(key,prop);
     return prop;
 }
 
-void CSSSelector::setProperty(QString key, CSSProperty *prop)
+void Selector::setProperty(QString key, Property *prop)
 {
     if (m_props.contains(key))
     {
@@ -162,12 +162,12 @@ void CSSSelector::setProperty(QString key, CSSProperty *prop)
     m_props.insert(key,prop);
 }
 
-CSSProperty::CSSProperty(QString value, Stylesheet* css, bool scale, bool isHeightProp, bool null) : m_bNull(null), m_bScale(scale), m_sValue(value), m_pCSS(css), m_bHeightProp(isHeightProp)
+Property::Property(QString value, Stylesheet* css, bool scale, bool isHeightProp, bool null) : m_bNull(null), m_bScale(scale), m_sValue(value), m_pCSS(css), m_bHeightProp(isHeightProp)
 {
 
 }
 
-QString CSSProperty::toString()
+QString Property::toString()
 {
     if (m_bScale)
     {
@@ -192,12 +192,12 @@ QString CSSProperty::toString()
     return m_sValue;
 }
 
-int CSSProperty::toInt()
+int Property::toInt()
 {
     return toString().toInt();
 }
 
-double CSSProperty::toDouble()
+double Property::toDouble()
 {
     return toString().toDouble();
 }
@@ -213,8 +213,8 @@ void Stylesheet::parse(QString css)
 
     QString ss,propdata,propkey,propvalue,proprules;
     QStringList proplist,proper;
-    CSSSelector* s;
-    CSSProperty* prop;
+    Selector* s;
+    Property* prop;
 
     int f;
     bool b,hp;
@@ -234,7 +234,7 @@ void Stylesheet::parse(QString css)
         if (m_selectors.contains(ss))
             s = m_selectors[ss];
         else
-            s = new CSSSelector();
+            s = new Selector();
 
         proplist = propdata.split(";");
 
@@ -260,7 +260,7 @@ void Stylesheet::parse(QString css)
                     if (proprules.indexOf("!scale") != -1)
                         b = true;
 
-                    prop = new CSSProperty(propvalue,this,b,hp);
+                    prop = new Property(propvalue,this,b,hp);
 
                 }
                 else
@@ -270,7 +270,7 @@ void Stylesheet::parse(QString css)
                     if (m_HeightProps.contains(propvalue))
                         hp = true;
 
-                    prop = new CSSProperty(propvalue,this,false,hp,false);
+                    prop = new Property(propvalue,this,false,hp,false);
                 }
 
                 s->setProperty(propkey,prop);
@@ -300,7 +300,7 @@ QStringList Stylesheet::properties(CBaseObject* obj)
     QStringList props;
     QString s;
     QStringList classes = obj->styleClasses();
-    QMap<QString,CSSSelector*>::Iterator it;
+    QMap<QString,Selector*>::Iterator it;
 
     for (int i=0;i<classes.size();i++)
     {
@@ -343,7 +343,7 @@ QStringList Stylesheet::properties(CSection* s)
 
 }
 
-CSSSelector* Stylesheet::selector(QString selector)
+Selector* Stylesheet::selector(QString selector)
 {
     if (!m_selectors.contains(selector))
         return 0;
@@ -351,12 +351,12 @@ CSSSelector* Stylesheet::selector(QString selector)
     return m_selectors[selector];
 }
 
-QList<CSSSelector*> Stylesheet::selectors(CBaseObject* obj)
+QList<Selector*> Stylesheet::selectors(CBaseObject* obj)
 {
-    QList<CSSSelector*> list;
+    QList<Selector*> list;
     QString s;
     QStringList classes = obj->styleClasses();
-    QMap<QString,CSSSelector*>::Iterator it;
+    QMap<QString,Selector*>::Iterator it;
 
     for (int i=0;i<classes.size();i++)
     {
@@ -386,12 +386,12 @@ QList<CSSSelector*> Stylesheet::selectors(CBaseObject* obj)
     return list;
 }
 
-QList<CSSSelector*> Stylesheet::selectors(CLayer* l)
+QList<Selector*> Stylesheet::selectors(CLayer* l)
 {
 
 }
 
-QList<CSSSelector*> Stylesheet::selectors(CSection* s)
+QList<Selector*> Stylesheet::selectors(CSection* s)
 {
 
 }

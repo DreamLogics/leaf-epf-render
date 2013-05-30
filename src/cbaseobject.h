@@ -43,6 +43,8 @@ public:
     CBaseObject(QString id, CLayer* layer);
     virtual ~CBaseObject();
 
+    void setParents();
+
     virtual void preload();
 
     //virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -57,9 +59,9 @@ public:
     virtual void setBoundingRect(const QRectF&);
     virtual QRectF boundingRect() const;
 
-    virtual void layout(CBaseObject* relative);
-    virtual CBaseObject* getObjectAnchor();
-    virtual QString getObjectAnchorID();
+    virtual void layout();
+    virtual CBaseObject* relative();
+    virtual QString relativeID();
 
     virtual QString property(QString key);
     virtual void setProperty(QString key, QString value);
@@ -73,9 +75,6 @@ public:
 
     virtual void setCSSOverride(QString css);
     virtual QString cssOverrides();
-
-    virtual bool visible();
-    virtual void setVisibility(bool);
 
     //virtual QString css();
 
@@ -107,13 +106,15 @@ public:
     virtual int innerHeight() const;
     virtual int innerWidth() const;*/
 
+protected:
+
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+
 public slots:
 
     virtual QStringList styleClasses() const;
     virtual void addStyleClass(QString classname);
     virtual void removeStyleClass(QString classname);
-
-    virtual QObject* getStyle();
 
 signals:
 
@@ -132,9 +133,8 @@ private:
     QRectF m_rRect;
     QString m_sID;
     QMap<QString,QString> m_Props;
-    //CStyleParser* m_pStyle;
-    int m_iVisible;
-    QString m_sCSS;
+
+
     QString m_sCSSOverrides;
 
     QImage m_qiRenderBuffer;
