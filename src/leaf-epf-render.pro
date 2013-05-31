@@ -59,7 +59,8 @@ HEADERS += leaf-epf-render_global.h \
     pugixml/src/pugixml.hpp \
     pugixml/src/pugiconfig.hpp \
     czlib.h \
-    css/css_painters.h
+    css/css_painters.h \
+    css/css_default.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

@@ -23,12 +23,16 @@
 #include "css_style.h"
 #include <QRegExp>
 #include <QStringList>
+#include "css_default.h"
 
 using namespace CSS;
 
 Stylesheet::Stylesheet(QString css)
 {
     m_HeightProps << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom";
+
+    //parse default css first
+    parse(pszDefaultCSS);
     parse(css);
 }
 
@@ -43,6 +47,7 @@ Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width)
 
     setScale(h,w);
     m_HeightProps << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom";
+    parse(pszDefaultCSS);
     parse(layout->getStyle());
 }
 
@@ -79,6 +84,10 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     QStringList classes = obj->styleClasses();
     QMap<QString,Selector*>::Iterator it;
 
+    //cascade from style class > object > layer > section > document
+
+    //class selectors
+
     for (int i=0;i<classes.size();i++)
     {
         for (it=m_selectors.begin();it != m_selectors.end();it++)
@@ -96,12 +105,57 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     if (prop)
         return prop;
 
+    //object id selectors
+
     for (it=m_selectors.begin();it != m_selectors.end();it++)
     {
         selector = it.key();
         if (selector == "#"+obj->id()
                 || selector == "#" + obj->layer()->id() + " #"+obj->id()
                 || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
+        {
+            prop = property(selector,key);
+        }
+    }
+
+    if (prop)
+        return prop;
+
+    //layer id selectors
+
+    for (it=m_selectors.begin();it != m_selectors.end();it++)
+    {
+        selector = it.key();
+        if ( selector == "#" + obj->layer()->id()
+                || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() )
+        {
+            prop = property(selector,key);
+        }
+    }
+
+    if (prop)
+        return prop;
+
+    //section id selector
+
+    for (it=m_selectors.begin();it != m_selectors.end();it++)
+    {
+        selector = it.key();
+        if ( selector == "#" + obj->layer()->section()->id() )
+        {
+            prop = property(selector,key);
+        }
+    }
+
+    if (prop)
+        return prop;
+
+    //document selector
+
+    for (it=m_selectors.begin();it != m_selectors.end();it++)
+    {
+        selector = it.key();
+        if ( selector == "document" )
         {
             prop = property(selector,key);
         }
@@ -217,7 +271,7 @@ void Stylesheet::parse(QString css)
     Property* prop;
 
     int f;
-    bool b,hp;
+    bool bScale,bHeightProp;
 
     QRegExp outerspaces("(^ +| +$)");
 
@@ -251,29 +305,152 @@ void Stylesheet::parse(QString css)
                     proprules = propvalue.mid(f).toLower();
                     propvalue = propvalue.left(f).toLower();
 
-                    b = false;
-                    hp = false;
+                    bScale = false;
+                    bHeightProp = false;
 
                     if (m_HeightProps.contains(propvalue))
-                        hp = true;
+                        bHeightProp = true;
 
                     if (proprules.indexOf("!scale") != -1)
-                        b = true;
+                        bScale = true;
 
-                    prop = new Property(propvalue,this,b,hp);
 
                 }
                 else
                 {
-                    hp = false;
+                    bHeightProp = false;
 
                     if (m_HeightProps.contains(propvalue))
-                        hp = true;
+                        bHeightProp = true;
 
-                    prop = new Property(propvalue,this,false,hp,false);
+                    bScale = false;
                 }
 
-                s->setProperty(propkey,prop);
+                if (propkey == "margin")
+                {
+                    QStringList marginprops = propvalue.split(QRegExp(" +"));
+                    if (marginprops.size() == 4)
+                    {
+                        prop = new Property(marginprops[0],this,bScale,true);
+                        s->setProperty("margin-top",prop);
+
+                        prop = new Property(marginprops[1],this,bScale,false);
+                        s->setProperty("margin-right",prop);
+
+                        prop = new Property(marginprops[2],this,bScale,true);
+                        s->setProperty("margin-bottom",prop);
+
+                        prop = new Property(marginprops[3],this,bScale,false);
+                        s->setProperty("margin-left",prop);
+                    }
+                    else if (marginprops.size() == 3)
+                    {
+                        prop = new Property(marginprops[0],this,bScale,true);
+                        s->setProperty("margin-top",prop);
+
+                        prop = new Property(marginprops[1],this,bScale,false);
+                        s->setProperty("margin-right",prop);
+
+                        prop = new Property(marginprops[2],this,bScale,true);
+                        s->setProperty("margin-bottom",prop);
+
+                        prop = new Property(marginprops[1],this,bScale,false);
+                        s->setProperty("margin-left",prop);
+                    }
+                    else if (marginprops.size() == 2)
+                    {
+                        prop = new Property(marginprops[0],this,bScale,true);
+                        s->setProperty("margin-top",prop);
+
+                        prop = new Property(marginprops[1],this,bScale,false);
+                        s->setProperty("margin-right",prop);
+
+                        prop = new Property(marginprops[0],this,bScale,true);
+                        s->setProperty("margin-bottom",prop);
+
+                        prop = new Property(marginprops[1],this,bScale,false);
+                        s->setProperty("margin-left",prop);
+                    }
+                    else
+                    {
+                        prop = new Property(propvalue,this,bScale,true);
+                        s->setProperty("margin-top",prop);
+
+                        prop = new Property(propvalue,this,bScale,false);
+                        s->setProperty("margin-right",prop);
+
+                        prop = new Property(propvalue,this,bScale,true);
+                        s->setProperty("margin-bottom",prop);
+
+                        prop = new Property(propvalue,this,bScale,false);
+                        s->setProperty("margin-left",prop);
+                    }
+                }
+                else if (propkey == "padding")
+                {
+                    QStringList paddingprops = propvalue.split(QRegExp(" +"));
+                    if (paddingprops.size() == 4)
+                    {
+                        prop = new Property(paddingprops[0],this,bScale,true);
+                        s->setProperty("padding-top",prop);
+
+                        prop = new Property(paddingprops[1],this,bScale,false);
+                        s->setProperty("padding-right",prop);
+
+                        prop = new Property(paddingprops[2],this,bScale,true);
+                        s->setProperty("padding-bottom",prop);
+
+                        prop = new Property(paddingprops[3],this,bScale,false);
+                        s->setProperty("padding-left",prop);
+                    }
+                    else if (marginprops.size() == 3)
+                    {
+                        prop = new Property(paddingprops[0],this,bScale,true);
+                        s->setProperty("padding-top",prop);
+
+                        prop = new Property(paddingprops[1],this,bScale,false);
+                        s->setProperty("padding-right",prop);
+
+                        prop = new Property(paddingprops[2],this,bScale,true);
+                        s->setProperty("padding-bottom",prop);
+
+                        prop = new Property(paddingprops[1],this,bScale,false);
+                        s->setProperty("padding-left",prop);
+                    }
+                    else if (marginprops.size() == 2)
+                    {
+                        prop = new Property(paddingprops[0],this,bScale,true);
+                        s->setProperty("padding-top",prop);
+
+                        prop = new Property(paddingprops[1],this,bScale,false);
+                        s->setProperty("padding-right",prop);
+
+                        prop = new Property(paddingprops[0],this,bScale,true);
+                        s->setProperty("padding-bottom",prop);
+
+                        prop = new Property(paddingprops[1],this,bScale,false);
+                        s->setProperty("padding-left",prop);
+                    }
+                    else
+                    {
+                        prop = new Property(propvalue,this,bScale,true);
+                        s->setProperty("padding-top",prop);
+
+                        prop = new Property(propvalue,this,bScale,false);
+                        s->setProperty("padding-right",prop);
+
+                        prop = new Property(propvalue,this,bScale,true);
+                        s->setProperty("padding-bottom",prop);
+
+                        prop = new Property(propvalue,this,bScale,false);
+                        s->setProperty("padding-left",prop);
+                    }
+                }
+                else
+                {
+                    prop = new Property(propvalue,this,bScale,bHeightProp);
+                    s->setProperty(propkey,prop);
+                }
             }
         }
 

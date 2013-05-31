@@ -39,7 +39,17 @@ static QStringList int_props = (QStringList() << "top" << "bottom" << "left" << 
 static QStringList double_props = (QStringList() << "opacity");
 static QStringList redraw_props = (QStringList() << "height" << "width" << "background-image" << "opacity");
 
-static QStringList combined_props = (QStringList() << "margin" << "padding");
+//static QStringList combined_props = (QStringList() << "margin" << "padding");
+
+enum RenderMode
+{
+    rmNone = 0,
+    rmNormal,
+    rmOverlay,
+    rmMultiply,
+    rmReplace,
+    rmScreen
+};
 
 class Stylesheet;
 
