@@ -23,7 +23,7 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QRectF qrSize, QS
 
 void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
 {
-    int compmode = pPainter->compositionMode();
+    QPainter::CompositionMode compmode = pPainter->compositionMode();
     switch (iRenderMode)
     {
     case rmNone:
@@ -73,7 +73,7 @@ void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderM
 
 void paintInnerGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
 {
-    int compmode = pPainter->compositionMode();
+    QPainter::CompositionMode compmode = pPainter->compositionMode();
     switch (iRenderMode)
     {
     case rmNone:
@@ -124,7 +124,7 @@ void paintInnerGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderM
 
 void paintDropShadow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iLightDir, int iDistance, int iSpread, int iSize)
 {
-    int compmode = pPainter->compositionMode();
+    QPainter::CompositionMode compmode = pPainter->compositionMode();
     switch (iRenderMode)
     {
     case rmNone:
@@ -166,7 +166,7 @@ void paintDropShadow(QPainter* pPainter, QRectF qrRect, QString strColor, Render
 
     double stepsize = dOpacity / iSize;
     double steps;
-    QRectF drawrect = qrRect;
+
     drawrect.adjust(-iSpread,-iSpread,iSpread,iSpread);
     p.setWidth(1);
 

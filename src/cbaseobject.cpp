@@ -36,12 +36,12 @@ CBaseObject::~CBaseObject()
 
 }
 
-void CBaseObject::setParents()
+void CBaseObject::setParents(CBaseObject* obj)
 {
-    CSS::Property* relative = document()->stylesheet()->property(this,"relative-to");
+    /*CSS::Property* relative = document()->stylesheet()->property(this,"relative-to");
     if (!relative->isNull())
     {
-        CBaseObject* obj = section()->getObjectByID(relative->toString());
+        CBaseObject* obj = section()->objectByID(relative->toString());
         if (obj)
         {
             setParent((QObject*)obj);
@@ -50,9 +50,11 @@ void CBaseObject::setParents()
     }
     else
     {
-        setParent((QObject*)layer);
-        setParentItem((QGraphicsItem*)layer);
-    }
+        setParent((QObject*)m_pLayer);
+        setParentItem((QGraphicsItem*)m_pLayer);
+    }*/
+    setParent((QObject*)obj);
+    setParentItem((QGraphicsItem*)obj);
 }
 
 CLayer* CBaseObject::layer()
@@ -110,51 +112,52 @@ void CBaseObject::layout()
     m_rRect.setHeight(css->property(this,"height")->toInt());
     m_rRect.setWidth(css->property(this,"width")->toInt());
 
-    if (getObjectAnchorID() == "")
+    /*if (css->property(this,"relative-to")->toString() == "")
     {
         m_rRect.setTop(relrect.top() + r->outerHeight() + marginTop());
         m_rRect.setLeft(css->property(this,"left")->toInt() + marginLeft());
 
         //top/left/bottom/right negeren
     }
-    else
+    else*/
+    if (css->property(this,"position")->toString() != "relative")
     {
         m_rRect.setTop(relrect.top() + css->property(this,"top")->toInt());
         m_rRect.setLeft(relrect.left() + css->property(this,"left")->toInt());
 
-        m_rRect.setHeight(css->property(this,"height"));
-        m_rRect.setWidth(css->property(this,"width"));
+        m_rRect.setHeight(css->property(this,"height")->toInt());
+        m_rRect.setWidth(css->property(this,"width")->toInt());
 
         if (!css->property(this,"bottom")->isNull() && !css->property(this,"top")->isNull())
         {
-            m_rRect.setBottom(relrect.bottom() - css->property(this,"bottom"));
-            m_rRect.setTop(m_rRect.bottom() - css->property(this,"height"));
+            m_rRect.setBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
+            m_rRect.setTop(m_rRect.bottom() - css->property(this,"height")->toInt());
         }
         else if (!css->property(this,"bottom")->isNull())
-            m_rRect.setBottom(relrect.bottom() - css->property(this,"bottom"));
+            m_rRect.setBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
 
         if (!css->property(this,"right")->isNull() && css->property(this,"left")->isNull())
         {
-            m_rRect.setRight(relrect.right() - css->property(this,"right"));
-            m_rRect.setLeft(m_rRect.right() - css->property(this,"width"));
+            m_rRect.setRight(relrect.right() - css->property(this,"right")->toInt());
+            m_rRect.setLeft(m_rRect.right() - css->property(this,"width")->toInt());
         }
         else if (!css->property(this,"right")->isNull())
-            m_rRect.setRight(relrect.right() - css->property(this,"right"));
+            m_rRect.setRight(relrect.right() - css->property(this,"right")->toInt());
     }
 
 
     //min/max height/width
-    if (m_pStyle->property("min-height") != "" && css->property(this,"height") < css->property(this,"min-height"))
-        m_rRect.setHeight(css->property(this,"min-height"));
+    if (!css->property(this,"min-height")->isNull() && css->property(this,"height")->toInt() < css->property(this,"min-height")->toInt())
+        m_rRect.setHeight(css->property(this,"min-height")->toInt());
 
-    if (m_pStyle->property("min-width") != "" && css->property(this,"width") < css->property(this,"min-width"))
-        m_rRect.setHeight(css->property(this,"min-width"));
+    if (!css->property(this,"min-width")->isNull() && css->property(this,"width")->toInt() < css->property(this,"min-width")->toInt())
+        m_rRect.setHeight(css->property(this,"min-width")->toInt());
 
-    if (m_pStyle->property("max-height") != "" && css->property(this,"height") > css->property(this,"max-height"))
-        m_rRect.setHeight(css->property(this,"max-height"));
+    if (!css->property(this,"max-height")->isNull() && css->property(this,"height")->toInt() > css->property(this,"max-height")->toInt())
+        m_rRect.setHeight(css->property(this,"max-height")->toInt());
 
-    if (m_pStyle->property("max-width") != "" && css->property(this,"width") > css->property(this,"max-width"))
-        m_rRect.setHeight(css->property(this,"max-width"));
+    if (!css->property(this,"max-width")->isNull() && css->property(this,"width")->toInt() > css->property(this,"max-width")->toInt())
+        m_rRect.setHeight(css->property(this,"max-width")->toInt());
 
 
 
@@ -169,12 +172,11 @@ void CBaseObject::layout()
 
 CBaseObject* CBaseObject::relative()
 {
-    QString relative = getObjectAnchorID();
-    section()->objectByID(relative);
+    return (CBaseObject*)parent();
 }
 QString CBaseObject::relativeID()
 {
-    return document()->stylesheet()->property(this,"relative-to")->toString();
+    return relative()->id();
 }
 
 QString CBaseObject::property(QString key)

@@ -27,6 +27,7 @@
 #include "clayer.h"
 #include "cbaseobject.h"
 #include <QGraphicsScene>
+#include <QDebug>
 
 CEPFView::CEPFView()
 {
@@ -141,4 +142,14 @@ int CEPFView::currentSection()
 void CEPFView::ready()
 {
 
+}
+
+void CEPFView::tocSection()
+{
+
+}
+
+void CEPFView::drawForeground(QPainter *painter, const QRectF &rect)
+{
+    QGraphicsView::drawForeground(painter,rect);
 }

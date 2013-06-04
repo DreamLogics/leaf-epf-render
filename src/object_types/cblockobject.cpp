@@ -27,11 +27,10 @@
 
 CBaseObject* CBlockObjectFactory::create(QString id, CLayer *layer)
 {
-    return new CBaseObject(id,layer);
+    return new CBlockObject(id,layer);
 }
 
-CBlockObject::CBlockObject(QObject *parent) :
-    CBaseObject(parent)
+CBlockObject::CBlockObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 {
 }
 

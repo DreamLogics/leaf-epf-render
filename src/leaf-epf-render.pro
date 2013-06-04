@@ -21,7 +21,6 @@ SOURCES += cdocument.cpp \
     cepfdocumentreader.cpp \
     canimation.cpp \
     canimframe.cpp \
-    ctextobject.cpp \
     object_types/ctextobject.cpp \
     object_types/cscriptobject.cpp \
     object_types/cmediaobject.cpp \

@@ -22,6 +22,21 @@
 
 #include "cimageobject.h"
 
-CImageObject::CImageObject()
+CBaseObject* CImageObjectFactory::create(QString id, CLayer *layer)
 {
+    return new CImageObject(id,layer);
+}
+
+CImageObject::CImageObject(QString id, CLayer *layer) : CBaseObject(id,layer)
+{
+}
+
+void CImageObject::preload()
+{
+
+}
+
+void CImageObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+
 }

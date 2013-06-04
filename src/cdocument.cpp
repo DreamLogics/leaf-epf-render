@@ -264,33 +264,61 @@ QByteArray CDocument::resource(QString resource)
         return QByteArray();
 
     struct Resource res = m_Resources[resource];
-    QFile f(res.container);
     QByteArray data;
-    int s = res.size_compressed;
 
-    if (res.size_compressed == 0)
-        s = res.size;
-
-    if (f.open(QIODevice::ReadOnly))
+    if (res.type == 0 || res.type == 1 || res.type == 3)
     {
-        if (f.seek(res.offset))
-        {
-            data = f.read(s);
 
-            if (res.size_compressed != 0)
-                CZLib::decompress(&data,res.size,res.checksum);
+        QFile f(res.container);
+
+        int s = res.size_compressed;
+
+        if (res.size_compressed == 0)
+            s = res.size;
+
+        if (f.open(QIODevice::ReadOnly))
+        {
+            if (res.type == 3)
+            {
+                data = f.readAll();
+
+                if (res.size_compressed != 0)
+                    CZLib::decompress(&data,res.size/*,res.checksum*/);
+            }
+            else
+            {
+                if (f.seek(res.offset))
+                {
+                    data = f.read(s);
+
+                    if (res.size_compressed != 0)
+                        CZLib::decompress(&data,res.size/*,res.checksum*/);
+                }
+            }
+
+            f.close();
         }
-        f.close();
     }
+    else if (res.type == 4)
+    {
+        qDebug() << "remote res not implemented";
+    }
+    else
+        qDebug() << "unsupported resource type";
 
     return data;
 }
 
-void CDocument::addResource(QString resource, QString container_file, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed)
+void CDocument::addResource(QString resource, QString container_file, QString extra, /*qint32 checksum, */qint32 offset, qint32 size, qint32 size_compressed, qint16 type)
 {
     struct Resource res;
-    res.container = container_file;
-    res.checksum = checksum;
+    if (type == 1 || type == 3)
+        res.container = extra;
+    else
+        res.container = container_file;
+    res.extra = extra;
+    /*res.checksum = checksum;*/
+    res.type = type;
     res.offset = offset;
     res.size = size;
     res.size_compressed = size_compressed;

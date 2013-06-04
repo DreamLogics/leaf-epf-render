@@ -22,6 +22,21 @@
 
 #include "cscriptobject.h"
 
-CScriptObject::CScriptObject()
+CBaseObject* CScriptObjectFactory::create(QString id, CLayer *layer)
 {
+    return new CScriptObject(id,layer);
+}
+
+CScriptObject::CScriptObject(QString id, CLayer *layer) : CBaseObject(id,layer)
+{
+}
+
+void CScriptObject::preload()
+{
+
+}
+
+void CScriptObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+
 }

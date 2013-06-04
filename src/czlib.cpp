@@ -71,11 +71,11 @@ qint32 CZLib::compressRaw (unsigned char* dest,quint32* destLen, const unsigned 
     return err;
 }
 */
-bool CZLib::compress(QByteArray* data, int *crccc)
+bool CZLib::compress(QByteArray* data/*, int *crccc*/)
 {
-    ZipCRC crc;
+    /*ZipCRC crc;
 
-    (*crccc) = crc.getCRC((const unsigned char*)(data->constData()),data->size());
+    (*crccc) = crc.getCRC((const unsigned char*)(data->constData()),data->size());*/
 
     (*data) = qCompress(*data);
     data->remove(0,4);
@@ -108,7 +108,7 @@ bool CZLib::compress(QByteArray* data, int *crccc)
     return true;*/
 }
 
-bool CZLib::decompress(QByteArray* data, int inflatesize, int crc32)
+bool CZLib::decompress(QByteArray* data, int inflatesize/*, int crc32*/)
 {
     QByteArray size;
     QDataStream ds(&size,QIODevice::WriteOnly);
@@ -122,12 +122,12 @@ bool CZLib::decompress(QByteArray* data, int inflatesize, int crc32)
 
     //do crc check
     //TODO: repair?
-    ZipCRC crc;
+    /*ZipCRC crc;
     if (crc.getCRC((const unsigned char*)(data->constData()),data->size()) != crc32)
     {
         qDebug() << "crc error";
         return false;
-    }
+    }*/
 
     return true;
 

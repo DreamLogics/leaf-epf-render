@@ -83,14 +83,16 @@ public:
     struct Resource
     {
         QString container;
-        qint32 checksum;
+        QString extra;
+        //qint32 checksum;
         qint32 offset;
         qint32 size;
         qint32 size_compressed;
+        qint16 type;
     };
 
     QByteArray resource(QString resource);
-    void addResource(QString resource, QString container_file, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed);
+    void addResource(QString resource, QString resource_file, QString extra, /*qint32 checksum, */qint32 offset, qint32 size, qint32 size_compressed, qint16 type);
 
 signals:
 

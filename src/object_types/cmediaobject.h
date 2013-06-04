@@ -36,6 +36,9 @@ class CMediaObject : public CBaseObject
     Q_OBJECT
 public:
     CMediaObject(QString id, CLayer* layer);
+
+    virtual void preload();
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 };
 
 #endif // CMEDIAOBJECT_H

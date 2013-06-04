@@ -30,6 +30,11 @@
 #include "leaf-epf-render_global.h"
 #include <QStringList>
 
+namespace pugi
+{
+    class xml_node;
+}
+
 class LEAFEPFRENDERSHARED_EXPORT CEPFDocumentReader
 {
 public:
@@ -44,11 +49,13 @@ public:
 private:
 
     CBaseObject* createObject(QString type,QString id, CLayer* layer, QString props, QString styleclasses);
+    void parseObjectNode(pugi::xml_node* node,CLayer* layer, CSection* section, CBaseObject* parent);
 
 private:
     QMap<QString,IEPFObjectFactory*> m_ObjectTypes;
     QStringList m_Platforms;
     QString m_sLanguage;
+    QMap<QString,CBaseObject*> m_objectmap;
     //QThread* m_pCreateInThread;
 };
 

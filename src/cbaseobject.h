@@ -43,7 +43,7 @@ public:
     CBaseObject(QString id, CLayer* layer);
     virtual ~CBaseObject();
 
-    void setParents();
+    void setParents(CBaseObject*);
 
     virtual void preload();
 

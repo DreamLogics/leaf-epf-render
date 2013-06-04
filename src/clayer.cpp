@@ -23,8 +23,9 @@
 #include "clayer.h"
 
 CLayer::CLayer(QString id, CSection* s) :
-    QObject((QObject*)s), m_sID(id), m_pSection(s)
+    m_sID(id), m_pSection(s)
 {
+    setParent((QObject*)s);
 }
 
 QString CLayer::id()
@@ -55,7 +56,7 @@ void CLayer::addObject(CBaseObject *obj)
     m_Objects.append(obj);
 }
 
-QRectF CLayer::boundingRect()
+QRectF CLayer::boundingRect() const
 {
     return childrenBoundingRect();
 }

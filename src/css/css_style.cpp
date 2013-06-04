@@ -29,8 +29,6 @@ using namespace CSS;
 
 Stylesheet::Stylesheet(QString css)
 {
-    m_HeightProps << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom";
-
     //parse default css first
     parse(pszDefaultCSS);
     parse(css);
@@ -46,9 +44,8 @@ Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width)
     h = target_height / h;
 
     setScale(h,w);
-    m_HeightProps << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom";
     parse(pszDefaultCSS);
-    parse(layout->getStyle());
+    parse(layout->css());
 }
 
 Stylesheet::~Stylesheet()
@@ -59,16 +56,32 @@ Stylesheet::~Stylesheet()
 
 }
 
+double Stylesheet::widthScaleFactor() const
+{
+    return m_dWSF;
+}
+
+double Stylesheet::heightScaleFactor() const
+{
+    return m_dHSF;
+}
+
+void Stylesheet::setScale(double height_factor, double width_factor)
+{
+    m_dHSF = height_factor;
+    m_dWSF = width_factor;
+}
+
 Property* Stylesheet::property(QString selector, QString key)
 {
     if (!m_selectors.contains(selector))
     {
         //create the selector and prop
         bool hp = false;
-        if (m_HeightProps.contains(key))
+        if (height_props.contains(key))
             hp = true;
         Property* prop = new Property("",this,false,hp,true);
-        Selector* s = new Selector();
+        Selector* s = new Selector(this);
         s->setProperty(key,prop);
         m_selectors.insert(selector,s);
         return prop;
@@ -181,7 +194,7 @@ Property* Stylesheet::property(CSection *s, QString key)
     return 0;
 }
 
-Selector::Selector()
+Selector::Selector(Stylesheet* s) : m_pCSS(s)
 {
 
 }
@@ -199,7 +212,7 @@ Property* Selector::property(QString key)
         return m_props[key];
 
     //create prop
-    Property* prop = new Property("",true);
+    Property* prop = new Property("",m_pCSS,true,height_props.contains(key),true);
     m_props.insert(key,prop);
     return prop;
 }
@@ -221,6 +234,11 @@ Property::Property(QString value, Stylesheet* css, bool scale, bool isHeightProp
 
 }
 
+bool Property::isNull()
+{
+    return m_bNull;
+}
+
 QString Property::toString()
 {
     if (m_bScale)
@@ -238,9 +256,9 @@ QString Property::toString()
             v *= m_pCSS->widthScaleFactor();
 
         if (n.cap(0).indexOf(".") == -1)
-            return m_sValue.mid(0,o) + QString::number((int)(v)) + m_sValue(o+n.cap(0).size());
+            return m_sValue.mid(0,o) + QString::number((int)(v)) + m_sValue.mid(o+n.cap(0).size());
 
-        return m_sValue.mid(0,o) + QString::number(v) + m_sValue(o+n.cap(0).size());
+        return m_sValue.mid(0,o) + QString::number(v) + m_sValue.mid(o+n.cap(0).size());
 
     }
     return m_sValue;
@@ -254,6 +272,27 @@ int Property::toInt()
 double Property::toDouble()
 {
     return toString().toDouble();
+}
+
+void Property::setValue(double val, bool scale)
+{
+    m_bNull = false;
+    m_bScale = scale;
+    m_sValue = QString::number(val);
+}
+
+void Property::setValue(int val, bool scale)
+{
+    m_bNull = false;
+    m_bScale = scale;
+    m_sValue = QString::number(val);
+}
+
+void Property::setValue(QString val, bool scale)
+{
+    m_bNull = false;
+    m_bScale = scale;
+    m_sValue = val;
 }
 
 void Stylesheet::parse(QString css)
@@ -288,7 +327,7 @@ void Stylesheet::parse(QString css)
         if (m_selectors.contains(ss))
             s = m_selectors[ss];
         else
-            s = new Selector();
+            s = new Selector(this);
 
         proplist = propdata.split(";");
 
@@ -403,7 +442,7 @@ void Stylesheet::parse(QString css)
                         prop = new Property(paddingprops[3],this,bScale,false);
                         s->setProperty("padding-left",prop);
                     }
-                    else if (marginprops.size() == 3)
+                    else if (paddingprops.size() == 3)
                     {
                         prop = new Property(paddingprops[0],this,bScale,true);
                         s->setProperty("padding-top",prop);
@@ -417,7 +456,7 @@ void Stylesheet::parse(QString css)
                         prop = new Property(paddingprops[1],this,bScale,false);
                         s->setProperty("padding-left",prop);
                     }
-                    else if (marginprops.size() == 2)
+                    else if (paddingprops.size() == 2)
                     {
                         prop = new Property(paddingprops[0],this,bScale,true);
                         s->setProperty("padding-top",prop);
@@ -488,7 +527,7 @@ QStringList Stylesheet::properties(CBaseObject* obj)
                     || s == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
                     || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
             {
-                props += properties(s);
+                props << properties(s);
             }
         }
     }
@@ -500,7 +539,7 @@ QStringList Stylesheet::properties(CBaseObject* obj)
                 || s == "#" + obj->layer()->id() + " #"+obj->id()
                 || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
         {
-            props += properties(selector);
+            props << properties(s);
         }
     }
 
@@ -571,4 +610,9 @@ QList<Selector*> Stylesheet::selectors(CLayer* l)
 QList<Selector*> Stylesheet::selectors(CSection* s)
 {
 
+}
+
+QStringList Selector::properties()
+{
+    return QStringList(m_props.keys());
 }

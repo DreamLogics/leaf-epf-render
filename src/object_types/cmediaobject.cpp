@@ -22,6 +22,21 @@
 
 #include "cmediaobject.h"
 
-CMediaObject::CMediaObject()
+CBaseObject* CMediaObjectFactory::create(QString id, CLayer *layer)
 {
+    return new CMediaObject(id,layer);
+}
+
+CMediaObject::CMediaObject(QString id, CLayer *layer) : CBaseObject(id,layer)
+{
+}
+
+void CMediaObject::preload()
+{
+
+}
+
+void CMediaObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+
 }

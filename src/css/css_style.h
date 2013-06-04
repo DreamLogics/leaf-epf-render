@@ -39,6 +39,8 @@ static QStringList int_props = (QStringList() << "top" << "bottom" << "left" << 
 static QStringList double_props = (QStringList() << "opacity");
 static QStringList redraw_props = (QStringList() << "height" << "width" << "background-image" << "opacity");
 
+static QStringList height_props = (QStringList() << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom" << "min-height" << "max-height");
+
 //static QStringList combined_props = (QStringList() << "margin" << "padding");
 
 enum RenderMode
@@ -80,7 +82,7 @@ private:
 class Selector
 {
 public:
-    Selector();
+    Selector(Stylesheet*);
     ~Selector();
 
     Property* property(QString key);
@@ -89,6 +91,7 @@ public:
 
 private:
     QMap<QString,Property*> m_props;
+    Stylesheet* m_pCSS;
 };
 
 class Stylesheet
@@ -115,8 +118,8 @@ public:
     QList<Selector*> selectors(CSection* s);
 
     void setScale(double height_factor, double width_factor);
-    double heightScaleFactor();
-    double widthScaleFactor();
+    double heightScaleFactor() const;
+    double widthScaleFactor() const;
 
     void addCSS(QString css);
 

@@ -7,8 +7,8 @@ class CZLib
 {
 public:
 
-    static bool compress(QByteArray* data, int *crc32);
-    static bool decompress(QByteArray* data, int inflatesize, int crc32);
+    static bool compress(QByteArray* data/*, int *crc32*/);
+    static bool decompress(QByteArray* data, int inflatesize/*, int crc32*/);
 
     class ZipCRC
     {
