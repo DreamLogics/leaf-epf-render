@@ -21,6 +21,7 @@
 ****************************************************************************/
 
 #include "clayer.h"
+#include <QPainter>
 
 CLayer::CLayer(QString id, CSection* s) :
     m_sID(id), m_pSection(s)
@@ -58,10 +59,11 @@ void CLayer::addObject(CBaseObject *obj)
 
 QRectF CLayer::boundingRect() const
 {
-    return childrenBoundingRect();
+    //return childrenBoundingRect();
+    return QRectF();
 }
 
 void CLayer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-
+    painter->fillRect(0,0,100,100,QColor("red"));
 }

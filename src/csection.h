@@ -28,10 +28,30 @@
 #include <QString>
 #include <QMap>
 #include <QImage>
+#include <QGraphicsItem>
 
 class CDocument;
 class CLayer;
 class CBaseObject;
+
+class CDocumentItem : public QGraphicsItem
+{
+public:
+    CDocumentItem();
+
+    void setSize(int height,int width);
+    void setHeight(int height);
+    void increaseHeight(int delta);
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual QRectF boundingRect() const;
+
+protected:
+
+    //virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value);
+
+private:
+    QRectF m_qrRect;
+};
 
 class CSection : /*public QObject, */public QGraphicsScene
 {
@@ -59,6 +79,9 @@ public:
 
     QImage& rendered();
 
+    void layout(int height, int width);
+    CDocumentItem* documentItem();
+
 public slots:
 
     QObjectList layers();
@@ -78,6 +101,7 @@ private:
 
     CDocument* m_pDoc;
     QImage m_imgRendered;
+    CDocumentItem* m_pDocumentItem;
     
 };
 

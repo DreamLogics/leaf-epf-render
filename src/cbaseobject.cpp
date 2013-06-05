@@ -25,6 +25,7 @@
 #include "clayer.h"
 #include "csection.h"
 #include "cdocument.h"
+#include "cepfview.h"
 
 CBaseObject::CBaseObject(QString id, CLayer* layer) :
     m_sID(id), m_pLayer(layer)
@@ -54,7 +55,7 @@ void CBaseObject::setParents(CBaseObject* obj)
         setParentItem((QGraphicsItem*)m_pLayer);
     }*/
     setParent((QObject*)obj);
-    setParentItem((QGraphicsItem*)obj);
+    //setParentItem((QGraphicsItem*)obj);
 }
 
 CLayer* CBaseObject::layer()

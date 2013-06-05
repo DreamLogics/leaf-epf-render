@@ -23,12 +23,52 @@
 #include "csection.h"
 #include "clayer.h"
 #include <QPainter>
+#include "cdocument.h"
+#include "cepfview.h"
+#include "cbaseobject.h"
+#include "css/css_style.h"
+
+CDocumentItem::CDocumentItem()
+{
+}
+
+void CDocumentItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+
+}
+
+QRectF CDocumentItem::boundingRect() const
+{
+    return m_qrRect;
+}
+
+void CDocumentItem::setSize(int height, int width)
+{
+    prepareGeometryChange();
+    m_qrRect.setHeight(height);
+    m_qrRect.setWidth(width);
+}
+
+void CDocumentItem::setHeight(int height)
+{
+    prepareGeometryChange();
+    m_qrRect.setHeight(height);
+}
+
+void CDocumentItem::increaseHeight(int delta)
+{
+    prepareGeometryChange();
+    m_qrRect.setHeight(m_qrRect.height()+delta);
+}
+
 
 CSection::CSection(QString id, CDocument* doc,bool hidden) : /*QObject(doc), */m_sID(id), m_pDoc(doc), m_bHidden(hidden)
 {
     setParent((QObject*)doc);
 
     connect(this,SIGNAL(changed(QList<QRectF>)),this,SLOT(updateRendered(QList<QRectF>)));
+
+    m_pDocumentItem = new CDocumentItem()
 }
 
 CSection::~CSection()
@@ -147,4 +187,56 @@ void CSection::updateRendered(const QList<QRectF> &region)
     }
     p.end();
 
+}
+
+void CSection::layout(int height, int width)
+{
+    m_pDocumentItem->setSize(height,width);
+    CSS::Stylesheet* css = document()->stylesheet();
+
+    int docheight=0;
+
+    int i,n,h;
+    CLayer* l;
+    CBaseObject* obj;
+    for (i=0;i<layerCount();i++)
+    {
+        l = layer(i);
+        h=0;
+        for (n=0;n<l->objectCount();n++) //first layout all fixed objects which are relative to the document
+        {
+            obj = l->object(n);
+            if (css->property(obj,"position")->toString() == "fixed" && !dynamic_cast<CDocumentItem*>(obj->relative()))
+            {
+                obj->layout();
+                h+=obj->boundingRect().height();
+            }
+        }
+        if (h>docheight)
+            docheight = h;
+    }
+
+    m_pDocumentItem->setHeight(docheight); //could children bounding work too?
+
+    for (i=0;i<layerCount();i++)
+    {
+        l = layer(i);
+        h=0;
+        for (n=0;n<l->objectCount();n++) //now layout all objects relative to the document but not fixed
+        {
+            obj = l->object(n);
+            if (css->property(obj,"position")->toString() != "fixed" && dynamic_cast<CDocumentItem*>(obj->relative()))
+            {
+                obj->layout();
+                h+=obj->boundingRect().height();
+            }
+        }
+        if (h>docheight)
+            docheight = h;
+    }
+}
+
+CDocumentItem* CSection::documentItem()
+{
+    return m_pDocumentItem;
 }

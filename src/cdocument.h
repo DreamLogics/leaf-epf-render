@@ -71,7 +71,6 @@ public:
     void addLayout(CLayout* layout);
 
     CLayout* layoutByID(QString id, bool bMakeCurrent = false);
-    CLayout* layout(int height, int width, bool bMakeCurrent = false);
     CLayout* currentLayout();
 
     CAnimation* animation(QString id);
@@ -112,7 +111,8 @@ public slots:
 
     void setActiveOverlay(QString overlay_id);
 
-    void load();
+    void load(int height, int width);
+    void layout(int height, int width);
 
 private:
     QList<CSection*> m_Sections;

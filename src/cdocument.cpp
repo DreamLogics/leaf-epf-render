@@ -39,6 +39,7 @@ CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(plat
     m_pCurrentLayout = 0;
     m_pRenderView = 0;
     m_pActiveOverlay = 0;
+    m_pStylesheet = 0;
 }
 
 CDocument::~CDocument()
@@ -138,7 +139,7 @@ CLayout* CDocument::layoutByID(QString id,bool b)
     return 0;
 }
 
-CLayout* CDocument::layout(int height, int width,bool bMakeCurrent)
+void CDocument::layout(int height, int width)
 {
     int mm = height * width;
     int d,dc,r,match,i;
@@ -240,15 +241,21 @@ CLayout* CDocument::layout(int height, int width,bool bMakeCurrent)
         }
     }
 
-    if (bMakeCurrent)
+
+    m_pCurrentLayout = m_Layouts[match];
+    if (m_pStylesheet)
+        delete m_pStylesheet;
+    m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,height,width);
+
+
+    CSection* s;
+    for (i=0;i<sectionCount();i++)
     {
-        m_pCurrentLayout = m_Layouts[match];
-        if (m_pStylesheet)
-            delete m_pStylesheet;
-        m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,height,width);
+        s = section(i);
+        s->layout(height,width);
     }
 
-    return m_Layouts[match];
+    return;
 }
 
 void CDocument::addLayout(CLayout *layout)
@@ -409,12 +416,13 @@ void CDocument::setActiveOverlay(QString overlay_id)
     setActiveOverlay(overlayByID(overlay_id));
 }
 
-void CDocument::load()
+void CDocument::load(int height, int width)
 {
     CSection* s;
     CLayer* layer;
+    int i;
 
-    for (int i=0;i<sectionCount();i++)
+    for (i=0;i<sectionCount();i++)
     {
         s = section(i);
 
@@ -426,6 +434,9 @@ void CDocument::load()
                 layer->object(l)->preload();
         }
     }
+
+    layout(height,width);
+
     emit finishedLoading();
 }
 

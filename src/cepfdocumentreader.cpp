@@ -82,6 +82,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
     QString resname;
     QString extrafield;
 
+
+
     if (f.open(QIODevice::ReadOnly))
     {
         ds.setDevice(&f);
@@ -185,7 +187,21 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             return 0;
         }
 
-        pugi::xml_node props = containerxml.child("OEPF").child("info");
+        pugi::xml_node modules = containerxml.child("EPF").child("modules");
+
+        for (pugi::xml_node module = modules.child("module"); module; module = module.next_sibling("module"))
+        {
+            if (module.attribute("required").as_bool() && !m_Modules.contains(module.attribute("id").value()))
+            {
+                (*error) = "The module \""+QString(module.attribute("id").value())+"\" is required but not available.";
+                delete document;
+                return 0;
+            }
+        }
+
+
+
+        pugi::xml_node props = containerxml.child("EPF").child("info");
 
         for (pugi::xml_node prop = props.child("prop"); prop; prop = prop.next_sibling("prop"))
         {
@@ -193,14 +209,14 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             qDebug() << "property added: "<<prop.attribute("key").value() << prop.child_value();
         }
 
-        pugi::xml_node fonts = containerxml.child("OEPF").child("fonts");
+        pugi::xml_node fonts = containerxml.child("EPF").child("fonts");
         for (pugi::xml_node font = fonts.child("font"); font; font = font.next_sibling("font"))
         {
             if (QFontDatabase::addApplicationFontFromData(document->resource(font.attribute("src").value())) == -1)
                 qDebug() << "Could not load font:" << font.attribute("src").value();
         }
 
-        pugi::xml_node layouts = containerxml.child("OEPF").child("layouts");
+        pugi::xml_node layouts = containerxml.child("EPF").child("layouts");
         //QRect lrect;
         //int sz;
         QString style;
@@ -226,8 +242,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
         QMap<QString,CSection*> sectionmap;
 
-        pugi::xml_node sections = containerxml.child("OEPF").child("sections");
-        pugi::xml_node overlays = containerxml.child("OEPF").child("overlays");
+        pugi::xml_node sections = containerxml.child("EPF").child("sections");
+        pugi::xml_node overlays = containerxml.child("EPF").child("overlays");
         pugi::xml_node object;
         pugi::xml_node layer;
 
@@ -254,23 +270,6 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
                 l = new CLayer(layer.attribute("id").value(),o);
 
-                //objects maken
-                for (object = layer.child("object"); object; object = object.next_sibling("object"))
-                {
-                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
-                    m_objectmap.insert(QString(overlay.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
-
-                    obj->setParent((QObject*)l);
-                    obj->setParentItem((QGraphicsItem*)l);
-
-                    qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
-
-                    //s->addObject(obj,object.attribute("id").value(),object.attribute("layer").as_int());
-                    l->addObject(obj);
-
-                    parseObjectNode(&object,l,o,obj);
-                }
-
                 if (layer.attribute("active").as_int() == 1)
                     bActive = true;
                 else
@@ -278,11 +277,31 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
                 o->addLayer(l,bActive);
 
+                //objects maken
+                for (object = layer.child("object"); object; object = object.next_sibling("object"))
+                {
+                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
+                    m_objectmap.insert(QString(overlay.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
+
+                    obj->setParent((QObject*)l);
+                    //obj->setParentItem((QGraphicsItem*)l);
+
+                    qDebug() << "object made of type("<< object.attribute("type").value() <<"): "<<object.attribute("id").value();
+
+                    //s->addObject(obj,object.attribute("id").value(),object.attribute("layer").as_int());
+                    l->addObject(obj);
+
+
+                    parseObjectNode(&object,l,o,obj);
+                }
+
             }
 
 
             document->addOverlay(o);
         }
+
+
 
         //sections verwerken
 
@@ -297,6 +316,13 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
                 l = new CLayer(layer.attribute("id").value(),s);
 
+                if (layer.attribute("active").as_int() == 1)
+                    bActive = true;
+                else
+                    bActive = false;
+
+                s->addLayer(l,bActive);
+
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
                 {
@@ -304,7 +330,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     m_objectmap.insert(QString(section.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
                     obj->setParent((QObject*)l);
-                    obj->setParentItem((QGraphicsItem*)l);
+                    //obj->setParentItem((QGraphicsItem*)l);
 
                     qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
 
@@ -314,25 +340,18 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     parseObjectNode(&object,l,o,obj);
                 }
 
-                if (layer.attribute("active").as_int() == 1)
-                    bActive = true;
-                else
-                    bActive = false;
-
-                s->addLayer(l,bActive);
-
             }
 
             document->addSection(s);
         }
 
 
-
+        qDebug() << "ani";
 
         QStringList anims;
 
         //animations
-        pugi::xml_node animations = containerxml.child("OEPF").child("animations");
+        pugi::xml_node animations = containerxml.child("EPF").child("animations");
 
         for (pugi::xml_node animation = animations.child("animation"); animation; animation = animation.next_sibling("animation"))
         {
@@ -340,8 +359,10 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             document->addAnimation(animation.attribute("id").value(),animation.attribute("frames").as_int(),animation.attribute("fps").as_int(),animation.attribute("src").value());
         }
 
+        qDebug() << "con";
+
         //connections
-        pugi::xml_node connections = containerxml.child("OEPF").child("connections");
+        pugi::xml_node connections = containerxml.child("EPF").child("connections");
         QString func,param;
         //QStringList parameters;
         QRegExp funcreg("([^\\(]+)\\(([^\\)]*)\\)");
@@ -382,8 +403,14 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             }
         }
 
+        qDebug() << "moving to thread";
+        //(*error) = "test";
+
         if (create_in_thread)
+        {
             document->moveToThread(create_in_thread);
+            qDebug() << "moved";
+        }
 
 
         return document;
@@ -448,16 +475,21 @@ void CEPFDocumentReader::parseObjectNode(pugi::xml_node *node, CLayer *layer, CS
 
     for (object = node->child("object"); object; object = object.next_sibling("object"))
     {
-        obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
+        obj = createObject(object.attribute("type").value(),object.attribute("id").value(),layer,object.attribute("properties").value(),object.attribute("styles").value());
         m_objectmap.insert(section->id()+":"+QString(object.attribute("id").value()),obj);
 
-        obj->setParents(obj);
+        obj->setParents(parent);
 
         qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
 
         //s->addObject(obj,object.attribute("id").value(),object.attribute("layer").as_int());
-        l->addObject(obj);
+        layer->addObject(obj);
 
         parseObjectNode(&object,layer,section,obj);
     }
+}
+
+void CEPFDocumentReader::addModule(QString module)
+{
+    m_Modules.append(module);
 }

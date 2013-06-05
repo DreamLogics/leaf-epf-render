@@ -53,9 +53,11 @@ public slots:
 
     void ready();
 
+    void updateDot();
+
 signals:
 
-    void loadDocument();
+    void loadDocument(int height, int width);
 
 protected:
 
@@ -75,6 +77,8 @@ private:
 
     int m_iCurrentSection;
     int m_iTOCSection;
+
+    int m_iRenderDot;
 
     QGraphicsScene* m_pDocScene;
 };
