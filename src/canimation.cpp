@@ -373,14 +373,15 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
             css = "#" + obj->id() + "{";
             css += obj->cssOverrides();
             css += "}";
-            CSS::Stylesheet sp(lay,m_pDoc->renderview()->height(),m_pDoc->renderview()->width());
-            sp.addCSS(css);
+            //CSS::Stylesheet sp(lay,m_pDoc->renderview()->height(),m_pDoc->renderview()->width());
+            CSS::Stylesheet* sp = m_pDoc->stylesheet();
+            sp->addCSS(css);
             //sp.setOverrides(obj->cssOverrides());
-            QStringList sl = sp.properties(obj);
+            QStringList sl = sp->properties(obj);
 
             for (int ii=0;ii<sl.size();ii++)
             {
-                startpropmap.insert(sl[ii],sp.property(obj,sl[ii])->toString());
+                startpropmap.insert(sl[ii],sp->property(obj,sl[ii])->toString());
                 //qDebug() << sl[ii] << sp.property(sl[ii]);
             }
             objpropmapstart.insert(obj,startpropmap);

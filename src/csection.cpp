@@ -68,7 +68,8 @@ CSection::CSection(QString id, CDocument* doc,bool hidden) : /*QObject(doc), */m
 
     connect(this,SIGNAL(changed(QList<QRectF>)),this,SLOT(updateRendered(QList<QRectF>)));
 
-    m_pDocumentItem = new CDocumentItem()
+    m_pDocumentItem = new CDocumentItem();
+    m_pDocumentItem->setParent((QObject*)this);
 }
 
 CSection::~CSection()
@@ -199,40 +200,35 @@ void CSection::layout(int height, int width)
     int i,n,h;
     CLayer* l;
     CBaseObject* obj;
-    for (i=0;i<layerCount();i++)
+    for (i=0;i<layerCount();i++) //first layout all fixed objects which are relative to the document
     {
         l = layer(i);
-        h=0;
-        for (n=0;n<l->objectCount();n++) //first layout all fixed objects which are relative to the document
+        obj=0;
+        for (n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
             if (css->property(obj,"position")->toString() == "fixed" && !dynamic_cast<CDocumentItem*>(obj->relative()))
-            {
                 obj->layout();
-                h+=obj->boundingRect().height();
-            }
         }
-        if (h>docheight)
-            docheight = h;
+        if (obj)
+        {
+            h=obj->boundingRect().bottom() + obj->marginBottom();
+            if (h>docheight)
+                docheight = h;
+        }
     }
 
-    m_pDocumentItem->setHeight(docheight); //could children bounding work too?
+    m_pDocumentItem->setHeight(docheight);
 
-    for (i=0;i<layerCount();i++)
+    for (i=0;i<layerCount();i++) //now layout all objects relative to the document but not fixed
     {
         l = layer(i);
-        h=0;
-        for (n=0;n<l->objectCount();n++) //now layout all objects relative to the document but not fixed
+        for (n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
             if (css->property(obj,"position")->toString() != "fixed" && dynamic_cast<CDocumentItem*>(obj->relative()))
-            {
                 obj->layout();
-                h+=obj->boundingRect().height();
-            }
         }
-        if (h>docheight)
-            docheight = h;
     }
 }
 

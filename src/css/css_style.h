@@ -29,6 +29,7 @@
 #include "clayer.h"
 #include "csection.h"
 #include "clayout.h"
+#include "cdocument.h"
 
 namespace CSS
 {
@@ -77,6 +78,9 @@ private:
     bool m_bNull;
     bool m_bHeightProp;
     Stylesheet* m_pCSS;
+    bool m_bReadOnly;
+
+    friend class Stylesheet;
 };
 
 class Selector
@@ -92,13 +96,14 @@ public:
 private:
     QMap<QString,Property*> m_props;
     Stylesheet* m_pCSS;
+
 };
 
 class Stylesheet
 {
 public:
-    Stylesheet(QString css);
-    Stylesheet(CLayout* layout, int target_height, int target_width);
+    Stylesheet(QString css, CDocument* doc);
+    Stylesheet(CLayout* layout, int target_height, int target_width, CDocument* doc);
     ~Stylesheet();
 
     Property* property(QString selector, QString key);
@@ -132,6 +137,8 @@ private:
     double m_dHSF;
     double m_dWSF;
     QStringList m_HeightProps;
+    CDocument* m_pDocument;
+
 };
 
 }

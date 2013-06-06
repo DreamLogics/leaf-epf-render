@@ -33,6 +33,7 @@ public:
     COverlay(QString id,CDocument* doc,bool visible);
     virtual ~COverlay();
 
+    virtual void layout(int height, int width);
 
 
 public slots:

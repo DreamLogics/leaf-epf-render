@@ -23,18 +23,20 @@
 #include "css_style.h"
 #include <QRegExp>
 #include <QStringList>
+#include "coverlay.h"
+#include "csection.h"
 #include "css_default.h"
 
 using namespace CSS;
 
-Stylesheet::Stylesheet(QString css)
+Stylesheet::Stylesheet(QString css,CDocument* doc) : m_pDocument(doc)
 {
     //parse default css first
     parse(pszDefaultCSS);
     parse(css);
 }
 
-Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width)
+Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width, CDocument* doc) : m_pDocument(doc)
 {
     double w,h;
     w = layout->width();
@@ -97,7 +99,7 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     QStringList classes = obj->styleClasses();
     QMap<QString,Selector*>::Iterator it;
 
-    //cascade from style class > object > layer > section > document
+    //cascade from style class > object
 
     //class selectors
 
@@ -116,82 +118,32 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     }
 
     if (prop)
+    {
+        //indirect selector, make read only
+        prop->m_bReadOnly = true;
         return prop;
+    }
 
     //object id selectors
-
-    for (it=m_selectors.begin();it != m_selectors.end();it++)
+    it=m_selectors.find("#"+obj->section()->id()+"::"+obj->id());
+    if (it != m_selectors.end())
     {
-        selector = it.key();
-        if (selector == "#"+obj->id()
-                || selector == "#" + obj->layer()->id() + " #"+obj->id()
-                || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
-        {
-            prop = property(selector,key);
-        }
+        prop->m_bReadOnly = false;
+        return prop;
     }
 
-    if (prop)
-        return prop;
 
-    //layer id selectors
-
-    for (it=m_selectors.begin();it != m_selectors.end();it++)
-    {
-        selector = it.key();
-        if ( selector == "#" + obj->layer()->id()
-                || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() )
-        {
-            prop = property(selector,key);
-        }
-    }
-
-    if (prop)
-        return prop;
-
-    //section id selector
-
-    for (it=m_selectors.begin();it != m_selectors.end();it++)
-    {
-        selector = it.key();
-        if ( selector == "#" + obj->layer()->section()->id() )
-        {
-            prop = property(selector,key);
-        }
-    }
-
-    if (prop)
-        return prop;
-
-    //document selector
-
-    for (it=m_selectors.begin();it != m_selectors.end();it++)
-    {
-        selector = it.key();
-        if ( selector == "document" )
-        {
-            prop = property(selector,key);
-        }
-    }
-
-    if (prop)
-        return prop;
-
-    //create the property
-    prop = property("#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id(),key);
-
-
-    return prop;
+    return property("#"+obj->section()->id()+"::"+obj->id(),key);
 }
 
 Property* Stylesheet::property(CLayer *l, QString key)
 {
-    return 0;
+    return property("#"+l->section()->id()+":"+l->id(),key);
 }
 
 Property* Stylesheet::property(CSection *s, QString key)
 {
-    return 0;
+    return property("#"+s->id(),key);
 }
 
 Selector::Selector(Stylesheet* s) : m_pCSS(s)
@@ -231,7 +183,7 @@ void Selector::setProperty(QString key, Property *prop)
 
 Property::Property(QString value, Stylesheet* css, bool scale, bool isHeightProp, bool null) : m_bNull(null), m_bScale(scale), m_sValue(value), m_pCSS(css), m_bHeightProp(isHeightProp)
 {
-
+    m_bReadOnly = false;
 }
 
 bool Property::isNull()
@@ -276,6 +228,8 @@ double Property::toDouble()
 
 void Property::setValue(double val, bool scale)
 {
+    if (m_bReadOnly)
+        return;
     m_bNull = false;
     m_bScale = scale;
     m_sValue = QString::number(val);
@@ -495,6 +449,235 @@ void Stylesheet::parse(QString css)
 
         offset += propgroupfinder.cap(0).size();
     }
+
+    //propagate properties
+
+    CLayer* l;
+    CBaseObject* obj;
+    Selector* base;
+    QStringList baseprops,oriprops;
+
+    //overlays
+    COverlay* o;
+
+    for (int i=0;i<m_pDocument->overlayCount();i++)
+    {
+        o=m_pDocument->overlay(i);
+
+        s = selector("overlay");
+
+        //propagate from base section props to overlay
+        base = selector("section");
+        baseprops = base->properties();
+
+        for (int n=0;n<baseprops.size();n++)
+        {
+            if (s->property(baseprops[n])->isNull())
+                s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+        }
+
+        //propagate from base overlay props for overlay specific props
+        s = selector("#"+o->id());
+        base = selector("overlay");
+        baseprops = base->properties();
+
+        for (int n=0;n<baseprops.size();n++)
+        {
+            if (s->property(baseprops[n])->isNull())
+                s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+        }
+
+
+        for (int n=0;n<o->layerCount();n++)
+        {
+            l=o->layer(n);
+
+            s = selector("#"+o->id()+" layer");
+
+            //first propagate from the layer base
+            base = selector("layer");
+            baseprops = base->properties();
+
+            for (int n=0;n<baseprops.size();n++)
+            {
+                if (s->property(baseprops[n])->isNull())
+                    s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+            }
+
+            //propagate from layer base per section
+            s = selector("#"+o->id()+":"+l->id());
+            base = selector("#"+o->id()+" layer");
+            baseprops = base->properties();
+
+            for (int n=0;n<baseprops.size();n++)
+            {
+                if (s->property(baseprops[n])->isNull())
+                    s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+            }
+
+            for (int j=0;j<l->objectCount();j++)
+            {
+                obj=l->object(j);
+
+                // propagate the section specific object base
+                s = selector("#"+o->id()+" object");
+                base = selector("object");
+                baseprops = base->properties();
+
+                for (int n=0;n<baseprops.size();n++)
+                {
+                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                }
+
+                s = selector("#"+o->id()+"::"+obj->id());
+                oriprops = s->properties();
+
+                // also propagate from overlay > object
+                base = selector("overlay object");
+                baseprops = base->properties();
+
+                for (int n=0;n<baseprops.size();n++)
+                {
+                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]) || baseprops[n] == "position")
+                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                }
+
+                // now propagate from the layer base
+                base = selector("#"+o->id()+" layer");
+                baseprops = base->properties();
+
+                for (int n=0;n<baseprops.size();n++)
+                {
+                    if ((s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n])) && baseprops[n] != "position")
+                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                }
+
+                // and propagate from the section specific object base
+                base = selector("#"+o->id()+" object");
+                baseprops = base->properties();
+
+                for (int n=0;n<baseprops.size();n++)
+                {
+                    if ((s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n])) && baseprops[n] != "position")
+                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                }
+
+            }
+        }
+    }
+
+
+    //sections
+    CSection* cs;
+
+    for (int i=0;i<m_pDocument->sectionCount();i++)
+    {
+        cs=m_pDocument->section(i);
+
+        s = selector("overlay");
+
+        //propagate from base section props to overlay
+        base = selector("section");
+        baseprops = base->properties();
+
+        for (int n=0;n<baseprops.size();n++)
+        {
+            if (s->property(baseprops[n])->isNull())
+                s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+        }
+
+        //propagate from base overlay props for overlay specific props
+        s = selector("#"+cs->id());
+        base = selector("overlay");
+        baseprops = base->properties();
+
+        for (int n=0;n<baseprops.size();n++)
+        {
+            if (s->property(baseprops[n])->isNull())
+                s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+        }
+
+
+        for (int n=0;n<cs->layerCount();n++)
+        {
+            l=cs->layer(n);
+
+            s = selector("#"+cs->id()+" layer");
+
+            //first propagate from the layer base
+            base = selector("layer");
+            baseprops = base->properties();
+
+            for (int n=0;n<baseprops.size();n++)
+            {
+                if (s->property(baseprops[n])->isNull())
+                    s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+            }
+
+            //propagate from layer base per section
+            s = selector("#"+cs->id()+":"+l->id());
+            base = selector("#"+cs->id()+" layer");
+            baseprops = base->properties();
+
+            for (int n=0;n<baseprops.size();n++)
+            {
+                if (s->property(baseprops[n])->isNull())
+                    s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+            }
+
+            for (int j=0;j<l->objectCount();j++)
+            {
+                obj=l->object(j);
+
+                // propagate the section specific object base
+                s = selector("#"+cs->id()+" object");
+                base = selector("object");
+                baseprops = base->properties();
+
+                for (int n=0;n<baseprops.size();n++)
+                {
+                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                }
+
+                s = selector("#"+cs->id()+"::"+obj->id());
+                oriprops = s->properties();
+
+                // also propagate from section object
+                base = selector("section object");
+                baseprops = base->properties();
+
+                for (int n=0;n<baseprops.size();n++)
+                {
+                    if (s->property(baseprops[n])->isNull())
+                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                }
+
+                // now propagate from the layer base
+                base = selector("#"+cs->id()+" layer");
+                baseprops = base->properties();
+
+                for (int n=0;n<baseprops.size();n++)
+                {
+                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                }
+
+                // and propagate from the section specific object base
+                base = selector("#"+cs->id()+" object");
+                baseprops = base->properties();
+
+                for (int n=0;n<baseprops.size();n++)
+                {
+                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                }
+
+            }
+        }
+    }
+
 }
 
 void Stylesheet::addCSS(QString css)

@@ -169,6 +169,16 @@ void CBaseObject::layout()
         m_bNeedsRedraw = true;
     }*/
 
+    QObjectList clist = children();
+    CBaseObject* cobj;
+    for (int i=0;i<clist.size();i++)
+    {
+        cobj = dynamic_cast<CBaseObject*>(clist[i]);
+        if (cobj)
+            cobj->layout();
+    }
+
+
 }
 
 CBaseObject* CBaseObject::relative()

@@ -28,13 +28,13 @@
 #include <QString>
 #include <QMap>
 #include <QImage>
-#include <QGraphicsItem>
+#include <QGraphicsObject>
 
 class CDocument;
 class CLayer;
 class CBaseObject;
 
-class CDocumentItem : public QGraphicsItem
+class CDocumentItem : public QGraphicsObject
 {
 public:
     CDocumentItem();
@@ -63,7 +63,7 @@ public:
 
     virtual int objectCount();
 
-    void addLayer(CLayer*,bool active);
+    virtual void addLayer(CLayer*,bool active);
 
     virtual int layerCount();
     virtual CLayer* layer(int index);
@@ -79,7 +79,7 @@ public:
 
     QImage& rendered();
 
-    void layout(int height, int width);
+    virtual void layout(int height, int width);
     CDocumentItem* documentItem();
 
 public slots:

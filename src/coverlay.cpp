@@ -21,6 +21,7 @@
 ****************************************************************************/
 
 #include "coverlay.h"
+#include "css/css_style.h"
 
 COverlay::COverlay(QString id,CDocument* doc,bool visible) : CSection(id,doc,true), m_bVisible(visible)
 {
@@ -40,4 +41,28 @@ bool COverlay::isVisible()
 void COverlay::setVisibility(bool b)
 {
     m_bVisible = b;
+}
+
+void COverlay::layout(int height, int width)
+{
+    documentItem()->setSize(height,width);
+    CSS::Stylesheet* css = document()->stylesheet();
+
+    int i,n;
+    CLayer* l;
+    CBaseObject* obj;
+    for (i=0;i<layerCount();i++) //layout all objects which are relative to the document and set their position to fixed
+    {
+        l = layer(i);
+        obj=0;
+        for (n=0;n<l->objectCount();n++)
+        {
+            obj = l->object(n);
+            if (!dynamic_cast<CDocumentItem*>(obj->relative()))
+            {
+                css->property(obj,"position")->setValue("fixed");
+                obj->layout();
+            }
+        }
+    }
 }

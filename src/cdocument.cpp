@@ -131,7 +131,7 @@ CLayout* CDocument::layoutByID(QString id,bool b)
                 m_pCurrentLayout = m_Layouts[i];
                 if (m_pStylesheet)
                     delete m_pStylesheet;
-                m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,m_pRenderView->height(),m_pRenderView->width());
+                m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,m_pRenderView->height(),m_pRenderView->width(),this);
             }
             return m_Layouts[i];
         }
@@ -208,7 +208,7 @@ void CDocument::layout(int height, int width)
     }
 
     if (dc == -1)
-        return 0;
+        return;
 
     //we hebben er 1 gevonden
     //lijst maken met alle layouts die een gelijke oppervlakte hebben
@@ -245,7 +245,7 @@ void CDocument::layout(int height, int width)
     m_pCurrentLayout = m_Layouts[match];
     if (m_pStylesheet)
         delete m_pStylesheet;
-    m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,height,width);
+    m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,height,width,this);
 
 
     CSection* s;
