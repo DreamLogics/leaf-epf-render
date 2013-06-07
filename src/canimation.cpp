@@ -377,7 +377,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
             CSS::Stylesheet* sp = m_pDoc->stylesheet();
             sp->addCSS(css);
             //sp.setOverrides(obj->cssOverrides());
-            QStringList sl = sp->properties(obj);
+            QStringList sl = sp->selector(obj)->properties();
 
             for (int ii=0;ii<sl.size();ii++)
             {

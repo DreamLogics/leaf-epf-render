@@ -111,16 +111,8 @@ public:
     Property* property(CLayer* l, QString key);
     Property* property(CSection* s, QString key);
 
-    QStringList properties(QString selector);
-    QStringList properties(CBaseObject* obj);
-    QStringList properties(CLayer* l);
-    QStringList properties(CSection* s);
-
     Selector* selector(QString selector);
-
-    QList<Selector*> selectors(CBaseObject* obj);
-    QList<Selector*> selectors(CLayer* l);
-    QList<Selector*> selectors(CSection* s);
+    Selector* selector(CBaseObject* obj);
 
     void setScale(double height_factor, double width_factor);
     double heightScaleFactor() const;

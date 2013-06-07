@@ -283,9 +283,10 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
                     m_objectmap.insert(QString(overlay.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
-                    //obj->setParent((QObject*)l);
-                    //obj->setParentItem((QGraphicsItem*)l);
-                    obj->setParent((QObject*)o->documentItem());
+                    obj->setParent(/*(QObject*)*/l);
+                    obj->setParentItem(/*(QGraphicsItem*)*/l);
+                    //obj->setParent((QObject*)o->documentItem());
+                    //obj->setParentItem((QGraphicsItem*)o->documentItem());
 
                     qDebug() << "object made of type("<< object.attribute("type").value() <<"): "<<object.attribute("id").value();
 
@@ -330,9 +331,9 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
                     m_objectmap.insert(QString(section.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
-                    //obj->setParent((QObject*)l);
-                    //obj->setParentItem((QGraphicsItem*)l);
-                    obj->setParent((QObject*)s->documentItem());
+                    obj->setParent(l);
+                    obj->setParentItem(l);
+                    //obj->setParent((QObject*)s->documentItem());
 
 
                     qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();

@@ -26,6 +26,7 @@
 #include "coverlay.h"
 #include "csection.h"
 #include "css_default.h"
+#include <QDebug>
 
 using namespace CSS;
 
@@ -105,7 +106,12 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
 
     for (int i=0;i<classes.size();i++)
     {
-        for (it=m_selectors.begin();it != m_selectors.end();it++)
+        it=m_selectors.find("#"+obj->section()->id()+"::"+obj->id()+"."+classes[i]);
+        if (it != m_selectors.end())
+        {
+            prop = property(it.key(),key);
+        }
+        /*for (it=m_selectors.begin();it != m_selectors.end();it++)
         {
             selector = it.key();
             if (selector == "#"+obj->id()+"."+classes[i] || selector == classes[i]
@@ -114,7 +120,7 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
             {
                 prop = property(selector,key);
             }
-        }
+        }*/
     }
 
     if (prop)
@@ -128,6 +134,7 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     it=m_selectors.find("#"+obj->section()->id()+"::"+obj->id());
     if (it != m_selectors.end())
     {
+        prop = property(it.key(),key);
         prop->m_bReadOnly = false;
         return prop;
     }
@@ -218,12 +225,21 @@ QString Property::toString()
 
 int Property::toInt()
 {
-    return toString().toInt();
+    QString val = toString();
+    QRegExp nr("([0-9]+)");
+    if (nr.indexIn(val) == -1)
+        return 0;
+
+    return nr.cap(1).toInt();
 }
 
 double Property::toDouble()
 {
-    return toString().toDouble();
+    QString val = toString();
+    QRegExp nr("([0-9\.]+)");
+    if (nr.indexIn(val) == -1)
+        return 0;
+    return nr.cap(1).toDouble();
 }
 
 void Property::setValue(double val, bool scale)
@@ -278,10 +294,15 @@ void Stylesheet::parse(QString css)
         ss = propgroupfinder.cap(1).replace(outerspaces,"");
         propdata = propgroupfinder.cap(2);
 
+        qDebug() << "selector found: " <<ss;
+
         if (m_selectors.contains(ss))
             s = m_selectors[ss];
         else
+        {
             s = new Selector(this);
+            m_selectors.insert(ss,s);
+        }
 
         proplist = propdata.split(";");
 
@@ -292,6 +313,9 @@ void Stylesheet::parse(QString css)
             {
                 propkey = proper[0].replace(outerspaces,"");
                 propvalue = proper[1].replace(outerspaces,"");
+
+                qDebug() << "prop found: " << propkey << propvalue;
+
                 f = propvalue.indexOf("!");
                 if (f != -1)
                 {
@@ -574,6 +598,7 @@ void Stylesheet::parse(QString css)
     for (int i=0;i<m_pDocument->sectionCount();i++)
     {
         cs=m_pDocument->section(i);
+        qDebug() << "propagating section" << cs->id();
 
         s = selector("overlay");
 
@@ -602,6 +627,7 @@ void Stylesheet::parse(QString css)
         for (int n=0;n<cs->layerCount();n++)
         {
             l=cs->layer(n);
+            qDebug() << "propagating layer" << l->id();
 
             s = selector("#"+cs->id()+" layer");
 
@@ -629,14 +655,18 @@ void Stylesheet::parse(QString css)
             for (int j=0;j<l->objectCount();j++)
             {
                 obj=l->object(j);
+                qDebug() << "propagating object" << obj->id();
 
                 // propagate the section specific object base
                 s = selector("#"+cs->id()+" object");
                 base = selector("object");
                 baseprops = base->properties();
 
+                qDebug() << "propagating obj baseprops size" << baseprops.size();
+
                 for (int n=0;n<baseprops.size();n++)
                 {
+                    qDebug() << "#"+cs->id()+" object" << baseprops[n];
                     if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
                 }
@@ -670,6 +700,7 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
+                    qDebug() << "#"+cs->id()+"::"+obj->id() << baseprops[n];
                     if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
                 }
@@ -686,113 +717,23 @@ void Stylesheet::addCSS(QString css)
     parse(css);
 }
 
-QStringList Stylesheet::properties(QString selector)
-{
-    if (!m_selectors.contains(selector))
-        return QStringList();
-
-    return m_selectors[selector]->properties();
-}
-
-QStringList Stylesheet::properties(CBaseObject* obj)
-{
-    QStringList props;
-    QString s;
-    QStringList classes = obj->styleClasses();
-    QMap<QString,Selector*>::Iterator it;
-
-    for (int i=0;i<classes.size();i++)
-    {
-        for (it=m_selectors.begin();it != m_selectors.end();it++)
-        {
-            s = it.key();
-            if (s == "#"+obj->id()+"."+classes[i] || s == classes[i]
-                    || s == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
-                    || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
-            {
-                props << properties(s);
-            }
-        }
-    }
-
-    for (it=m_selectors.begin();it != m_selectors.end();it++)
-    {
-        s = it.key();
-        if (s == "#"+obj->id()
-                || s == "#" + obj->layer()->id() + " #"+obj->id()
-                || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
-        {
-            props << properties(s);
-        }
-    }
-
-
-    props.removeDuplicates();
-
-    return props;
-}
-
-QStringList Stylesheet::properties(CLayer* l)
-{
-
-}
-
-QStringList Stylesheet::properties(CSection* s)
-{
-
-}
 
 Selector* Stylesheet::selector(QString selector)
 {
     if (!m_selectors.contains(selector))
-        return 0;
+    {
+        //the selector does not exist, create it
+        Selector* s = new Selector(this);
+        m_selectors.insert(selector,s);
+        return s;
+    }
 
     return m_selectors[selector];
 }
 
-QList<Selector*> Stylesheet::selectors(CBaseObject* obj)
+Selector* Stylesheet::selector(CBaseObject *obj)
 {
-    QList<Selector*> list;
-    QString s;
-    QStringList classes = obj->styleClasses();
-    QMap<QString,Selector*>::Iterator it;
-
-    for (int i=0;i<classes.size();i++)
-    {
-        for (it=m_selectors.begin();it != m_selectors.end();it++)
-        {
-            s = it.key();
-            if (s == "#"+obj->id()+"."+classes[i] || s == classes[i]
-                    || s == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
-                    || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
-            {
-                list.append(selector(s));
-            }
-        }
-    }
-
-    for (it=m_selectors.begin();it != m_selectors.end();it++)
-    {
-        s = it.key();
-        if (s == "#"+obj->id()
-                || s == "#" + obj->layer()->id() + " #"+obj->id()
-                || s == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id())
-        {
-            list.append(selector(s));
-        }
-    }
-
-    return list;
-}
-
-QList<Selector*> Stylesheet::selectors(CLayer* l)
-{
-
-}
-
-QList<Selector*> Stylesheet::selectors(CSection* s)
-{
-
+    return selector("#"+obj->section()->id()+"::"+obj->id());
 }
 
 QStringList Selector::properties()

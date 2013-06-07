@@ -97,9 +97,9 @@ private:
     CLayer* m_pActiveLayer;
 
     QString m_sID;
+    CDocument* m_pDoc;
     bool m_bHidden;
 
-    CDocument* m_pDoc;
     QImage m_imgRendered;
     CDocumentItem* m_pDocumentItem;
     

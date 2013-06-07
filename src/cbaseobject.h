@@ -60,8 +60,8 @@ public:
     virtual QRectF boundingRect() const;
 
     virtual void layout();
-    virtual CBaseObject* relative();
-    virtual QString relativeID();
+    /*virtual CBaseObject* relative();
+    virtual QString relativeID();*/
 
     virtual QString property(QString key);
     virtual void setProperty(QString key, QString value);

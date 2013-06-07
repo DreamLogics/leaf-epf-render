@@ -26,10 +26,15 @@
 #include "csection.h"
 #include "cdocument.h"
 #include "cepfview.h"
+#include <QDebug>
 
-CBaseObject::CBaseObject(QString id, CLayer* layer) :
+CBaseObject::CBaseObject(QString id, CLayer* layer) : QGraphicsObject(),
     m_sID(id), m_pLayer(layer)
 {
+    m_iMarginTop = 0;
+    m_iMarginRight = 0;
+    m_iMarginBottom = 0;
+    m_iMarginLeft = 0;
 }
 
 CBaseObject::~CBaseObject()
@@ -54,8 +59,8 @@ void CBaseObject::setParents(CBaseObject* obj)
         setParent((QObject*)m_pLayer);
         setParentItem((QGraphicsItem*)m_pLayer);
     }*/
-    setParent((QObject*)obj);
-    //setParentItem((QGraphicsItem*)obj);
+    setParent(obj);
+    setParentItem(obj);
 }
 
 CLayer* CBaseObject::layer()
@@ -95,7 +100,7 @@ const char* CBaseObject::objectType() const
 
 void CBaseObject::layout()
 {
-    CBaseObject* r = relative();
+    QGraphicsItem* r = parentItem();
 
     if (!r)
         return;
@@ -113,6 +118,8 @@ void CBaseObject::layout()
     m_rRect.setHeight(css->property(this,"height")->toInt());
     m_rRect.setWidth(css->property(this,"width")->toInt());
 
+    qDebug() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << css->property(this,"height")->toString();
+
     /*if (css->property(this,"relative-to")->toString() == "")
     {
         m_rRect.setTop(relrect.top() + r->outerHeight() + marginTop());
@@ -121,7 +128,7 @@ void CBaseObject::layout()
         //top/left/bottom/right negeren
     }
     else*/
-    if (css->property(this,"position")->toString() != "relative")
+    if (css->property(this,"position")->toString() != "static")
     {
         m_rRect.setTop(relrect.top() + css->property(this,"top")->toInt());
         m_rRect.setLeft(relrect.left() + css->property(this,"left")->toInt());
@@ -180,7 +187,7 @@ void CBaseObject::layout()
 
 
 }
-
+/*
 CBaseObject* CBaseObject::relative()
 {
     return (CBaseObject*)parent();
@@ -189,7 +196,7 @@ QString CBaseObject::relativeID()
 {
     return relative()->id();
 }
-
+*/
 QString CBaseObject::property(QString key)
 {
     if (!m_Props.contains(key))
@@ -374,6 +381,7 @@ CDocument* CBaseObject::document()
 
 QVariant CBaseObject::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    if (change == QGraphicsItem::ItemParentHasChanged)
-        layout();
+    /*if (change == QGraphicsItem::ItemParentHasChanged)
+        layout();*/
+    return QGraphicsObject::itemChange(change,value);
 }

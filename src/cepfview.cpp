@@ -55,7 +55,6 @@ void CEPFView::setDocument(CDocument *doc)
     doc->setRenderview(this);
     doc->layout(height(),width());
 
-
     for (i=0;i<doc->sectionCount();i++)
     {
         section = doc->section(i);
@@ -143,6 +142,7 @@ int CEPFView::currentSection()
 void CEPFView::ready()
 {
     m_bIsLoading = false;
+    setScene(m_pDocument->section(0));
 }
 
 void CEPFView::tocSection()

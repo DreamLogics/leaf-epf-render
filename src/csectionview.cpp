@@ -23,6 +23,7 @@
 #include "csectionview.h"
 #include "csection.h"
 #include <QPainter>
+#include <QDebug>
 
 CSectionView::CSectionView(CSection* section) : m_pSection(section)
 {
@@ -36,7 +37,9 @@ CSection* CSectionView::sectionObject()
 
 void CSectionView::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    qDebug() << "paint section view" << boundingRect().size();
     painter->drawImage(0,0,m_pSection->rendered());
+    painter->fillRect(boundingRect(),QColor("red"));
 }
 
 void CSectionView::sectionChanged()

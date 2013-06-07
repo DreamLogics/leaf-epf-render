@@ -22,8 +22,9 @@
 
 #include "clayer.h"
 #include <QPainter>
+#include <QDebug>
 
-CLayer::CLayer(QString id, CSection* s) :
+CLayer::CLayer(QString id, CSection* s) : QGraphicsObject(),
     m_sID(id), m_pSection(s)
 {
     setParent((QObject*)s);
@@ -59,8 +60,9 @@ void CLayer::addObject(CBaseObject *obj)
 
 QRectF CLayer::boundingRect() const
 {
-    //return childrenBoundingRect();
-    return QRectF();
+    qDebug() << "clayer::bounding" << childrenBoundingRect().size() << childItems().size();
+    return childrenBoundingRect();
+    //return QRectF();
 }
 
 void CLayer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)

@@ -27,6 +27,7 @@
 #include "cepfview.h"
 #include "cbaseobject.h"
 #include "css/css_style.h"
+#include <QDebug>
 
 CDocumentItem::CDocumentItem()
 {
@@ -62,7 +63,7 @@ void CDocumentItem::increaseHeight(int delta)
 }
 
 
-CSection::CSection(QString id, CDocument* doc,bool hidden) : /*QObject(doc), */m_sID(id), m_pDoc(doc), m_bHidden(hidden)
+CSection::CSection(QString id, CDocument* doc,bool hidden) : QGraphicsScene(doc),/*QObject(doc), */m_sID(id), m_pDoc(doc), m_bHidden(hidden)
 {
     setParent((QObject*)doc);
 
@@ -168,8 +169,10 @@ QImage& CSection::rendered()
 
 void CSection::updateRendered(const QList<QRectF> &region)
 {
+    qDebug() << "CSection::updateRendered()";
     if (m_imgRendered.isNull() || m_imgRendered.height() != height() || m_imgRendered.width() != width())
     {
+        qDebug() << width() << height();
         m_imgRendered = QImage(width(),height(),QImage::Format_RGB32);
         m_imgRendered.fill(Qt::black);
 
@@ -195,6 +198,8 @@ void CSection::layout(int height, int width)
     m_pDocumentItem->setSize(height,width);
     CSS::Stylesheet* css = document()->stylesheet();
 
+    qDebug() << "CSection::layout" << width << height;
+
     int docheight=0;
 
     int i,n,h;
@@ -207,7 +212,8 @@ void CSection::layout(int height, int width)
         for (n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
-            if (css->property(obj,"position")->toString() == "fixed" && !dynamic_cast<CDocumentItem*>(obj->relative()))
+            qDebug() << "position" << css->property(obj,"position")->toString();
+            if (css->property(obj,"position")->toString() == "static" && dynamic_cast<CLayer*>(obj->parentItem()))
                 obj->layout();
         }
         if (obj)
@@ -226,7 +232,7 @@ void CSection::layout(int height, int width)
         for (n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
-            if (css->property(obj,"position")->toString() != "fixed" && dynamic_cast<CDocumentItem*>(obj->relative()))
+            if (css->property(obj,"position")->toString() != "static" && dynamic_cast<CLayer*>(obj->parentItem()))
                 obj->layout();
         }
     }

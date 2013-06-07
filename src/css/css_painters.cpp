@@ -4,7 +4,9 @@
 #include <QPen>
 #include <QtCore/qmath.h>
 
-using namespace CSS;
+namespace CSS
+{
+
 
 void paintBorder(QPainter* pPainter, QRectF qrBorderRect, double dWidth, QString strColor, QString strStyle)
 {
@@ -13,10 +15,10 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, double dWidth, QString
 
 void paintBackgroundColor(QPainter* pPainter, QRectF qrBgRect, QString strColor)
 {
-
+    pPainter->fillRect(qrBgRect,QColor(strColor));
 }
 
-void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QRectF qrSize, QString strSrc, CDocument* pDocument)
+void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QRectF qrSize, QString strSrc, bool bKeepAspectRatio, CDocument* pDocument)
 {
 
 }
@@ -178,4 +180,6 @@ void paintDropShadow(QPainter* pPainter, QRectF qrRect, QString strColor, Render
     }
 
     pPainter->setCompositionMode(compmode);
+}
+
 }
