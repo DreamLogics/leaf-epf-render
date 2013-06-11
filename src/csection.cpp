@@ -83,11 +83,11 @@ int CSection::objectCount()
     return m_ObjectsCatalog.size();
 }
 
-void CSection::addLayer(CLayer* layer,bool active)
+void CSection::addLayer(CLayer* layer/*,bool active*/)
 {
     m_Layers.append(layer);
-    if (active)
-        m_pActiveLayer = layer;
+    /*if (active)
+        m_pActiveLayer = layer;*/
     addItem(layer);
 }
 
@@ -103,7 +103,7 @@ CLayer* CSection::layer(int index)
 
     return m_Layers[index];
 }
-
+/*
 void CSection::setActiveLayer(CLayer* layer)
 {
     m_pActiveLayer = layer;
@@ -113,7 +113,7 @@ CLayer* CSection::activeLayer()
 {
     return m_pActiveLayer;
 }
-
+*/
 CBaseObject* CSection::objectByID(QString id)
 {
     if (!m_ObjectsCatalog.contains(id))
@@ -144,7 +144,7 @@ QObjectList CSection::layers()
         list.append((QObject*)m_Layers[i]);
     return list;
 }
-
+/*
 void CSection::setActiveLayer(QObject* obj)
 {
     CLayer* layer = dynamic_cast<CLayer*>(obj);
@@ -156,7 +156,7 @@ QObject* CSection::getActiveLayer()
 {
     return m_pActiveLayer;
 }
-
+*/
 QObject* CSection::getObjectByID(QString id)
 {
     return getObjectByID(id);
@@ -205,16 +205,23 @@ void CSection::layout(int height, int width)
     int i,n,h;
     CLayer* l;
     CBaseObject* obj;
-    for (i=0;i<layerCount();i++) //first layout all fixed objects which are relative to the document
+    QRectF relrect;
+    QString pos;
+    for (i=0;i<layerCount();i++) //first layout all static and relative objects which are relative to the document
     {
         l = layer(i);
         obj=0;
+        relrect = QRectF(0,0,0,0);
         for (n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
-            qDebug() << "position" << css->property(obj,"position")->toString();
-            if (css->property(obj,"position")->toString() == "static" && dynamic_cast<CLayer*>(obj->parentItem()))
-                obj->layout();
+            pos = css->property(obj,"position")->toString();
+            qDebug() << "position" << pos;
+            if ((pos == "static" || pos == "relative") && dynamic_cast<CLayer*>(obj->parentItem()))
+            {
+                obj->layout(relrect);
+                relrect.setTop(obj->boundingRect().bottom());
+            }
         }
         if (obj)
         {
@@ -226,14 +233,21 @@ void CSection::layout(int height, int width)
 
     m_pDocumentItem->setHeight(docheight);
 
-    for (i=0;i<layerCount();i++) //now layout all objects relative to the document but not fixed
+    for (i=0;i<layerCount();i++) //now layout all objects relative to the document but not static
     {
         l = layer(i);
         for (n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
-            if (css->property(obj,"position")->toString() != "static" && dynamic_cast<CLayer*>(obj->parentItem()))
-                obj->layout();
+            pos = css->property(obj,"position")->toString();
+            if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*>(obj->parentItem()))
+            {
+                if (pos == "fixed")
+                    relrect = QRectF(0,0,width,height);
+                else
+                    relrect = QRectF(0,0,width,docheight);
+                obj->layout(relrect);
+            }
         }
     }
 }

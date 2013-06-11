@@ -63,12 +63,12 @@ public:
 
     virtual int objectCount();
 
-    virtual void addLayer(CLayer*,bool active);
+    virtual void addLayer(CLayer*/*,bool active*/);
 
     virtual int layerCount();
     virtual CLayer* layer(int index);
-    virtual void setActiveLayer(CLayer* layer);
-    virtual CLayer* activeLayer();
+    //virtual void setActiveLayer(CLayer* layer);
+    //virtual CLayer* activeLayer();
 
     virtual CBaseObject* objectByID(QString id);
 
@@ -85,8 +85,8 @@ public:
 public slots:
 
     QObjectList layers();
-    void setActiveLayer(QObject*);
-    QObject* getActiveLayer();
+    //void setActiveLayer(QObject*);
+    //QObject* getActiveLayer();
     QObject* getObjectByID(QString id);
 
     void updateRendered( const QList<QRectF> &region );
@@ -94,7 +94,7 @@ public slots:
 private:
     QList<CLayer*> m_Layers;
     QMap<QString,CBaseObject*> m_ObjectsCatalog;
-    CLayer* m_pActiveLayer;
+    //CLayer* m_pActiveLayer;
 
     QString m_sID;
     CDocument* m_pDoc;

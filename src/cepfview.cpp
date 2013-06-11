@@ -36,6 +36,7 @@ CEPFView::CEPFView()
     setScene(m_pDocScene);
     m_bIsLoading = false;
     m_iRenderDot = 0;
+    setAlignment(Qt::AlignLeft | Qt::AlignTop);
 }
 
 void CEPFView::setDocument(CDocument *doc)
@@ -143,6 +144,7 @@ void CEPFView::ready()
 {
     m_bIsLoading = false;
     setScene(m_pDocument->section(0));
+    ensureVisible(0,0,width(),height());
 }
 
 void CEPFView::tocSection()

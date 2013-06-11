@@ -3,6 +3,8 @@
 #include "cdocument.h"
 #include <QPen>
 #include <QtCore/qmath.h>
+#include <QImage>
+#include <QDebug>
 
 namespace CSS
 {
@@ -18,9 +20,56 @@ void paintBackgroundColor(QPainter* pPainter, QRectF qrBgRect, QString strColor)
     pPainter->fillRect(qrBgRect,QColor(strColor));
 }
 
-void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QRectF qrSize, QString strSrc, bool bKeepAspectRatio, CDocument* pDocument)
+void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, QString strSrc, CDocument* pDocument)
 {
+    QRectF qrSize;
 
+    qDebug() << "paintBackgroundImage :" << strSrc;
+
+    QRegExp srcreg("[\"'\(\)]");
+
+    if (strSrc.left(4) == "src(")
+        strSrc = strSrc.mid(4);
+
+    strSrc = strSrc.replace(srcreg,"");
+
+    qDebug() << "paintBackgroundImage :" << strSrc;
+
+    QImage img = QImage::fromData(pDocument->resource(strSrc));
+
+    if (img.isNull())
+        return;
+
+    qDebug() << "paintBackgroundImage - size :" << strSize;
+
+    if (strSize != "")
+    {
+        QRegExp percreg("([0-9]+)%");
+        QRegExp sizereg("([0-9]+)px +([0-9]+)px");
+        QRegExp sizeautoreg("([0-9]+)px");
+        QString propstr = strSize;
+        if (propstr == "cover")
+            img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+        else if (propstr == "contain")
+            img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        else if (sizereg.indexIn(propstr) != -1)
+            img = img.scaled(sizereg.cap(1).toInt(),sizereg.cap(2).toInt(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+        else if (sizeautoreg.indexIn(propstr) != -1)
+            img = img.scaledToWidth(sizeautoreg.cap(1).toInt(),Qt::SmoothTransformation);
+        else if (percreg.indexIn(propstr) != -1)
+            img = img.scaled(((float)(percreg.cap(1).toInt())/100)*img.width(),((float)(percreg.cap(2).toInt())/100)*img.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+
+        img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::KeepAspectRatio);
+    }
+
+    qrSize = img.rect();
+
+    if (img.height() > qrBgRect.height())
+        qrSize.setHeight(qrBgRect.height());
+    if (img.width() > qrBgRect.width())
+        qrSize.setWidth(qrBgRect.width());
+
+    pPainter->drawImage(qrBgRect,img,qrSize);
 }
 
 void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)

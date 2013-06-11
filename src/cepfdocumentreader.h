@@ -49,7 +49,7 @@ public:
 
 private:
 
-    CBaseObject* createObject(QString type,QString id, CLayer* layer, QString props, QString styleclasses);
+    CBaseObject* createObject(QString type,QString id, CLayer* layer, QString props, QString styleclasses, bool enabled);
     void parseObjectNode(pugi::xml_node* node,CLayer* layer, CSection* section, CBaseObject* parent);
 
 private:

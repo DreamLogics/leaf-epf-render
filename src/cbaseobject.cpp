@@ -35,6 +35,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QGraphicsObject(),
     m_iMarginRight = 0;
     m_iMarginBottom = 0;
     m_iMarginLeft = 0;
+    m_bEnabled = false;
 }
 
 CBaseObject::~CBaseObject()
@@ -63,6 +64,16 @@ void CBaseObject::setParents(CBaseObject* obj)
     setParentItem(obj);
 }
 
+bool CBaseObject::enabled() const
+{
+    return m_bEnabled;
+}
+
+void CBaseObject::setEnabled(bool b)
+{
+    m_bEnabled = b;
+}
+
 CLayer* CBaseObject::layer()
 {
     return m_pLayer;
@@ -88,7 +99,7 @@ void CBaseObject::preload()
 
 }
 
-QString CBaseObject::id()
+QString CBaseObject::id() const
 {
     return m_sID;
 }
@@ -98,17 +109,21 @@ const char* CBaseObject::objectType() const
     return "base";
 }
 
-void CBaseObject::layout()
+void CBaseObject::layout(QRectF relrect)
 {
-    QGraphicsItem* r = parentItem();
+    /*QGraphicsItem* r = parentItem();
 
     if (!r)
         return;
 
+    CBaseObject* obj = dynamic_cast<CBaseObject*>(r);
+    if (obj)
+        qDebug() << "child of:" << obj->id();*/
+
     prepareGeometryChange();
 
     //QRectF oldrect = m_rRect;
-    QRectF relrect = r->boundingRect();
+    //QRectF relrect = r->boundingRect();
 
     CSS::Stylesheet* css = document()->stylesheet();
 
@@ -128,7 +143,10 @@ void CBaseObject::layout()
         //top/left/bottom/right negeren
     }
     else*/
-    if (css->property(this,"position")->toString() != "static")
+    QString pos = css->property(this,"position")->toString();
+
+
+    if (pos != "static" && pos != "relative")
     {
         m_rRect.setTop(relrect.top() + css->property(this,"top")->toInt());
         m_rRect.setLeft(relrect.left() + css->property(this,"left")->toInt());
@@ -151,6 +169,10 @@ void CBaseObject::layout()
         }
         else if (!css->property(this,"right")->isNull())
             m_rRect.setRight(relrect.right() - css->property(this,"right")->toInt());
+    }
+    else
+    {
+        m_rRect.setTop(relrect.top());
     }
 
 
@@ -178,11 +200,22 @@ void CBaseObject::layout()
 
     QObjectList clist = children();
     CBaseObject* cobj;
+    QRectF relr = m_rRect;
     for (int i=0;i<clist.size();i++)
     {
         cobj = dynamic_cast<CBaseObject*>(clist[i]);
         if (cobj)
-            cobj->layout();
+        {
+            pos = css->property(cobj,"position")->toString();
+
+            if (pos == "absolute")
+                cobj->layout(m_rRect);
+            else
+            {
+                cobj->layout(relr);
+                relr.setTop(cobj->boundingRect().bottom());
+            }
+        }
     }
 
 

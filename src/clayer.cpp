@@ -67,5 +67,5 @@ QRectF CLayer::boundingRect() const
 
 void CLayer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    painter->fillRect(0,0,100,100,QColor("red"));
+    //painter->fillRect(0,0,100,100,QColor("red"));
 }

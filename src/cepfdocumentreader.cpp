@@ -270,17 +270,17 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
                 l = new CLayer(layer.attribute("id").value(),o);
 
-                if (layer.attribute("active").as_int() == 1)
+                /*if (layer.attribute("active").as_int() == 1)
                     bActive = true;
                 else
-                    bActive = false;
+                    bActive = false;*/
 
-                o->addLayer(l,bActive);
+                o->addLayer(l/*,bActive*/);
 
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
                 {
-                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
+                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value(),object.attribute("enabled").as_bool());
                     m_objectmap.insert(QString(overlay.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
                     obj->setParent(/*(QObject*)*/l);
@@ -318,17 +318,17 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
                 l = new CLayer(layer.attribute("id").value(),s);
 
-                if (layer.attribute("active").as_int() == 1)
+                /*if (layer.attribute("active").as_int() == 1)
                     bActive = true;
                 else
-                    bActive = false;
+                    bActive = false;*/
 
-                s->addLayer(l,bActive);
+                s->addLayer(l/*,bActive*/);
 
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
                 {
-                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value());
+                    obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value(),object.attribute("enabled").as_bool());
                     m_objectmap.insert(QString(section.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
                     obj->setParent(l);
@@ -431,7 +431,7 @@ void CEPFDocumentReader::registerObjectType(QString type, IEPFObjectFactory *fac
     m_ObjectTypes.insert(type,factory);
 }
 
-CBaseObject* CEPFDocumentReader::createObject(QString type, QString id, CLayer* layer, QString props, QString styleclasses)
+CBaseObject* CEPFDocumentReader::createObject(QString type, QString id, CLayer* layer, QString props, QString styleclasses,bool enabled)
 {
     IEPFObjectFactory* factory;
     CBaseObject* obj;
@@ -441,6 +441,8 @@ CBaseObject* CEPFDocumentReader::createObject(QString type, QString id, CLayer* 
     {
         factory = m_ObjectTypes[type];
         obj = factory->create(id,layer);
+
+        obj->setEnabled(enabled);
 
         propslist = props.split(";");
         for (int i=0;i<propslist.size();i++)
@@ -479,7 +481,7 @@ void CEPFDocumentReader::parseObjectNode(pugi::xml_node *node, CLayer *layer, CS
 
     for (object = node->child("object"); object; object = object.next_sibling("object"))
     {
-        obj = createObject(object.attribute("type").value(),object.attribute("id").value(),layer,object.attribute("properties").value(),object.attribute("styles").value());
+        obj = createObject(object.attribute("type").value(),object.attribute("id").value(),layer,object.attribute("properties").value(),object.attribute("styles").value(),object.attribute("enabled").as_bool());
         m_objectmap.insert(section->id()+":"+QString(object.attribute("id").value()),obj);
 
         obj->setParents(parent);

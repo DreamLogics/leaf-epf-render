@@ -49,41 +49,22 @@ void CBlockObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
         CSS::paintBackgroundColor(painter,boundingRect(),css->property(this,"background-color")->toString());
     }
 
-    /*if (!css->property(this,"background-image")->isNull())
+    if (!css->property(this,"background-image")->isNull())
     {
-        QRectF qrSize;
-        bool bAspRat=false;
+        QString size;
 
-        if (!css->property(this,"background-image-size")->isNull())
-        {
-            QRegExp percreg("([0-9]+)%");
-            QRegExp sizereg("([0-9]+)px +([0-9]+)px");
-            QRegExp sizeautoreg("([0-9]+)px");
-            QString propstr = css->property(this,"background-image-size")->toString();
-            if (propstr == "cover")
-                qrSize = boundingRect();
-            else if (propstr == "contain")
-            {
-                bAspRat = true;
-                qrSize = boundingRect();
-            }
-            else if (sizereg.indexIn(propstr) != -1)
-            {
-                qrSize.setWidth(sizereg.cap(1).toInt());
-                qrSize.setHeight(sizereg.cap(2).toInt());
-            }
-            else if (sizeautoreg.indexIn(propstr) != -1)
-            {
-                qrSize.setWidth(sizeautoreg.cap(1).toInt());
-                bAspRat = true;
-            }
-            else if (sizeautoreg.indexIn(propstr) != -1)
-            {
-                qrSize.setWidth(sizeautoreg.cap(1).toInt());
-                bAspRat = true;
-            }
-        }
+        if (!css->property(this,"background-size")->isNull())
+            size = css->property(this,"background-size")->toString();
+        else if (!css->property(this,"background-image-size")->isNull())
+            size = css->property(this,"background-image-size")->toString();
 
-        CSS::paintBackgroundImage(painter,boundingRect(),qrSize,css->property(this,"background-color")->toString(),document());
-    }*/
+        CSS::paintBackgroundImage(painter,boundingRect(),size,css->property(this,"background-image")->toString(),document());
+    }
+
+    painter->setFont(QFont("sans-serif",10,QFont::Bold));
+    painter->setPen(QColor("black"));
+    painter->drawText(boundingRect().x()+20,boundingRect().y()+20,id());
+    painter->setFont(QFont("sans-serif",10));
+    painter->setPen(QColor("white"));
+    painter->drawText(boundingRect().x()+21,boundingRect().y()+21,id());
 }

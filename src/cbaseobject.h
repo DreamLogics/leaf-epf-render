@@ -49,8 +49,11 @@ public:
 
     //virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    virtual QString id();
+    virtual QString id() const;
     virtual const char* objectType() const;
+
+    virtual bool enabled() const;
+    virtual void setEnabled(bool b);
 
     CLayer* layer();
     CSection* section();
@@ -59,7 +62,7 @@ public:
     virtual void setBoundingRect(const QRectF&);
     virtual QRectF boundingRect() const;
 
-    virtual void layout();
+    virtual void layout(QRectF relativeTo);
     /*virtual CBaseObject* relative();
     virtual QString relativeID();*/
 
@@ -140,7 +143,7 @@ private:
     QImage m_qiRenderBuffer;
     bool m_bNeedsRedraw;
 
-    bool m_bDisabled;
+    bool m_bEnabled;
 
 
 

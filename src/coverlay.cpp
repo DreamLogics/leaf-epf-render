@@ -58,7 +58,7 @@ void COverlay::layout(int height, int width)
         for (n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
-            if (!dynamic_cast<CDocumentItem*>(obj->relative()))
+            if (dynamic_cast<CLayer*>(obj->parentItem()))
             {
                 css->property(obj,"position")->setValue("fixed");
                 obj->layout();
