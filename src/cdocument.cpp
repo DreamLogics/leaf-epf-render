@@ -33,6 +33,7 @@
 #include "clayer.h"
 #include "cbaseobject.h"
 #include "css/css_style.h"
+#include <QTimer>
 
 CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
 {
@@ -268,7 +269,10 @@ void CDocument::addLayout(CLayout *layout)
 QByteArray CDocument::resource(QString resource)
 {
     if (!m_Resources.contains(resource))
+    {
+        qDebug() << "Requested non existing resource:" << resource;
         return QByteArray();
+    }
 
     struct Resource res = m_Resources[resource];
     QByteArray data;
@@ -436,6 +440,8 @@ void CDocument::load(int height, int width)
     }
 
     layout(height,width);
+
+    //QTimer::singleShot(1000,this,SIGNAL(finishedLoading()));
 
     emit finishedLoading();
 }

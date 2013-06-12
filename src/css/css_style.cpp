@@ -740,3 +740,22 @@ QStringList Selector::properties()
 {
     return QStringList(m_props.keys());
 }
+
+namespace CSS
+{
+    RenderMode renderModeFromString(QString str)
+    {
+        if (str == "normal")
+            return rmNormal;
+        else if (str == "overlay")
+            return rmOverlay;
+        else if (str == "multiply")
+            return rmMultiply;
+        else if (str == "replace")
+            return rmReplace;
+        else if (str == "screen")
+            return rmScreen;
+        else
+            return rmNormal;
+    }
+}

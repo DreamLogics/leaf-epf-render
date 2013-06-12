@@ -54,6 +54,8 @@ enum RenderMode
     rmScreen
 };
 
+RenderMode renderModeFromString(QString str);
+
 class Stylesheet;
 
 class Property

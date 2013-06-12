@@ -82,6 +82,10 @@ public:
     virtual void layout(int height, int width);
     CDocumentItem* documentItem();
 
+    /*virtual void render(QPainter *painter,
+                             const QRectF &target = QRectF(), const QRectF &source = QRectF(),
+                             Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);*/
+
 public slots:
 
     QObjectList layers();
@@ -90,6 +94,7 @@ public slots:
     QObject* getObjectByID(QString id);
 
     void updateRendered( const QList<QRectF> &region );
+    void updateFixedObjects(int dy);
 
 private:
     QList<CLayer*> m_Layers;

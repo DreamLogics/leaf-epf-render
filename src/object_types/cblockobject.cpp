@@ -33,6 +33,7 @@ CBaseObject* CBlockObjectFactory::create(QString id, CLayer *layer)
 
 CBlockObject::CBlockObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 {
+
 }
 
 void CBlockObject::preload()
@@ -61,10 +62,18 @@ void CBlockObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
         CSS::paintBackgroundImage(painter,boundingRect(),size,css->property(this,"background-image")->toString(),document());
     }
 
-    painter->setFont(QFont("sans-serif",10,QFont::Bold));
-    painter->setPen(QColor("black"));
-    painter->drawText(boundingRect().x()+20,boundingRect().y()+20,id());
-    painter->setFont(QFont("sans-serif",10));
-    painter->setPen(QColor("white"));
-    painter->drawText(boundingRect().x()+21,boundingRect().y()+21,id());
+    if (!css->property(this,"color-overlay")->isNull())
+    {
+        QRegExp cov("(#[0-9a-fA-F]{3,6}) +([a-zA-Z]+) +([0-9\.]+)");
+        if (cov.indexIn(css->property(this,"color-overlay")->toString()) != -1)
+        {
+            CSS::paintColorOverlay(painter,boundingRect(),cov.cap(1),CSS::renderModeFromString(cov.cap(2)),cov.cap(3).toDouble());
+        }
+    }
+
+    /*painter->setFont(QFont("sans-serif",10));
+    painter->setPen(QColor("red"));
+    painter->drawText(boundingRect().left()+16,boundingRect().bottom()-16,id());
+
+    painter->drawRect(boundingRect());*/
 }

@@ -28,6 +28,8 @@
 #include "cbaseobject.h"
 #include "css/css_style.h"
 #include <QDebug>
+#include <QStyleOptionGraphicsItem>
+#include <QGraphicsItem>
 
 CDocumentItem::CDocumentItem()
 {
@@ -71,6 +73,8 @@ CSection::CSection(QString id, CDocument* doc,bool hidden) : QGraphicsScene(doc)
 
     m_pDocumentItem = new CDocumentItem();
     m_pDocumentItem->setParent((QObject*)this);
+
+    //connect(this,SIGNAL(sceneRectChanged(QRectF)),this,SLOT(updateFixedObjects()),Qt::QueuedConnection);
 }
 
 CSection::~CSection()
@@ -232,6 +236,7 @@ void CSection::layout(int height, int width)
     }
 
     m_pDocumentItem->setHeight(docheight);
+    const QRectF docbound(0,0,width,docheight);
 
     for (i=0;i<layerCount();i++) //now layout all objects relative to the document but not static
     {
@@ -245,7 +250,7 @@ void CSection::layout(int height, int width)
                 if (pos == "fixed")
                     relrect = QRectF(0,0,width,height);
                 else
-                    relrect = QRectF(0,0,width,docheight);
+                    relrect = docbound;
                 obj->layout(relrect);
             }
         }
@@ -255,4 +260,90 @@ void CSection::layout(int height, int width)
 CDocumentItem* CSection::documentItem()
 {
     return m_pDocumentItem;
+}
+/*
+void CSection::render(QPainter *painter, const QRectF &target, const QRectF &source,
+                            Qt::AspectRatioMode aspectRatioMode)
+{
+    // ### Switch to using the recursive rendering algorithm instead.
+
+    qDebug() << "render in section";
+
+    // Default source rect = scene rect
+    QRectF sourceRect = source;
+    if (sourceRect.isNull())
+        sourceRect = sceneRect();
+
+    // Default target rect = device rect
+    QRectF targetRect = target;
+    if (targetRect.isNull()) {
+        if (painter->device()->devType() == QInternal::Picture)
+            targetRect = sourceRect;
+        else
+            targetRect.setRect(0, 0, painter->device()->width(), painter->device()->height());
+    }
+
+    // Find the ideal x / y scaling ratio to fit \a source into \a target.
+    qreal xratio = targetRect.width() / sourceRect.width();
+    qreal yratio = targetRect.height() / sourceRect.height();
+
+    // Scale according to the aspect ratio mode.
+    switch (aspectRatioMode) {
+    case Qt::KeepAspectRatio:
+        xratio = yratio = qMin(xratio, yratio);
+        break;
+    case Qt::KeepAspectRatioByExpanding:
+        xratio = yratio = qMax(xratio, yratio);
+        break;
+    case Qt::IgnoreAspectRatio:
+        break;
+    }
+
+    // Find all items to draw, and reverse the list (we want to draw
+    // in reverse order).
+    QList<QGraphicsItem *> itemList = items(sourceRect, Qt::IntersectsItemBoundingRect);
+
+    //add fixed item,
+
+    QGraphicsItem **itemArray = new QGraphicsItem *[itemList.size()];
+    int numItems = itemList.size();
+    for (int i = 0; i < numItems; ++i)
+        itemArray[numItems - i - 1] = itemList.at(i);
+    itemList.clear();
+
+    painter->save();
+
+    // Transform the painter.
+    painter->setClipRect(targetRect, Qt::IntersectClip);
+    QTransform painterTransform;
+    painterTransform *= QTransform()
+                        .translate(targetRect.left(), targetRect.top())
+                        .scale(xratio, yratio)
+                        .translate(-sourceRect.left(), -sourceRect.top());
+    painter->setWorldTransform(painterTransform, true);
+
+    // Two unit vectors.
+    QLineF v1(0, 0, 1, 0);
+    QLineF v2(0, 0, 0, 1);
+
+    // Generate the style options
+    QStyleOptionGraphicsItem *styleOptionArray = new QStyleOptionGraphicsItem[numItems];
+    //for (int i = 0; i < numItems; ++i)
+    //    itemArray[i]->d_ptr->initStyleOption(&styleOptionArray[i], painterTransform, targetRect.toRect());
+
+    // Render the scene.
+    drawBackground(painter, sourceRect);
+    drawItems(painter, numItems, itemArray, styleOptionArray);
+    drawForeground(painter, sourceRect);
+
+    delete [] itemArray;
+    delete [] styleOptionArray;
+
+    painter->restore();
+}
+*/
+
+void CSection::updateFixedObjects(int dy)
+{
+    qDebug() << "dd" << dy;
 }

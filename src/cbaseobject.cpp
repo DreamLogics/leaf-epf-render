@@ -36,6 +36,8 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QGraphicsObject(),
     m_iMarginBottom = 0;
     m_iMarginLeft = 0;
     m_bEnabled = false;
+
+    setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
 
 CBaseObject::~CBaseObject()
@@ -93,6 +95,7 @@ QRectF CBaseObject::boundingRect() const
     return m_rRect;
 }
 
+
 void CBaseObject::preload()
 {
 
@@ -148,11 +151,11 @@ void CBaseObject::layout(QRectF relrect)
 
     if (pos != "static" && pos != "relative")
     {
-        m_rRect.setTop(relrect.top() + css->property(this,"top")->toInt());
-        m_rRect.setLeft(relrect.left() + css->property(this,"left")->toInt());
+        m_rRect.moveTop(relrect.top() + css->property(this,"top")->toInt());
+        m_rRect.moveLeft(relrect.left() + css->property(this,"left")->toInt());
 
-        m_rRect.setHeight(css->property(this,"height")->toInt());
-        m_rRect.setWidth(css->property(this,"width")->toInt());
+        //m_rRect.setHeight(css->property(this,"height")->toInt());
+        //m_rRect.setWidth(css->property(this,"width")->toInt());
 
         if (!css->property(this,"bottom")->isNull() && !css->property(this,"top")->isNull())
         {
@@ -160,7 +163,7 @@ void CBaseObject::layout(QRectF relrect)
             m_rRect.setTop(m_rRect.bottom() - css->property(this,"height")->toInt());
         }
         else if (!css->property(this,"bottom")->isNull())
-            m_rRect.setBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
+            m_rRect.moveBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
 
         if (!css->property(this,"right")->isNull() && css->property(this,"left")->isNull())
         {
@@ -168,11 +171,11 @@ void CBaseObject::layout(QRectF relrect)
             m_rRect.setLeft(m_rRect.right() - css->property(this,"width")->toInt());
         }
         else if (!css->property(this,"right")->isNull())
-            m_rRect.setRight(relrect.right() - css->property(this,"right")->toInt());
+            m_rRect.moveRight(relrect.right() - css->property(this,"right")->toInt());
     }
     else
     {
-        m_rRect.setTop(relrect.top());
+        m_rRect.moveTop(relrect.top());
     }
 
 

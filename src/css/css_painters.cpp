@@ -231,4 +231,38 @@ void paintDropShadow(QPainter* pPainter, QRectF qrRect, QString strColor, Render
     pPainter->setCompositionMode(compmode);
 }
 
+void paintColorOverlay(QPainter *pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity)
+{
+    double opac = pPainter->opacity();
+    pPainter->setOpacity(dOpacity);
+    QColor mixcolor(strColor);
+    QPainter::CompositionMode mode = pPainter->compositionMode();
+
+    switch (iRenderMode) {
+    case rmNormal:
+        pPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
+        break;
+    case rmOverlay:
+        pPainter->setCompositionMode(QPainter::CompositionMode_Overlay);
+        break;
+    case rmMultiply:
+        pPainter->setCompositionMode(QPainter::CompositionMode_Multiply);
+        break;
+    case rmReplace:
+        pPainter->setCompositionMode(QPainter::CompositionMode_SourceIn);
+        break;
+    case rmScreen:
+        pPainter->setCompositionMode(QPainter::CompositionMode_Screen);
+        break;
+    default:
+        pPainter->setCompositionMode(QPainter::CompositionMode_SourceOver);
+        break;
+    }
+
+    pPainter->fillRect(qrRect,mixcolor);
+
+    pPainter->setCompositionMode(mode);
+    pPainter->setOpacity(opac);
+}
+
 }

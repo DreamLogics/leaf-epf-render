@@ -29,6 +29,7 @@
 #include <QGraphicsScene>
 #include <QDebug>
 #include <QTimer>
+#include <QEvent>
 
 CEPFView::CEPFView()
 {
@@ -37,6 +38,9 @@ CEPFView::CEPFView()
     m_bIsLoading = false;
     m_iRenderDot = 0;
     setAlignment(Qt::AlignLeft | Qt::AlignTop);
+
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 void CEPFView::setDocument(CDocument *doc)
@@ -66,6 +70,8 @@ void CEPFView::setDocument(CDocument *doc)
 
         m_pDocScene->addItem(view);
 
+        connect(this,SIGNAL(viewChanged()),section,SLOT(updateFixedObjects()));
+
         //view->setGeometry(width(),0,width(),height());
         view->setX(width());
 
@@ -81,7 +87,7 @@ void CEPFView::setDocument(CDocument *doc)
     connect(this,SIGNAL(loadDocument(int,int)),doc,SLOT(load(int,int)));
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
 
-    emit loadDocument(height(),width());
+    emit loadDocument(height()-2,width()-2);
 }
 
 void CEPFView::setSection(int index)
@@ -144,7 +150,7 @@ void CEPFView::ready()
 {
     m_bIsLoading = false;
     setScene(m_pDocument->section(0));
-    ensureVisible(0,0,width(),height());
+    ensureVisible(0,0,1,1);
 }
 
 void CEPFView::tocSection()
@@ -186,4 +192,16 @@ void CEPFView::updateDot()
     viewport()->update();
     if (m_bIsLoading)
         QTimer::singleShot(300,this,SLOT(updateDot()));
+}
+
+bool CEPFView::viewportEvent(QEvent *event)
+{
+    bool b = QGraphicsView::viewportEvent(event);
+    if (event->type() == QEvent::Scroll || event->type() == QEvent::Wheel)
+    {
+        //qDebug() << viewportTransform().dy();
+        emit viewChanged(viewportTransform().dy());
+    }
+
+    return b;
 }

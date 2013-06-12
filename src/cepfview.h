@@ -58,10 +58,12 @@ public slots:
 signals:
 
     void loadDocument(int height, int width);
+    void viewChanged(int dy);
 
 protected:
 
     virtual void drawForeground(QPainter *painter, const QRectF &rect);
+    virtual bool viewportEvent(QEvent *event);
 
 private:
 
