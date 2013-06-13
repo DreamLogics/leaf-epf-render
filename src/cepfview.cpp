@@ -54,6 +54,8 @@ void CEPFView::setDocument(CDocument *doc)
     m_SectionViews.clear();
     m_SectionIndex.clear();
 
+    m_iCurrentSection = -1;
+
     CSectionView* view;
     CSection* section;
 
@@ -96,12 +98,13 @@ void CEPFView::setSection(int index)
         return;
 
     CSectionView* view = m_SectionViews[index];
-    CSectionView* curview = m_SectionViews[m_iCurrentSection];
-
-    //view->move(0,0);
     view->setX(0);
-    //curview->move(width(),0);
-    curview->setX(width());
+
+    if (m_iCurrentSection > -1)
+    {
+        CSectionView* curview = m_SectionViews[m_iCurrentSection];
+        curview->setX(width());
+    }
 
     m_iCurrentSection = index;
 }
