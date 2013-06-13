@@ -26,7 +26,7 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
 
     qDebug() << "paintBackgroundImage :" << strSrc;
 
-    QRegExp srcreg("[\"'\(\)]");
+    QRegExp srcreg("[\"'\\(\\)]");
 
     if (strSrc.left(4) == "src(")
         strSrc = strSrc.mid(4);

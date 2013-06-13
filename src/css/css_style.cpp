@@ -236,7 +236,7 @@ int Property::toInt()
 double Property::toDouble()
 {
     QString val = toString();
-    QRegExp nr("([0-9\.]+)");
+    QRegExp nr("([0-9\\.]+)");
     if (nr.indexIn(val) == -1)
         return 0;
     return nr.cap(1).toDouble();
