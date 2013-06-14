@@ -614,7 +614,7 @@ void Stylesheet::parse(QString css)
 
         //propagate from base overlay props for overlay specific props
         s = selector("#"+cs->id());
-        base = selector("overlay");
+        base = selector("section");
         baseprops = base->properties();
 
         for (int n=0;n<baseprops.size();n++)
@@ -709,6 +709,22 @@ void Stylesheet::parse(QString css)
         }
     }
 
+    //reverse
+    /*
+    QMap<QString,Selector*>::Iterator it;
+    QString test;
+
+    for (it=m_selectors.begin();it!=m_selectors.end();it++)
+    {
+        test += it.key();
+        test += "\n{\n";
+        s = it.value();
+        QStringList list = s->properties();
+        for (int i=0;i<list.size();i++)
+            test += "\t"+list[i]+": "+s->property(list[i])->toString()+";\n";
+        test += "}\n";
+    }
+    qDebug() << test;*/
 }
 
 void Stylesheet::addCSS(QString css)
@@ -727,6 +743,8 @@ Selector* Stylesheet::selector(QString selector)
         m_selectors.insert(selector,s);
         return s;
     }
+
+    //qDebug() << m_selectors.keys();
 
     return m_selectors[selector];
 }

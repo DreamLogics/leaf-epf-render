@@ -60,7 +60,7 @@ void CEPFView::setDocument(CDocument *doc)
     CSection* section;
 
     doc->setRenderview(this);
-    doc->layout(height(),width());
+    //doc->layout(height(),width());
 
     for (i=0;i<doc->sectionCount();i++)
     {

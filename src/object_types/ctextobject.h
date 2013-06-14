@@ -43,10 +43,22 @@ public:
 
     virtual void preload();
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual void layout(QRectF relativeTo);
+    QString overflow();
+
+private:
+
+    QString css();
     
 signals:
     
 public slots:
+
+private:
+
+    QTextDocument* m_pTextDoc;
+    QString m_sOverflow;
+    int m_iRenderOffset;
     
 };
 
