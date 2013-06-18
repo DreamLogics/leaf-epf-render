@@ -31,7 +31,8 @@ SOURCES += cdocument.cpp \
     css/css_style.cpp \
     pugixml/src/pugixml.cpp \
     czlib.cpp \
-    css/css_painters.cpp
+    css/css_painters.cpp \
+    epfevent.cpp
 
 HEADERS += leaf-epf-render_global.h \
     cdocument.h \
@@ -59,7 +60,8 @@ HEADERS += leaf-epf-render_global.h \
     pugixml/src/pugiconfig.hpp \
     czlib.h \
     css/css_painters.h \
-    css/css_default.h
+    css/css_default.h \
+    epfevent.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

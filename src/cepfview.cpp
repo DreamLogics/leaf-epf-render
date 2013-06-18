@@ -35,7 +35,7 @@ CEPFView::CEPFView()
 {
     m_pDocScene = new QGraphicsScene();
     setScene(m_pDocScene);
-    m_bIsLoading = false;
+    m_bIsLoading = true;
     m_iRenderDot = 0;
     setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
@@ -199,12 +199,27 @@ void CEPFView::updateDot()
 
 bool CEPFView::viewportEvent(QEvent *event)
 {
-    bool b = QGraphicsView::viewportEvent(event);
+    if (!event)
+        return false;
+    qDebug() << "event ype" << event->type();
+    bool b = false;
+    //if (event->type() != QEvent::Wheel)
+        b = QGraphicsView::viewportEvent(event);
+    //bool b = false;
     if (event->type() == QEvent::Scroll || event->type() == QEvent::Wheel)
     {
         //qDebug() << viewportTransform().dy();
         emit viewChanged(viewportTransform().dy());
+        return true;
     }
 
     return b;
+}
+
+void CEPFView::resizeEvent(QResizeEvent *event)
+{
+    if (!m_bIsLoading && m_pDocument && m_pDocument->sectionCount() > 0)
+    {
+        m_pDocument->layout(height(),width());
+    }
 }

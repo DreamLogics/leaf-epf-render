@@ -42,6 +42,8 @@ class COverlay;
 class CLayout;
 class CAnimation;
 class CEPFView;
+class EPFEvent;
+
 
 class CDocument : public QObject
 {
@@ -92,6 +94,8 @@ public:
 
     QByteArray resource(QString resource);
     void addResource(QString resource, QString resource_file, QString extra, /*qint32 checksum, */qint32 offset, qint32 size, qint32 size_compressed, qint16 type);
+
+    void sendEvent(EPFEvent*);
 
 signals:
 

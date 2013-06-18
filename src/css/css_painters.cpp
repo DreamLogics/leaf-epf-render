@@ -24,7 +24,7 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
 {
     QRectF qrSize;
 
-    qDebug() << "paintBackgroundImage :" << strSrc;
+    //qDebug() << "paintBackgroundImage :" << strSrc;
 
     QRegExp srcreg("[\"'\\(\\)]");
 
@@ -33,14 +33,14 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
 
     strSrc = strSrc.replace(srcreg,"");
 
-    qDebug() << "paintBackgroundImage :" << strSrc;
+    //qDebug() << "paintBackgroundImage :" << strSrc;
 
     QImage img = QImage::fromData(pDocument->resource(strSrc));
 
     if (img.isNull())
         return;
 
-    qDebug() << "paintBackgroundImage - size :" << strSize;
+    //qDebug() << "paintBackgroundImage - size :" << strSize;
 
     if (strSize != "")
     {

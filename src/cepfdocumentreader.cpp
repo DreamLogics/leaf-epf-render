@@ -206,7 +206,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         for (pugi::xml_node prop = props.child("prop"); prop; prop = prop.next_sibling("prop"))
         {
             document->addProperty(prop.attribute("key").value(),prop.child_value());
-            qDebug() << "property added: "<<prop.attribute("key").value() << prop.child_value();
+            //qDebug() << "property added: "<<prop.attribute("key").value() << prop.child_value();
         }
 
         pugi::xml_node fonts = containerxml.child("EPF").child("fonts");
@@ -288,7 +288,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     //obj->setParent((QObject*)o->documentItem());
                     //obj->setParentItem((QGraphicsItem*)o->documentItem());
 
-                    qDebug() << "object made of type("<< object.attribute("type").value() <<"): "<<object.attribute("id").value();
+                    //qDebug() << "object made of type("<< object.attribute("type").value() <<"): "<<object.attribute("id").value();
 
                     //s->addObject(obj,object.attribute("id").value(),object.attribute("layer").as_int());
                     l->addObject(obj);
@@ -336,7 +336,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     //obj->setParent((QObject*)s->documentItem());
 
 
-                    qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
+                    //qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
 
                     //s->addObject(obj,object.attribute("id").value(),object.attribute("layer").as_int());
                     l->addObject(obj);
@@ -350,7 +350,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         }
 
 
-        qDebug() << "ani";
+        //qDebug() << "ani";
 
         QStringList anims;
 
@@ -363,7 +363,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             document->addAnimation(animation.attribute("id").value(),animation.attribute("frames").as_int(),animation.attribute("fps").as_int(),animation.attribute("src").value());
         }
 
-        qDebug() << "con";
+        //qDebug() << "con";
 
         //connections
         pugi::xml_node connections = containerxml.child("EPF").child("connections");
@@ -376,38 +376,38 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             func = connection.attribute("function").value();
             if (funcreg.indexIn(func) != -1)
             {
-                /*func = funcreg.cap(1);
+                func = funcreg.cap(1);
                 param = funcreg.cap(2);
                 QObject* src_obj=0;
                 QObject* dst_obj=0;
 
                 if (m_objectmap.contains(connection.attribute("source").value()))
-                    src_obj = (QObject*)m_objectmap[connection.attribute("source").value()];
+                    src_obj = m_objectmap[connection.attribute("source").value()];
                 else if (sectionmap.contains(connection.attribute("source").value()))
-                    src_obj = (QObject*)m_objectmap[connection.attribute("source").value()];
+                    src_obj = m_objectmap[connection.attribute("source").value()];
                 else if (anims.contains(connection.attribute("source").value()))
-                    src_obj = (QObject*)m_objectmap[connection.attribute("source").value()];
+                    src_obj = m_objectmap[connection.attribute("source").value()];
                 else if (!strcmp(connection.attribute("source").value(),"document"))
-                    src_obj = (QObject*)document;
+                    src_obj = document;
 
                 if (m_objectmap.contains(connection.attribute("target").value()))
-                    dst_obj = (QObject*)m_objectmap[connection.attribute("target").value()];
+                    dst_obj = m_objectmap[connection.attribute("target").value()];
                 else if (sectionmap.contains(connection.attribute("target").value()))
-                    dst_obj = (QObject*)m_objectmap[connection.attribute("target").value()];
+                    dst_obj = m_objectmap[connection.attribute("target").value()];
                 else if (anims.contains(connection.attribute("target").value()))
-                    dst_obj = (QObject*)m_objectmap[connection.attribute("target").value()];
+                    dst_obj = m_objectmap[connection.attribute("target").value()];
                 else if (!strcmp(connection.attribute("target").value(),"document"))
-                    dst_obj = (QObject*)document;
+                    dst_obj = document;
 
                 if (src_obj && dst_obj)
                 {
-                    QObject::connect(src_obj,SIGNAL());
-                    SLOT(tset);
-                }*/
+                    //QObject::connect(src_obj,SIGNAL());
+                    //SLOT(tset);
+                }
             }
         }
 
-        qDebug() << "moving to thread";
+        //qDebug() << "moving to thread";
         //(*error) = "test";
 
         if (create_in_thread)
@@ -486,7 +486,7 @@ void CEPFDocumentReader::parseObjectNode(pugi::xml_node *node, CLayer *layer, CS
 
         obj->setParents(parent);
 
-        qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
+        //qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
 
         //s->addObject(obj,object.attribute("id").value(),object.attribute("layer").as_int());
         layer->addObject(obj);

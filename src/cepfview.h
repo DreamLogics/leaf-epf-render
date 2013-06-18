@@ -64,6 +64,7 @@ protected:
 
     virtual void drawForeground(QPainter *painter, const QRectF &rect);
     virtual bool viewportEvent(QEvent *event);
+    virtual void resizeEvent(QResizeEvent *event);
 
 private:
 

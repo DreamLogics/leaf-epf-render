@@ -136,7 +136,7 @@ void CBaseObject::layout(QRectF relrect)
     m_rRect.setHeight(css->property(this,"height")->toInt());
     m_rRect.setWidth(css->property(this,"width")->toInt());
 
-    qDebug() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << css->property(this,"height")->toString();
+    //qDebug() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << css->property(this,"height")->toString();
 
     /*if (css->property(this,"relative-to")->toString() == "")
     {
