@@ -29,6 +29,7 @@
 #include <QString>
 #include <QStringList>
 #include <QObjectList>
+#include "epfevent.h"
 
 //class COEPFRender;
 
@@ -45,7 +46,7 @@ class CEPFView;
 class EPFEvent;
 
 
-class CDocument : public QObject
+class CDocument : public QObject, public EPFComponent
 {
     Q_OBJECT
 public:
@@ -95,7 +96,8 @@ public:
     QByteArray resource(QString resource);
     void addResource(QString resource, QString resource_file, QString extra, /*qint32 checksum, */qint32 offset, qint32 size, qint32 size_compressed, qint16 type);
 
-    void sendEvent(EPFEvent*);
+    //void makeConnection(EPFComponent* src, QString event, EPFComponent* target, QString function);
+    virtual void onEPFEvent(EPFEvent *ev);
 
 signals:
 

@@ -36,6 +36,7 @@
 #include "cunsupportedobject.h"
 #include <QThread>
 #include <QObject>
+#include "epfevent.h"
 
 #include "object_types/cblockobject.h"
 #include "object_types/ctextobject.h"
@@ -369,17 +370,17 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         pugi::xml_node connections = containerxml.child("EPF").child("connections");
         QString func,param;
         //QStringList parameters;
-        QRegExp funcreg("([^\\(]+)\\(([^\\)]*)\\)");
+        //QRegExp funcreg("([^\\(]+)\\(([^\\)]*)\\)");
 
         for (pugi::xml_node connection = connections.child("connection"); connection; connection = connection.next_sibling("connection"))
         {
             func = connection.attribute("function").value();
-            if (funcreg.indexIn(func) != -1)
+            //if (funcreg.indexIn(func) != -1)
             {
-                func = funcreg.cap(1);
-                param = funcreg.cap(2);
-                QObject* src_obj=0;
-                QObject* dst_obj=0;
+                //func = funcreg.cap(1);
+                //param = funcreg.cap(2);
+                EPFComponent* src_obj=0;
+                EPFComponent* dst_obj=0;
 
                 if (m_objectmap.contains(connection.attribute("source").value()))
                     src_obj = m_objectmap[connection.attribute("source").value()];
@@ -403,6 +404,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                 {
                     //QObject::connect(src_obj,SIGNAL());
                     //SLOT(tset);
+                    src_obj->addConnection(dst_obj,connection.attribute("event").value(),func);
                 }
             }
         }

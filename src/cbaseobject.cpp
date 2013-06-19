@@ -421,3 +421,8 @@ QVariant CBaseObject::itemChange(GraphicsItemChange change, const QVariant &valu
         layout();*/
     return QGraphicsObject::itemChange(change,value);
 }
+
+void CBaseObject::onEPFEvent(EPFEvent *ev)
+{
+
+}

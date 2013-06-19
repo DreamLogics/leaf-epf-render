@@ -450,3 +450,14 @@ CSS::Stylesheet* CDocument::stylesheet()
 {
     return m_pStylesheet;
 }
+
+void CDocument::onEPFEvent(EPFEvent *ev)
+{
+
+}
+/*
+void CDocument::makeConnection(EPFComponent *src, QString event, EPFComponent *target, QString function)
+{
+    src->addConnection(target,event,function);
+}
+*/

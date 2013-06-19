@@ -25,6 +25,7 @@
 
 #include "leaf-epf-render_global.h"
 #include <QGraphicsObject>
+#include "epfevent.h"
 
 namespace CSS
 {
@@ -36,7 +37,7 @@ class CLayer;
 class CSection;
 class CDocument;
 
-class LEAFEPFRENDERSHARED_EXPORT CBaseObject : public QGraphicsObject
+class LEAFEPFRENDERSHARED_EXPORT CBaseObject : public QGraphicsObject, public EPFComponent
 {
     Q_OBJECT
 public:
@@ -108,6 +109,8 @@ public:
 
     virtual int innerHeight() const;
     virtual int innerWidth() const;*/
+
+    virtual void onEPFEvent(EPFEvent *ev);
 
 protected:
 
