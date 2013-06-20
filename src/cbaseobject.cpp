@@ -92,9 +92,11 @@ void CBaseObject::setBoundingRect(const QRectF &r)
 
 QRectF CBaseObject::boundingRect() const
 {
+    /*QRectF r = m_rRect;
+    r.translate(m_iDX,m_iDY);
+    return r;*/
     return m_rRect;
 }
-
 
 void CBaseObject::preload()
 {
@@ -123,9 +125,10 @@ void CBaseObject::layout(QRectF relrect)
     if (obj)
         qDebug() << "child of:" << obj->id();*/
 
-    prepareGeometryChange();
 
-    //QRectF oldrect = m_rRect;
+
+    QRectF oldrect = m_rRect;
+    QRectF newrect = m_rRect;
     //QRectF relrect = r->boundingRect();
 
     CSS::Stylesheet* css = document()->stylesheet();
@@ -133,8 +136,8 @@ void CBaseObject::layout(QRectF relrect)
     setMargin(css->property(this,"margin-top")->toInt(),css->property(this,"margin-left")->toInt(),css->property(this,"margin-bottom")->toInt(),css->property(this,"margin-right")->toInt());
     //setPadding(css->property(this,"padding-top")->toInt(),css->property(this,"padding-left")->toInt(),css->property(this,"padding-bottom")->toInt(),css->property(this,"padding-right")->toInt());
 
-    m_rRect.setHeight(css->property(this,"height")->toInt());
-    m_rRect.setWidth(css->property(this,"width")->toInt());
+    newrect.setHeight(css->property(this,"height")->toInt());
+    newrect.setWidth(css->property(this,"width")->toInt());
 
     //qDebug() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << css->property(this,"height")->toString();
 
@@ -151,55 +154,60 @@ void CBaseObject::layout(QRectF relrect)
 
     if (pos != "static" && pos != "relative")
     {
-        m_rRect.moveTop(relrect.top() + css->property(this,"top")->toInt());
-        m_rRect.moveLeft(relrect.left() + css->property(this,"left")->toInt());
+        newrect.moveTop(relrect.top() + css->property(this,"top")->toInt());
+        newrect.moveLeft(relrect.left() + css->property(this,"left")->toInt());
 
         //m_rRect.setHeight(css->property(this,"height")->toInt());
         //m_rRect.setWidth(css->property(this,"width")->toInt());
 
         if (!css->property(this,"bottom")->isNull() && !css->property(this,"top")->isNull())
         {
-            m_rRect.setBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
-            m_rRect.setTop(m_rRect.bottom() - css->property(this,"height")->toInt());
+            newrect.setBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
+            newrect.setTop(newrect.bottom() - css->property(this,"height")->toInt());
         }
         else if (!css->property(this,"bottom")->isNull())
-            m_rRect.moveBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
+            newrect.moveBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
 
         if (!css->property(this,"right")->isNull() && css->property(this,"left")->isNull())
         {
-            m_rRect.setRight(relrect.right() - css->property(this,"right")->toInt());
-            m_rRect.setLeft(m_rRect.right() - css->property(this,"width")->toInt());
+            newrect.setRight(relrect.right() - css->property(this,"right")->toInt());
+            newrect.setLeft(m_rRect.right() - css->property(this,"width")->toInt());
         }
         else if (!css->property(this,"right")->isNull())
-            m_rRect.moveRight(relrect.right() - css->property(this,"right")->toInt());
+            newrect.moveRight(relrect.right() - css->property(this,"right")->toInt());
     }
     else
     {
-        m_rRect.moveTop(relrect.top());
+        newrect.moveTop(relrect.top());
     }
 
 
     //min/max height/width
-    if (!css->property(this,"min-height")->isNull() && css->property(this,"height")->toInt() < css->property(this,"min-height")->toInt())
-        m_rRect.setHeight(css->property(this,"min-height")->toInt());
+    if (!css->property(this,"min-height")->isNull() && newrect.height() < css->property(this,"min-height")->toInt())
+        newrect.setHeight(css->property(this,"min-height")->toInt());
 
-    if (!css->property(this,"min-width")->isNull() && css->property(this,"width")->toInt() < css->property(this,"min-width")->toInt())
-        m_rRect.setHeight(css->property(this,"min-width")->toInt());
+    if (!css->property(this,"min-width")->isNull() && newrect.width() < css->property(this,"min-width")->toInt())
+        newrect.setHeight(css->property(this,"min-width")->toInt());
 
-    if (!css->property(this,"max-height")->isNull() && css->property(this,"height")->toInt() > css->property(this,"max-height")->toInt())
-        m_rRect.setHeight(css->property(this,"max-height")->toInt());
+    if (!css->property(this,"max-height")->isNull() && newrect.height() > css->property(this,"max-height")->toInt())
+        newrect.setHeight(css->property(this,"max-height")->toInt());
 
-    if (!css->property(this,"max-width")->isNull() && css->property(this,"width")->toInt() > css->property(this,"max-width")->toInt())
-        m_rRect.setHeight(css->property(this,"max-width")->toInt());
+    if (!css->property(this,"max-width")->isNull() && newrect.width() > css->property(this,"max-width")->toInt())
+        newrect.setHeight(css->property(this,"max-width")->toInt());
 
 
 
-    /*if (oldrect.size() != m_rRect.size())
+    /*if (oldrect.size() != newrect.size())
     {
-        //qDebug() << "size change";
 
-        m_bNeedsRedraw = true;
     }*/
+
+    if (oldrect != newrect)
+    {
+        prepareGeometryChange();
+
+        m_rRect = newrect;
+    }
 
     QObjectList clist = children();
     CBaseObject* cobj;

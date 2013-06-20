@@ -30,6 +30,7 @@
 #include <QDebug>
 #include <QTimer>
 #include <QEvent>
+#include <QScrollBar>
 
 CEPFView::CEPFView()
 {
@@ -72,7 +73,7 @@ void CEPFView::setDocument(CDocument *doc)
 
         m_pDocScene->addItem(view);
 
-        connect(this,SIGNAL(viewChanged()),section,SLOT(updateFixedObjects()));
+        connect(this,SIGNAL(scrollSection(int,int)),section,SLOT(scrollSection(int,int)));
 
         //view->setGeometry(width(),0,width(),height());
         view->setX(width());
@@ -201,19 +202,20 @@ bool CEPFView::viewportEvent(QEvent *event)
 {
     if (!event)
         return false;
-    qDebug() << "event ype" << event->type();
-    bool b = false;
-    //if (event->type() != QEvent::Wheel)
-        b = QGraphicsView::viewportEvent(event);
-    //bool b = false;
+
     if (event->type() == QEvent::Scroll || event->type() == QEvent::Wheel)
     {
-        //qDebug() << viewportTransform().dy();
-        emit viewChanged(viewportTransform().dy());
-        return true;
+        qDebug() << verticalScrollBar()->value();
+        //return QAbstractScrollArea::viewportEvent(event);
+        //return true;
     }
 
-    return b;
+    return QGraphicsView::viewportEvent(event);
+}
+
+void CEPFView::scrollContentsBy(int dx, int dy)
+{
+    emit scrollSection(dx,dy);
 }
 
 void CEPFView::resizeEvent(QResizeEvent *event)

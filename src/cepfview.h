@@ -59,12 +59,14 @@ signals:
 
     void loadDocument(int height, int width);
     void viewChanged(int dy);
+    void scrollSection(int dx, int dy);
 
 protected:
 
     virtual void drawForeground(QPainter *painter, const QRectF &rect);
     virtual bool viewportEvent(QEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
+    virtual void scrollContentsBy( int dx, int dy );
 
 private:
 

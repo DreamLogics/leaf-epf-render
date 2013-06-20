@@ -34,14 +34,12 @@ class CDocument;
 class CLayer;
 class CBaseObject;
 
-class CDocumentItem : public QGraphicsObject
+class CViewportItem : public QGraphicsObject
 {
 public:
-    CDocumentItem();
+    CViewportItem();
 
     void setSize(int height,int width);
-    void setHeight(int height);
-    void increaseHeight(int delta);
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     virtual QRectF boundingRect() const;
 
@@ -80,7 +78,7 @@ public:
     QImage& rendered();
 
     virtual void layout(int height, int width);
-    CDocumentItem* documentItem();
+    CViewportItem* viewportItem();
 
     /*virtual void render(QPainter *painter,
                              const QRectF &target = QRectF(), const QRectF &source = QRectF(),
@@ -94,7 +92,8 @@ public slots:
     QObject* getObjectByID(QString id);
 
     void updateRendered( const QList<QRectF> &region );
-    void updateFixedObjects(int dy);
+    //void updateFixedObjects(int dy);
+    void scrollSection(int dx, int dy);
 
 private:
     QList<CLayer*> m_Layers;
@@ -106,7 +105,7 @@ private:
     bool m_bHidden;
 
     QImage m_imgRendered;
-    CDocumentItem* m_pDocumentItem;
+    CViewportItem* m_pViewportItem;
     
 };
 

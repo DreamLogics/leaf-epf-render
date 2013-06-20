@@ -31,37 +31,25 @@
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsItem>
 
-CDocumentItem::CDocumentItem()
+CViewportItem::CViewportItem()
 {
 }
 
-void CDocumentItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void CViewportItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-
+    //painter->fillRect(boundingRect(),QColor("red"));
 }
 
-QRectF CDocumentItem::boundingRect() const
+QRectF CViewportItem::boundingRect() const
 {
     return m_qrRect;
 }
 
-void CDocumentItem::setSize(int height, int width)
+void CViewportItem::setSize(int height, int width)
 {
     prepareGeometryChange();
     m_qrRect.setHeight(height);
     m_qrRect.setWidth(width);
-}
-
-void CDocumentItem::setHeight(int height)
-{
-    prepareGeometryChange();
-    m_qrRect.setHeight(height);
-}
-
-void CDocumentItem::increaseHeight(int delta)
-{
-    prepareGeometryChange();
-    m_qrRect.setHeight(m_qrRect.height()+delta);
 }
 
 
@@ -71,15 +59,16 @@ CSection::CSection(QString id, CDocument* doc,bool hidden) : QGraphicsScene(doc)
 
     connect(this,SIGNAL(changed(QList<QRectF>)),this,SLOT(updateRendered(QList<QRectF>)));
 
-    m_pDocumentItem = new CDocumentItem();
-    m_pDocumentItem->setParent((QObject*)this);
+    m_pViewportItem = new CViewportItem();
+    m_pViewportItem->setParent((QObject*)this);
+    addItem(m_pViewportItem);
 
     //connect(this,SIGNAL(sceneRectChanged(QRectF)),this,SLOT(updateFixedObjects()),Qt::QueuedConnection);
 }
 
 CSection::~CSection()
 {
-
+    delete m_pViewportItem;
 }
 
 int CSection::objectCount()
@@ -173,10 +162,10 @@ QImage& CSection::rendered()
 
 void CSection::updateRendered(const QList<QRectF> &region)
 {
-    qDebug() << "CSection::updateRendered()";
+    //qDebug() << "CSection::updateRendered()";
     if (m_imgRendered.isNull() || m_imgRendered.height() != height() || m_imgRendered.width() != width())
     {
-        qDebug() << width() << height();
+        //qDebug() << width() << height();
         m_imgRendered = QImage(width(),height(),QImage::Format_RGB32);
         m_imgRendered.fill(Qt::black);
 
@@ -199,10 +188,10 @@ void CSection::updateRendered(const QList<QRectF> &region)
 
 void CSection::layout(int height, int width)
 {
-    m_pDocumentItem->setSize(height,width);
+    m_pViewportItem->setSize(height,width);
     CSS::Stylesheet* css = document()->stylesheet();
 
-    qDebug() << "CSection::layout" << width << height;
+    //qDebug() << "CSection::layout" << width << height;
 
     int docheight=0;
 
@@ -220,8 +209,8 @@ void CSection::layout(int height, int width)
         {
             obj = l->object(n);
             pos = css->property(obj,"position")->toString();
-            qDebug() << "position" << pos;
-            if ((pos == "static" || pos == "relative") && dynamic_cast<CLayer*>(obj->parentItem()))
+            //qDebug() << "position" << pos;
+            if ((pos == "static" || pos == "relative") && dynamic_cast<CLayer*/*CLayer*/>(obj->parentItem()))
             {
                 obj->layout(relrect);
                 relrect.setTop(obj->boundingRect().bottom());
@@ -235,7 +224,6 @@ void CSection::layout(int height, int width)
         }
     }
 
-    m_pDocumentItem->setHeight(docheight);
     const QRectF docbound(0,0,width,docheight);
 
     for (i=0;i<layerCount();i++) //now layout all objects relative to the document but not static
@@ -245,10 +233,13 @@ void CSection::layout(int height, int width)
         {
             obj = l->object(n);
             pos = css->property(obj,"position")->toString();
-            if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*>(obj->parentItem()))
+            if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*/*CLayer*/>(obj->parentItem()))
             {
                 if (pos == "fixed")
+                {
+                    obj->setParentItem(m_pViewportItem);
                     relrect = QRectF(0,0,width,height);
+                }
                 else
                     relrect = docbound;
                 obj->layout(relrect);
@@ -257,93 +248,12 @@ void CSection::layout(int height, int width)
     }
 }
 
-CDocumentItem* CSection::documentItem()
+CViewportItem* CSection::viewportItem()
 {
-    return m_pDocumentItem;
+    return m_pViewportItem;
 }
-/*
-void CSection::render(QPainter *painter, const QRectF &target, const QRectF &source,
-                            Qt::AspectRatioMode aspectRatioMode)
+
+void CSection::scrollSection(int dx, int dy)
 {
-    // ### Switch to using the recursive rendering algorithm instead.
-
-    qDebug() << "render in section";
-
-    // Default source rect = scene rect
-    QRectF sourceRect = source;
-    if (sourceRect.isNull())
-        sourceRect = sceneRect();
-
-    // Default target rect = device rect
-    QRectF targetRect = target;
-    if (targetRect.isNull()) {
-        if (painter->device()->devType() == QInternal::Picture)
-            targetRect = sourceRect;
-        else
-            targetRect.setRect(0, 0, painter->device()->width(), painter->device()->height());
-    }
-
-    // Find the ideal x / y scaling ratio to fit \a source into \a target.
-    qreal xratio = targetRect.width() / sourceRect.width();
-    qreal yratio = targetRect.height() / sourceRect.height();
-
-    // Scale according to the aspect ratio mode.
-    switch (aspectRatioMode) {
-    case Qt::KeepAspectRatio:
-        xratio = yratio = qMin(xratio, yratio);
-        break;
-    case Qt::KeepAspectRatioByExpanding:
-        xratio = yratio = qMax(xratio, yratio);
-        break;
-    case Qt::IgnoreAspectRatio:
-        break;
-    }
-
-    // Find all items to draw, and reverse the list (we want to draw
-    // in reverse order).
-    QList<QGraphicsItem *> itemList = items(sourceRect, Qt::IntersectsItemBoundingRect);
-
-    //add fixed item,
-
-    QGraphicsItem **itemArray = new QGraphicsItem *[itemList.size()];
-    int numItems = itemList.size();
-    for (int i = 0; i < numItems; ++i)
-        itemArray[numItems - i - 1] = itemList.at(i);
-    itemList.clear();
-
-    painter->save();
-
-    // Transform the painter.
-    painter->setClipRect(targetRect, Qt::IntersectClip);
-    QTransform painterTransform;
-    painterTransform *= QTransform()
-                        .translate(targetRect.left(), targetRect.top())
-                        .scale(xratio, yratio)
-                        .translate(-sourceRect.left(), -sourceRect.top());
-    painter->setWorldTransform(painterTransform, true);
-
-    // Two unit vectors.
-    QLineF v1(0, 0, 1, 0);
-    QLineF v2(0, 0, 0, 1);
-
-    // Generate the style options
-    QStyleOptionGraphicsItem *styleOptionArray = new QStyleOptionGraphicsItem[numItems];
-    //for (int i = 0; i < numItems; ++i)
-    //    itemArray[i]->d_ptr->initStyleOption(&styleOptionArray[i], painterTransform, targetRect.toRect());
-
-    // Render the scene.
-    drawBackground(painter, sourceRect);
-    drawItems(painter, numItems, itemArray, styleOptionArray);
-    drawForeground(painter, sourceRect);
-
-    delete [] itemArray;
-    delete [] styleOptionArray;
-
-    painter->restore();
-}
-*/
-
-void CSection::updateFixedObjects(int dy)
-{
-    qDebug() << "dd" << dy;
+    //m_pViewportItem->setPos(dx,dy);
 }

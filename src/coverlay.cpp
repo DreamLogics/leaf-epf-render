@@ -45,7 +45,7 @@ void COverlay::setVisibility(bool b)
 
 void COverlay::layout(int height, int width)
 {
-    documentItem()->setSize(height,width);
+    viewportItem()->setSize(height,width);
     CSS::Stylesheet* css = document()->stylesheet();
 
     int i,n;

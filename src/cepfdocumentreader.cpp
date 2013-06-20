@@ -287,7 +287,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     obj->setParent(/*(QObject*)*/l);
                     obj->setParentItem(/*(QGraphicsItem*)*/l);
                     //obj->setParent((QObject*)o->documentItem());
-                    //obj->setParentItem((QGraphicsItem*)o->documentItem());
+                    //obj->setParentItem(o->documentItem());
 
                     //qDebug() << "object made of type("<< object.attribute("type").value() <<"): "<<object.attribute("id").value();
 
@@ -335,6 +335,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     obj->setParent(l);
                     obj->setParentItem(l);
                     //obj->setParent((QObject*)s->documentItem());
+                    //obj->setParentItem(s->documentItem());
 
 
                     //qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();

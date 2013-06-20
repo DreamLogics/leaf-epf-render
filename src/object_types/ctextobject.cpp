@@ -335,7 +335,7 @@ QString CTextObject::css()
             {
                 bInSel = true;
                 sel.replace(outerspaces,"");
-                qDebug() << sel << "#"+section()->id()+"::"+id();
+                //qDebug() << sel << "#"+section()->id()+"::"+id();
                 if ((sel.startsWith("#"+section()->id()+"::"+id()) || sel.startsWith("#"+section()->id()+":"+layer()->id()+":"+id()))
                         && !(sel == "#"+section()->id()+"::"+id() || sel == "#"+section()->id()+":"+layer()->id()+":"+id()))
                 {
@@ -362,7 +362,7 @@ QString CTextObject::css()
         }
     }
 
-    qDebug() << newcss;
+    //qDebug() << newcss;
 
     return newcss;
 

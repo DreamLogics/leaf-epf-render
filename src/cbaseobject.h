@@ -63,6 +63,9 @@ public:
     virtual void setBoundingRect(const QRectF&);
     virtual QRectF boundingRect() const;
 
+    void setPositionOffset(int dx, int dy);
+
+
     virtual void layout(QRectF relativeTo);
     /*virtual CBaseObject* relative();
     virtual QString relativeID();*/
