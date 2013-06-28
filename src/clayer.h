@@ -23,14 +23,14 @@
 #ifndef CLAYER_H
 #define CLAYER_H
 
-#include <QGraphicsObject>
+#include <QObject>
 #include <QString>
 #include <QList>
 
 class CBaseObject;
 class CSection;
 
-class CLayer : public QGraphicsObject
+class CLayer : public QObject
 {
     Q_OBJECT
 public:
@@ -44,8 +44,8 @@ public:
 
     CSection* section();
 
-    virtual QRectF boundingRect() const;
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    //virtual QRectF boundingRect() const;
+    //virtual void paint(QPainter *painter);
 
     
 signals:

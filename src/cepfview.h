@@ -27,13 +27,14 @@
 #include <QObject>
 #include <QString>
 #include <QList>
-#include <QGraphicsView>
+//#include <QGraphicsView>
+#include <QGLWidget>
 
 class CDocument;
-class QGraphicsScene;
-class CSectionView;
+//class QGraphicsScene;
+//class CSectionView;
 
-class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QGraphicsView//QObject
+class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QGLWidget
 {
     Q_OBJECT
 public:
@@ -59,14 +60,15 @@ signals:
 
     void loadDocument(int height, int width);
     void viewChanged(int dy);
-    void scrollSection(int dx, int dy);
+    //void scrollSection(int dx, int dy);
 
 protected:
 
-    virtual void drawForeground(QPainter *painter, const QRectF &rect);
-    virtual bool viewportEvent(QEvent *event);
+    //virtual void drawForeground(QPainter *painter, const QRectF &rect);
+    //virtual bool viewportEvent(QEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
-    virtual void scrollContentsBy( int dx, int dy );
+    //virtual void scrollContentsBy( int dx, int dy );
+    virtual void paintEvent(QPaintEvent *);
 
 private:
 
@@ -78,14 +80,14 @@ private:
     QList<QString> m_SectionIndex;
     CDocument* m_pDocument;
 
-    QList<CSectionView*> m_SectionViews;
+    //QList<CSectionView*> m_SectionViews;
 
     int m_iCurrentSection;
     int m_iTOCSection;
 
     int m_iRenderDot;
 
-    QGraphicsScene* m_pDocScene;
+    //QGraphicsScene* m_pDocScene;
 };
 
 #endif // CEPFVIEW_H

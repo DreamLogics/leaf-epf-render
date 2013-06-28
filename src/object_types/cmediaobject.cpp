@@ -36,7 +36,7 @@ void CMediaObject::preload()
 
 }
 
-void CMediaObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void CMediaObject::paint(QPainter *painter)
 {
 
 }

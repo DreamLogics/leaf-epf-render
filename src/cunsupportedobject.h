@@ -30,7 +30,7 @@ class CUnsupportedObject : public CBaseObject
 public:
     CUnsupportedObject(QString id, CLayer* layer);
 
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual void paint(QPainter *painter);
 };
 
 #endif // CUNSUPPORTEDOBJECT_H

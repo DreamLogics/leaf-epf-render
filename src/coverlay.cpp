@@ -59,7 +59,7 @@ void COverlay::layout(int height, int width)
         {
             obj = l->object(n);
             //pos = css->property(obj,"position")->toString();
-            if (dynamic_cast<CLayer*>(obj->parentItem()))
+            if (dynamic_cast<CLayer*>(obj->parent()))
             {
                 css->property(obj,"position")->setValue("fixed");
                 obj->layout(QRectF(0,0,width,height));

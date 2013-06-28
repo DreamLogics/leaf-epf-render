@@ -58,8 +58,8 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
             img = img.scaledToWidth(sizeautoreg.cap(1).toInt(),Qt::SmoothTransformation);
         else if (percreg.indexIn(propstr) != -1)
             img = img.scaled(((float)(percreg.cap(1).toInt())/100)*img.width(),((float)(percreg.cap(2).toInt())/100)*img.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-
-        img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::KeepAspectRatio);
+        else
+            img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::KeepAspectRatio);
     }
 
     qrSize = img.rect();

@@ -22,7 +22,7 @@
 
 #include "cepfview.h"
 #include "cdocument.h"
-#include "csectionview.h"
+//#include "csectionview.h"
 #include "csection.h"
 #include "clayer.h"
 #include "cbaseobject.h"
@@ -34,14 +34,14 @@
 
 CEPFView::CEPFView()
 {
-    m_pDocScene = new QGraphicsScene();
-    setScene(m_pDocScene);
+    //m_pDocScene = new QGraphicsScene();
+    //setScene(m_pDocScene);
     m_bIsLoading = true;
     m_iRenderDot = 0;
-    setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    //setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 void CEPFView::setDocument(CDocument *doc)
@@ -49,15 +49,15 @@ void CEPFView::setDocument(CDocument *doc)
     m_pDocument = doc;
     int i,first=-1;
 
-    for (i=0;i<m_SectionViews.size();i++)
-        delete m_SectionViews[i];
+    /*for (i=0;i<m_SectionViews.size();i++)
+        delete m_SectionViews[i];*/
 
-    m_SectionViews.clear();
+    //m_SectionViews.clear();
     m_SectionIndex.clear();
 
     m_iCurrentSection = -1;
 
-    CSectionView* view;
+    //CSectionView* view;
     CSection* section;
 
     doc->setRenderview(this);
@@ -67,16 +67,16 @@ void CEPFView::setDocument(CDocument *doc)
     {
         section = doc->section(i);
 
-        view = new CSectionView(section);
-        m_SectionViews.append(view);
+        //view = new CSectionView(section);
+        //m_SectionViews.append(view);
         m_SectionIndex.append(section->id());
 
-        m_pDocScene->addItem(view);
+        //m_pDocScene->addItem(view);
 
-        connect(this,SIGNAL(scrollSection(int,int)),section,SLOT(scrollSection(int,int)));
+        //connect(this,SIGNAL(scrollSection(int,int)),section,SLOT(scrollSection(int,int)));
 
         //view->setGeometry(width(),0,width(),height());
-        view->setX(width());
+        //view->setX(width());
 
         if (first == -1 && !section->isHidden())
             first = i;
@@ -95,17 +95,17 @@ void CEPFView::setDocument(CDocument *doc)
 
 void CEPFView::setSection(int index)
 {
-    if (index < 0 || index >= m_SectionViews.size())
+    if (index < 0 || index >= m_pDocument->sectionCount())
         return;
 
-    CSectionView* view = m_SectionViews[index];
+    /*CSectionView* view = m_SectionViews[index];
     view->setX(0);
 
     if (m_iCurrentSection > -1)
     {
         CSectionView* curview = m_SectionViews[m_iCurrentSection];
         curview->setX(width());
-    }
+    }*/
 
     m_iCurrentSection = index;
 }
@@ -121,7 +121,7 @@ void CEPFView::setSection(QString id)
 void CEPFView::nextSection()
 {
     int i;
-    for (i=m_iCurrentSection+1;i<m_SectionViews.size();i++)
+    for (i=m_iCurrentSection+1;i<m_pDocument->sectionCount();i++)
     {
         if (!m_pDocument->section(i)->isHidden())
         {
@@ -135,7 +135,7 @@ void CEPFView::nextSection()
 void CEPFView::previousSection()
 {
     int i;
-    for (i=m_iCurrentSection-1;i<m_SectionViews.size();i--)
+    for (i=m_iCurrentSection-1;i<m_pDocument->sectionCount();i--)
     {
         if (!m_pDocument->section(i)->isHidden())
         {
@@ -153,15 +153,15 @@ int CEPFView::currentSection()
 void CEPFView::ready()
 {
     m_bIsLoading = false;
-    setScene(m_pDocument->section(0));
-    ensureVisible(0,0,1,1);
+    //setScene(m_pDocument->section(0));
+    //ensureVisible(0,0,1,1);
 }
 
 void CEPFView::tocSection()
 {
 
 }
-
+/*
 void CEPFView::drawForeground(QPainter *p, const QRectF &rect)
 {
     if (m_bIsLoading)
@@ -189,15 +189,16 @@ void CEPFView::drawForeground(QPainter *p, const QRectF &rect)
     }
     QGraphicsView::drawForeground(p,rect);
 }
-
+*/
 void CEPFView::updateDot()
 {
     if (m_iRenderDot == 2) m_iRenderDot = 0; else m_iRenderDot++;
-    viewport()->update();
+    //viewport()->update();
+    update();
     if (m_bIsLoading)
         QTimer::singleShot(300,this,SLOT(updateDot()));
 }
-
+/*
 bool CEPFView::viewportEvent(QEvent *event)
 {
     if (!event)
@@ -217,11 +218,47 @@ void CEPFView::scrollContentsBy(int dx, int dy)
 {
     emit scrollSection(dx,dy);
 }
-
+*/
 void CEPFView::resizeEvent(QResizeEvent *event)
 {
     if (!m_bIsLoading && m_pDocument && m_pDocument->sectionCount() > 0)
     {
         m_pDocument->layout(height(),width());
     }
+}
+
+void CEPFView::paintEvent(QPaintEvent *ev)
+{
+    QPainter p;
+    p.begin(this);
+
+    if (m_bIsLoading)
+    {
+        p.resetTransform();
+        p.setRenderHint(QPainter::Antialiasing);
+
+        p.setOpacity(1.0);
+
+
+        p.fillRect(0,0,width(),height(),QColor(30,30,30));
+
+        for (int dot=0;dot<3;dot++)
+        {
+            if (dot == m_iRenderDot)
+                p.setBrush(QColor(200,0,0));
+            else
+                p.setBrush(QColor("grey"));
+            p.drawEllipse((width()/2)-18+(dot*12),(height()/2)+100,8,8);
+        }
+
+        p.setBrush(Qt::NoBrush);
+
+        return;
+    }
+    else
+    {
+        m_pDocument->section(0)->render(&p);
+    }
+
+    p.end();
 }

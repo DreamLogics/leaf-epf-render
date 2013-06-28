@@ -26,7 +26,7 @@ CUnsupportedObject::CUnsupportedObject(QString id, CLayer* layer) : CBaseObject(
 {
 }
 
-void CUnsupportedObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void CUnsupportedObject::paint(QPainter *painter)
 {
     QRectF r = boundingRect();
 }

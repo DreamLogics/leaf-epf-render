@@ -27,8 +27,9 @@
 #include "cdocument.h"
 #include "cepfview.h"
 #include <QDebug>
+#include <QGLFramebufferObject>
 
-CBaseObject::CBaseObject(QString id, CLayer* layer) : QGraphicsObject(),
+CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_sID(id), m_pLayer(layer)
 {
     m_iMarginTop = 0;
@@ -36,34 +37,16 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QGraphicsObject(),
     m_iMarginBottom = 0;
     m_iMarginLeft = 0;
     m_bEnabled = false;
+    m_bNeedsRedraw = true;
+    //m_pBuffer = 0;
 
-    setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+    //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
 
 CBaseObject::~CBaseObject()
 {
-
-}
-
-void CBaseObject::setParents(CBaseObject* obj)
-{
-    /*CSS::Property* relative = document()->stylesheet()->property(this,"relative-to");
-    if (!relative->isNull())
-    {
-        CBaseObject* obj = section()->objectByID(relative->toString());
-        if (obj)
-        {
-            setParent((QObject*)obj);
-            setParentItem((QGraphicsItem*)obj);
-        }
-    }
-    else
-    {
-        setParent((QObject*)m_pLayer);
-        setParentItem((QGraphicsItem*)m_pLayer);
-    }*/
-    setParent(obj);
-    setParentItem(obj);
+    //if (m_pBuffer)
+    //    delete m_pBuffer;
 }
 
 bool CBaseObject::enabled() const
@@ -85,7 +68,10 @@ void CBaseObject::setBoundingRect(const QRectF &r)
 {
     if (r != m_rRect)
     {
-        prepareGeometryChange();
+        //prepareGeometryChange();
+        if (m_rRect.size() != r.size())
+            m_bNeedsRedraw = true;
+
         m_rRect = r;
     }
 }
@@ -196,15 +182,11 @@ void CBaseObject::layout(QRectF relrect)
         newrect.setHeight(css->property(this,"max-width")->toInt());
 
 
-
-    /*if (oldrect.size() != newrect.size())
-    {
-
-    }*/
-
     if (oldrect != newrect)
     {
-        prepareGeometryChange();
+        //prepareGeometryChange();
+        if (oldrect.size() != newrect.size())
+            m_bNeedsRedraw = true;
 
         m_rRect = newrect;
     }
@@ -281,6 +263,7 @@ void CBaseObject::mouseMoveEvent(QMouseEvent *, QPoint contentpos)
 
 void CBaseObject::setCSSOverride(QString css)
 {
+    m_bNeedsRedraw = true;
     m_sCSSOverrides = css;
 }
 
@@ -422,15 +405,53 @@ CDocument* CBaseObject::document()
 {
     return section()->document();
 }
-
+/*
 QVariant CBaseObject::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    /*if (change == QGraphicsItem::ItemParentHasChanged)
-        layout();*/
+    if (change == QGraphicsItem::ItemParentHasChanged)
+        layout();
     return QGraphicsObject::itemChange(change,value);
 }
-
+*/
 void CBaseObject::onEPFEvent(EPFEvent *ev)
 {
 
+}
+
+void CBaseObject::sheduleRepaint()
+{
+    m_bNeedsRedraw = true;
+}
+
+void CBaseObject::paintBuffered(QPainter *p)
+{
+    if (m_bNeedsRedraw)
+    {
+        /*if (m_pBuffer)
+            delete m_pBuffer;*/
+
+        //QGLFramebufferObject fbo(m_rRect.size().toSize());
+
+        //m_pBuffer = new QGLFramebufferObject();
+
+        m_qiRenderBuffer = QImage(m_rRect.size().toSize(),QImage::Format_ARGB32_Premultiplied);
+        m_qiRenderBuffer.fill(0x00000000);
+
+        QPainter bp;
+        //bp.begin(&fbo);
+        bp.begin(&m_qiRenderBuffer);
+
+        //bp.fillRect(QRectF(0,0,m_rRect.width(),m_rRect.height()),QColor(0,0,0,0));
+
+        paint(&bp);
+
+        bp.end();
+
+        //m_qiRenderBuffer = fbo.toImage();
+
+        m_bNeedsRedraw = false;
+    }
+
+    //p->drawImage(0,0,m_pBuffer->toImage());
+    p->drawImage(0,0,m_qiRenderBuffer);
 }

@@ -38,7 +38,7 @@ public:
     CScriptObject(QString id, CLayer* layer);
 
     virtual void preload();
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual void paint(QPainter *painter);
 };
 
 #endif // CSCRIPTOBJECT_H

@@ -285,7 +285,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     m_objectmap.insert(QString(overlay.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
                     obj->setParent(/*(QObject*)*/l);
-                    obj->setParentItem(/*(QGraphicsItem*)*/l);
+                    //obj->setParentItem(/*(QGraphicsItem*)*/l);
                     //obj->setParent((QObject*)o->documentItem());
                     //obj->setParentItem(o->documentItem());
 
@@ -333,7 +333,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     m_objectmap.insert(QString(section.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
                     obj->setParent(l);
-                    obj->setParentItem(l);
+                    //obj->setParentItem(l);
                     //obj->setParent((QObject*)s->documentItem());
                     //obj->setParentItem(s->documentItem());
 
@@ -487,7 +487,7 @@ void CEPFDocumentReader::parseObjectNode(pugi::xml_node *node, CLayer *layer, CS
         obj = createObject(object.attribute("type").value(),object.attribute("id").value(),layer,object.attribute("properties").value(),object.attribute("styles").value(),object.attribute("enabled").as_bool());
         m_objectmap.insert(section->id()+":"+QString(object.attribute("id").value()),obj);
 
-        obj->setParents(parent);
+        obj->setParent(parent);
 
         //qDebug() << "object made of type("<< object.attribute("type").value()<<"): "<<object.attribute("id").value();
 

@@ -24,8 +24,11 @@
 #define CBASEOBJECT_H
 
 #include "leaf-epf-render_global.h"
-#include <QGraphicsObject>
+//#include <QGraphicsObject>
+#include <QObject>
 #include "epfevent.h"
+#include <QRectF>
+#include <QImage>
 
 namespace CSS
 {
@@ -36,19 +39,19 @@ class QMouseEvent;
 class CLayer;
 class CSection;
 class CDocument;
+class QPainter;
+//class QGLFramebufferObject;
 
-class LEAFEPFRENDERSHARED_EXPORT CBaseObject : public QGraphicsObject, public EPFComponent
+class LEAFEPFRENDERSHARED_EXPORT CBaseObject : public QObject, public EPFComponent
 {
     Q_OBJECT
 public:
     CBaseObject(QString id, CLayer* layer);
     virtual ~CBaseObject();
 
-    void setParents(CBaseObject*);
-
     virtual void preload();
 
-    //virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual void paint(QPainter *painter) = 0;
 
     virtual QString id() const;
     virtual const char* objectType() const;
@@ -63,8 +66,9 @@ public:
     virtual void setBoundingRect(const QRectF&);
     virtual QRectF boundingRect() const;
 
-    void setPositionOffset(int dx, int dy);
-
+    //void setPositionOffset(int dx, int dy);
+    void sheduleRepaint();
+    void paintBuffered(QPainter* p);
 
     virtual void layout(QRectF relativeTo);
     /*virtual CBaseObject* relative();
@@ -117,7 +121,7 @@ public:
 
 protected:
 
-    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    //virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
 public slots:
 
@@ -151,7 +155,7 @@ private:
 
     bool m_bEnabled;
 
-
+    //QGLFramebufferObject* m_pBuffer;
 
     int m_iMarginTop;
     int m_iMarginLeft;

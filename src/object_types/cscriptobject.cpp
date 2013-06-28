@@ -36,7 +36,7 @@ void CScriptObject::preload()
 
 }
 
-void CScriptObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void CScriptObject::paint(QPainter *painter)
 {
 
 }

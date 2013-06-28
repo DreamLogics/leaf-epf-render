@@ -13,7 +13,6 @@ DEFINES += LEAFEPFRENDER_LIBRARY
 
 SOURCES += cdocument.cpp \
     cepfview.cpp \
-    csectionview.cpp \
     csection.cpp \
     coverlay.cpp \
     clayer.cpp \
@@ -37,7 +36,6 @@ SOURCES += cdocument.cpp \
 HEADERS += leaf-epf-render_global.h \
     cdocument.h \
     cepfview.h \
-    csectionview.h \
     idevice.h \
     csection.h \
     coverlay.h \

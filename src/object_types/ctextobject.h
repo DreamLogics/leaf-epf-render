@@ -27,8 +27,7 @@
 #include "iepfobjectfactory.h"
 
 class QPainter;
-class QStyleOptionGraphicsItem;
-class QWidget;
+class QTextDocument;
 
 class CTextObjectFactory : public IEPFObjectFactory
 {
@@ -42,7 +41,7 @@ public:
     CTextObject(QString id, CLayer* layer);
 
     virtual void preload();
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual void paint(QPainter *painter);
     virtual void layout(QRectF relativeTo);
     QString overflow();
 

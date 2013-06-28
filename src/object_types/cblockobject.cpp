@@ -25,6 +25,7 @@
 #include <QStyleOptionGraphicsItem>
 #include <QWidget>
 #include "css/css_painters.h"
+#include <QDebug>
 
 CBaseObject* CBlockObjectFactory::create(QString id, CLayer *layer)
 {
@@ -41,13 +42,16 @@ void CBlockObject::preload()
 
 }
 
-void CBlockObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void CBlockObject::paint(QPainter *painter)
 {
     CSS::Stylesheet* css = document()->stylesheet();
+    QRectF r = boundingRect();
+    r.moveTop(0);
+    r.moveLeft(0);
 
     if (!css->property(this,"background-color")->isNull())
     {
-        CSS::paintBackgroundColor(painter,boundingRect(),css->property(this,"background-color")->toString());
+        CSS::paintBackgroundColor(painter,r,css->property(this,"background-color")->toString());
     }
 
     if (!css->property(this,"background-image")->isNull())
@@ -59,7 +63,7 @@ void CBlockObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
         else if (!css->property(this,"background-image-size")->isNull())
             size = css->property(this,"background-image-size")->toString();
 
-        CSS::paintBackgroundImage(painter,boundingRect(),size,css->property(this,"background-image")->toString(),document());
+        CSS::paintBackgroundImage(painter,r,size,css->property(this,"background-image")->toString(),document());
     }
 
     if (!css->property(this,"color-overlay")->isNull())
@@ -67,13 +71,13 @@ void CBlockObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
         QRegExp cov("(#[0-9a-fA-F]{3,6}) +([a-zA-Z]+) +([0-9\\.]+)");
         if (cov.indexIn(css->property(this,"color-overlay")->toString()) != -1)
         {
-            CSS::paintColorOverlay(painter,boundingRect(),cov.cap(1),CSS::renderModeFromString(cov.cap(2)),cov.cap(3).toDouble());
+            CSS::paintColorOverlay(painter,r,cov.cap(1),CSS::renderModeFromString(cov.cap(2)),cov.cap(3).toDouble());
         }
     }
 
     /*painter->setFont(QFont("sans-serif",10));
     painter->setPen(QColor("red"));
-    painter->drawText(boundingRect().left()+16,boundingRect().bottom()-16,id());
+    painter->drawText(r.left()+16,r.bottom()-16,id());
 
-    painter->drawRect(boundingRect());*/
+    painter->drawRect(r);*/
 }

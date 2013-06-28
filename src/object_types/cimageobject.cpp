@@ -36,7 +36,7 @@ void CImageObject::preload()
 
 }
 
-void CImageObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void CImageObject::paint(QPainter *painter)
 {
 
 }

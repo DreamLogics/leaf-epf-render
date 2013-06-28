@@ -31,11 +31,12 @@
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsItem>
 
+
 CViewportItem::CViewportItem()
 {
 }
 
-void CViewportItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void CViewportItem::paint(QPainter *painter/*, const QStyleOptionGraphicsItem *option, QWidget *widget*/)
 {
     //painter->fillRect(boundingRect(),QColor("red"));
 }
@@ -47,21 +48,19 @@ QRectF CViewportItem::boundingRect() const
 
 void CViewportItem::setSize(int height, int width)
 {
-    prepareGeometryChange();
+    //prepareGeometryChange();
     m_qrRect.setHeight(height);
     m_qrRect.setWidth(width);
 }
 
 
-CSection::CSection(QString id, CDocument* doc,bool hidden) : QGraphicsScene(doc),/*QObject(doc), */m_sID(id), m_pDoc(doc), m_bHidden(hidden)
+CSection::CSection(QString id, CDocument* doc,bool hidden) : QObject(doc), m_sID(id), m_pDoc(doc), m_bHidden(hidden)
 {
-    setParent((QObject*)doc);
+    setParent(doc);
 
     connect(this,SIGNAL(changed(QList<QRectF>)),this,SLOT(updateRendered(QList<QRectF>)));
 
     m_pViewportItem = new CViewportItem();
-    m_pViewportItem->setParent((QObject*)this);
-    addItem(m_pViewportItem);
 
     //connect(this,SIGNAL(sceneRectChanged(QRectF)),this,SLOT(updateFixedObjects()),Qt::QueuedConnection);
 }
@@ -81,7 +80,7 @@ void CSection::addLayer(CLayer* layer/*,bool active*/)
     m_Layers.append(layer);
     /*if (active)
         m_pActiveLayer = layer;*/
-    addItem(layer);
+    //addItem(layer);
 }
 
 int CSection::layerCount()
@@ -154,12 +153,12 @@ QObject* CSection::getObjectByID(QString id)
 {
     return getObjectByID(id);
 }
-
+/*
 QImage& CSection::rendered()
 {
     return m_imgRendered;
-}
-
+}*/
+/*
 void CSection::updateRendered(const QList<QRectF> &region)
 {
     //qDebug() << "CSection::updateRendered()";
@@ -185,7 +184,7 @@ void CSection::updateRendered(const QList<QRectF> &region)
     p.end();
 
 }
-
+*/
 void CSection::layout(int height, int width)
 {
     m_pViewportItem->setSize(height,width);
@@ -210,7 +209,7 @@ void CSection::layout(int height, int width)
             obj = l->object(n);
             pos = css->property(obj,"position")->toString();
             //qDebug() << "position" << pos;
-            if ((pos == "static" || pos == "relative") && dynamic_cast<CLayer*/*CLayer*/>(obj->parentItem()))
+            if ((pos == "static" || pos == "relative") && dynamic_cast<CLayer*/*CLayer*/>(obj->parent()))
             {
                 obj->layout(relrect);
                 relrect.setTop(obj->boundingRect().bottom());
@@ -233,11 +232,11 @@ void CSection::layout(int height, int width)
         {
             obj = l->object(n);
             pos = css->property(obj,"position")->toString();
-            if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*/*CLayer*/>(obj->parentItem()))
+            if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*/*CLayer*/>(obj->parent()))
             {
                 if (pos == "fixed")
                 {
-                    obj->setParentItem(m_pViewportItem);
+                    //obj->setParent(m_pViewportItem);
                     relrect = QRectF(0,0,width,height);
                 }
                 else
@@ -252,8 +251,35 @@ CViewportItem* CSection::viewportItem()
 {
     return m_pViewportItem;
 }
-
+/*
 void CSection::scrollSection(int dx, int dy)
 {
     //m_pViewportItem->setPos(dx,dy);
+}
+*/
+void CSection::render(QPainter *p)
+{
+    m_mRenderMutex.lock();
+
+    CSS::Stylesheet* css = document()->stylesheet();
+    CBaseObject* obj;
+    CLayer* l;
+
+    for (int i=0;i<layerCount();i++)
+    {
+        l = layer(i);
+        for (int n=0;n<l->objectCount();n++)
+        {
+            obj = l->object(n);
+            p->save();
+            /*if (css->property(obj,"position")->toString() == "fixed")
+                p->translate();
+            else*/
+                p->translate(obj->boundingRect().x(),obj->boundingRect().y());
+            obj->paintBuffered(p);
+            p->restore();
+        }
+    }
+
+    m_mRenderMutex.unlock();
 }

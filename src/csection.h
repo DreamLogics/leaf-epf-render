@@ -29,18 +29,19 @@
 #include <QMap>
 #include <QImage>
 #include <QGraphicsObject>
+#include <QMutex>
 
 class CDocument;
 class CLayer;
 class CBaseObject;
 
-class CViewportItem : public QGraphicsObject
+class CViewportItem
 {
 public:
     CViewportItem();
 
     void setSize(int height,int width);
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual void paint(QPainter *painter);
     virtual QRectF boundingRect() const;
 
 protected:
@@ -51,7 +52,7 @@ private:
     QRectF m_qrRect;
 };
 
-class CSection : /*public QObject, */public QGraphicsScene
+class CSection : public QObject
 {
     Q_OBJECT
 public:
@@ -75,14 +76,12 @@ public:
 
     virtual CDocument* document();
 
-    QImage& rendered();
+    //QImage& rendered();
 
     virtual void layout(int height, int width);
     CViewportItem* viewportItem();
 
-    /*virtual void render(QPainter *painter,
-                             const QRectF &target = QRectF(), const QRectF &source = QRectF(),
-                             Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);*/
+    virtual void render(QPainter* p);
 
 public slots:
 
@@ -91,9 +90,9 @@ public slots:
     //QObject* getActiveLayer();
     QObject* getObjectByID(QString id);
 
-    void updateRendered( const QList<QRectF> &region );
+    //void updateRendered( const QList<QRectF> &region );
     //void updateFixedObjects(int dy);
-    void scrollSection(int dx, int dy);
+    //void scrollSection(int dx, int dy);
 
 private:
     QList<CLayer*> m_Layers;
@@ -104,8 +103,9 @@ private:
     CDocument* m_pDoc;
     bool m_bHidden;
 
-    QImage m_imgRendered;
+    //QImage m_imgRendered;
     CViewportItem* m_pViewportItem;
+    QMutex m_mRenderMutex;
     
 };
 
