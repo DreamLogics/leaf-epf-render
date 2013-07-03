@@ -62,6 +62,11 @@ signals:
     void viewChanged(int dy);
     //void scrollSection(int dx, int dy);
 
+    void mouseDoubleClickEvent ( int x, int y );
+    void mousePressEvent( int x, int y );
+    void mouseReleaseEvent( int x, int y );
+    void mouseMoveEvent( int x, int y );
+
 protected:
 
     //virtual void drawForeground(QPainter *painter, const QRectF &rect);
@@ -69,6 +74,10 @@ protected:
     virtual void resizeEvent(QResizeEvent *event);
     //virtual void scrollContentsBy( int dx, int dy );
     virtual void paintEvent(QPaintEvent *);
+    virtual void mouseDoubleClickEvent ( QMouseEvent *ev );
+    virtual void mousePressEvent( QMouseEvent *ev );
+    virtual void mouseReleaseEvent( QMouseEvent *ev );
+    virtual void mouseMoveEvent( QMouseEvent *ev );
 
 private:
 

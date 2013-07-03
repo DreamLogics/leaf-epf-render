@@ -100,7 +100,13 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     QStringList classes = obj->styleClasses();
     QMap<QString,Selector*>::Iterator it;
 
-    //cascade from style class > object
+    //cascade from overrides > style class > object
+
+    //overrides
+
+    prop = obj->cssOverrideProp(key);
+    if (prop)
+        return prop;
 
     //class selectors
 
@@ -191,6 +197,11 @@ void Selector::setProperty(QString key, Property *prop)
 Property::Property(QString value, Stylesheet* css, bool scale, bool isHeightProp, bool null) : m_bNull(null), m_bScale(scale), m_sValue(value), m_pCSS(css), m_bHeightProp(isHeightProp)
 {
     m_bReadOnly = false;
+}
+
+bool Property::scales()
+{
+    return m_bScale;
 }
 
 bool Property::isNull()
@@ -325,7 +336,7 @@ void Stylesheet::parse(QString css)
                     bScale = false;
                     bHeightProp = false;
 
-                    if (m_HeightProps.contains(propvalue))
+                    if (height_props.contains(propkey))
                         bHeightProp = true;
 
                     if (proprules.indexOf("!scale") != -1)
@@ -337,7 +348,7 @@ void Stylesheet::parse(QString css)
                 {
                     bHeightProp = false;
 
-                    if (m_HeightProps.contains(propvalue))
+                    if (height_props.contains(propkey))
                         bHeightProp = true;
 
                     bScale = false;

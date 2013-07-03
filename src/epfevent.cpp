@@ -1,4 +1,5 @@
 #include "epfevent.h"
+#include <QDebug>
 
 EPFEvent::EPFEvent(QString event) : m_strEvent(event)
 {
@@ -29,6 +30,8 @@ void EPFComponent::addConnection(EPFComponent *listener, QString event, QString 
     QList<EPFConnection*> list;
     EPFConnection* connection = new EPFConnection(event,listener,function);;
 
+    //qDebug() << "add connection" << connection->event() << function;
+
     if (it == m_Connections.end())
     {
         //insert
@@ -56,21 +59,23 @@ void EPFComponent::sendEvent(QString event, QStringList parameters)
     QStringList param;
 
 
-    EPFEvent* ev = new EPFEvent(event);
+    EPFEvent* ev;
 
     for (int i=0;i<list.size();i++)
     {
         connection = list[i];
         param = connection->param(parameters);
+        ev = new EPFEvent(connection->function());
         ev->setParameters(param);
         connection->target()->onEPFEvent(ev);
+        delete ev;
     }
 }
 
 
 EPFConnection::EPFConnection(QString eventstr, EPFComponent *target, QString functionstr)
 {
-    QRegExp funcreg("([a-zA-Z]+)\\(([^]+)\\)");
+    QRegExp funcreg("([a-zA-Z]+)\\(([^\\)]+)\\)");
 
     eventstr = removeSpaces(eventstr);
     functionstr = removeSpaces(functionstr);
@@ -136,7 +141,7 @@ QStringList EPFConnection::param(QStringList event_params)
 
     if (params.size() < m_FuncParam.size())
     {
-        for (int i = m_FuncParam.size() - params.size();i<m_FuncParam.size();i++)
+        for (int i = params.size();i<m_FuncParam.size();i++)
             params << m_FuncParam[i];
     }
 

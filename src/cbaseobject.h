@@ -33,6 +33,7 @@
 namespace CSS
 {
     class Stylesheet;
+    class Property;
 }
 
 class QMouseEvent;
@@ -77,15 +78,16 @@ public:
     virtual QString property(QString key);
     virtual void setProperty(QString key, QString value);
 
-    virtual void mouseDoubleClickEvent ( QMouseEvent * e, QPoint contentpos );
-    virtual void mousePressEvent(QMouseEvent *, QPoint contentpos);
-    virtual void mouseReleaseEvent(QMouseEvent *, QPoint contentpos);
-    virtual void mouseMoveEvent(QMouseEvent *, QPoint contentpos);
+    virtual void mouseDoubleClickEvent ( QPoint pos );
+    virtual void mousePressEvent( QPoint pos );
+    virtual void mouseReleaseEvent( QPoint pos );
+    virtual void mouseMoveEvent( QPoint pos );
 
     //virtual CSS::Stylesheet* style();
 
-    virtual void setCSSOverride(QString css);
-    virtual QString cssOverrides();
+    void setCSSOverride(QString css);
+    //virtual QString cssOverrides();
+    CSS::Property* cssOverrideProp(QString prop);
 
     //virtual QString css();
 
@@ -148,7 +150,7 @@ private:
     QMap<QString,QString> m_Props;
 
 
-    QString m_sCSSOverrides;
+    //QString m_sCSSOverrides;
 
     QImage m_qiRenderBuffer;
     bool m_bNeedsRedraw;
@@ -170,6 +172,8 @@ private:
 
     QStringList m_StyleClasses;
     CLayer* m_pLayer;
+
+    QMap<QString,CSS::Property*> m_CSSOverrideProps;
     
 };
 

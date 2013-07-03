@@ -78,6 +78,14 @@ int CSection::objectCount()
 void CSection::addLayer(CLayer* layer/*,bool active*/)
 {
     m_Layers.append(layer);
+
+    CBaseObject* obj;
+    for (int i=0;i<layer->objectCount();i++)
+    {
+        obj = layer->object(i);
+        m_ObjectsCatalog.insert(obj->id(),obj);
+    }
+
     /*if (active)
         m_pActiveLayer = layer;*/
     //addItem(layer);
@@ -282,4 +290,76 @@ void CSection::render(QPainter *p)
     }
 
     m_mRenderMutex.unlock();
+}
+
+CBaseObject* CSection::objectOnPos(int x, int y)
+{
+    QPoint pos(x,y);
+
+    CLayer* l;
+    CBaseObject* obj;
+
+    for (int i=0;i<layerCount();i++)
+    {
+        l = layer(i);
+        for (int n=l->objectCount()-1;n>=0;n--)
+        {
+            obj = l->object(n);
+            if (obj->enabled())
+            {
+                if (obj->boundingRect().contains(pos))
+                    return obj;
+            }
+        }
+    }
+
+    return 0;
+}
+
+void CSection::mouseDoubleClickEvent ( int x, int y )
+{
+    CBaseObject* obj = objectOnPos(x,y);
+    if (!obj)
+        return;
+
+    x -= obj->boundingRect().x();
+    y -= obj->boundingRect().y();
+
+    obj->mouseDoubleClickEvent(QPoint(x,y));
+}
+
+void CSection::mousePressEvent( int x, int y )
+{
+    CBaseObject* obj = objectOnPos(x,y);
+    if (!obj)
+        return;
+
+    x -= obj->boundingRect().x();
+    y -= obj->boundingRect().y();
+
+    obj->mousePressEvent(QPoint(x,y));
+}
+
+void CSection::mouseReleaseEvent( int x, int y )
+{
+    CBaseObject* obj = objectOnPos(x,y);
+    if (!obj)
+        return;
+
+    x -= obj->boundingRect().x();
+    y -= obj->boundingRect().y();
+
+    obj->mouseReleaseEvent(QPoint(x,y));
+}
+
+void CSection::mouseMoveEvent( int x, int y )
+{
+    CBaseObject* obj = objectOnPos(x,y);
+    if (!obj)
+        return;
+
+    x -= obj->boundingRect().x();
+    y -= obj->boundingRect().y();
+
+    obj->mouseMoveEvent(QPoint(x,y));
 }

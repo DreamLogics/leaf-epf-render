@@ -73,6 +73,7 @@ public:
     void setValue(int val, bool scale=false);
     void setValue(double val, bool scale=false);
 
+    bool scales();
 
 private:
     QString m_sValue;
@@ -130,7 +131,6 @@ private:
     QMap<QString,Selector*> m_selectors;
     double m_dHSF;
     double m_dWSF;
-    QStringList m_HeightProps;
     CDocument* m_pDocument;
 
 };

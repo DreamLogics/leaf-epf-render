@@ -242,12 +242,22 @@ void CDocument::layout(int height, int width)
         }
     }
 
-
-    m_pCurrentLayout = m_Layouts[match];
-    if (m_pStylesheet)
-        delete m_pStylesheet;
-    m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,height,width,this);
-
+    if (m_pCurrentLayout != m_Layouts[match])
+    {
+        m_pCurrentLayout = m_Layouts[match];
+        if (m_pStylesheet)
+            delete m_pStylesheet;
+        m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,height,width,this);
+    }
+    else
+    {
+        double hf,wf;
+        hf = height;
+        hf/=m_pCurrentLayout->height();
+        wf = width;
+        wf/=m_pCurrentLayout->width();
+        m_pStylesheet->setScale(hf,wf);
+    }
 
     CSection* s;
     for (i=0;i<sectionCount();i++)
@@ -453,7 +463,21 @@ CSS::Stylesheet* CDocument::stylesheet()
 
 void CDocument::onEPFEvent(EPFEvent *ev)
 {
-
+    qDebug() << ev->event();
+    if (ev->event() == "playAnimation")
+    {
+        if (ev->parameter(0) != "")
+        {
+            CAnimation* ani = animation(ev->parameter(0));
+            if (ani)
+            {
+                bool b=false;
+                if (ev->parameter(1) == "true" || ev->parameter(1) == "1")
+                    b=true;
+                ani->play(b);
+            }
+        }
+    }
 }
 /*
 void CDocument::makeConnection(EPFComponent *src, QString event, EPFComponent *target, QString function)

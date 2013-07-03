@@ -66,9 +66,11 @@ CAnimation::CAnimation(int frames, int fps, QString src, CDocument* doc)
         selector = anireg.cap(3);
         propsdata = anireg.cap(4);
 
+
         layout = doc->layoutByID(layoutid);
         if (!layout)
             continue;
+
 
         //layouts.append(layoutid);
 
@@ -80,6 +82,7 @@ CAnimation::CAnimation(int frames, int fps, QString src, CDocument* doc)
         sec = doc->sectionByID(selectorl[0]);
         if (!sec)
             break;
+
         obj = sec->objectByID(selectorl[1]);
         if (!obj)
             break;
@@ -367,15 +370,15 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
         {
             obj = objs[i];
             startpropmap.clear();
-            CLayout* lay = m_pDoc->layoutByID(layout);
+            //CLayout* lay = m_pDoc->layoutByID(layout);
             //CStyleParser sp(lay,obj->getID(),endframep->section()->getID(),lay->height(),lay->width(),obj->styleClasses());
-            QString css;
+            /*QString css;
             css = "#" + obj->id() + "{";
             css += obj->cssOverrides();
             css += "}";
-            //CSS::Stylesheet sp(lay,m_pDoc->renderview()->height(),m_pDoc->renderview()->width());
+            //CSS::Stylesheet sp(lay,m_pDoc->renderview()->height(),m_pDoc->renderview()->width());*/
             CSS::Stylesheet* sp = m_pDoc->stylesheet();
-            sp->addCSS(css);
+            //sp->addCSS(css);
             //sp.setOverrides(obj->cssOverrides());
             QStringList sl = sp->selector(obj)->properties();
 

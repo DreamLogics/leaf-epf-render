@@ -31,6 +31,7 @@
 #include <QTimer>
 #include <QEvent>
 #include <QScrollBar>
+#include <QMouseEvent>
 
 CEPFView::CEPFView()
 {
@@ -75,6 +76,7 @@ void CEPFView::setDocument(CDocument *doc)
 
         //connect(this,SIGNAL(scrollSection(int,int)),section,SLOT(scrollSection(int,int)));
 
+
         //view->setGeometry(width(),0,width(),height());
         //view->setX(width());
 
@@ -106,6 +108,17 @@ void CEPFView::setSection(int index)
         CSectionView* curview = m_SectionViews[m_iCurrentSection];
         curview->setX(width());
     }*/
+    CSection* s = m_pDocument->section(index);
+
+    disconnect(this,SIGNAL(mouseDoubleClickEvent(int,int)),0,0);
+    disconnect(this,SIGNAL(mouseMoveEvent(int,int)),0,0);
+    disconnect(this,SIGNAL(mousePressEvent(int,int)),0,0);
+    disconnect(this,SIGNAL(mouseReleaseEvent(int,int)),0,0);
+
+    connect(this,SIGNAL(mouseDoubleClickEvent(int,int)),s,SLOT(mouseDoubleClickEvent(int,int)));
+    connect(this,SIGNAL(mouseMoveEvent(int,int)),s,SLOT(mouseMoveEvent(int,int)));
+    connect(this,SIGNAL(mousePressEvent(int,int)),s,SLOT(mousePressEvent(int,int)));
+    connect(this,SIGNAL(mouseReleaseEvent(int,int)),s,SLOT(mouseReleaseEvent(int,int)));
 
     m_iCurrentSection = index;
 }
@@ -261,4 +274,36 @@ void CEPFView::paintEvent(QPaintEvent *ev)
     }
 
     p.end();
+}
+
+void CEPFView::mousePressEvent(QMouseEvent *ev)
+{
+    int x,y;
+    x = ev->x();
+    y = ev->y();
+    emit mousePressEvent(x,y);
+}
+
+void CEPFView::mouseReleaseEvent(QMouseEvent *ev)
+{
+    int x,y;
+    x = ev->x();
+    y = ev->y();
+    emit mouseReleaseEvent(x,y);
+}
+
+void CEPFView::mouseMoveEvent(QMouseEvent *ev)
+{
+    int x,y;
+    x = ev->x();
+    y = ev->y();
+    emit mouseMoveEvent(x,y);
+}
+
+void CEPFView::mouseDoubleClickEvent(QMouseEvent *ev)
+{
+    int x,y;
+    x = ev->x();
+    y = ev->y();
+    emit mouseDoubleClickEvent(x,y);
 }

@@ -240,37 +240,62 @@ void CBaseObject::setProperty(QString key, QString value)
     m_Props.insert(key,value);
 }
 
-void CBaseObject::mouseDoubleClickEvent ( QMouseEvent * e, QPoint contentpos )
+void CBaseObject::mouseDoubleClickEvent ( QPoint contentpos )
+{
+
+}
+void CBaseObject::mousePressEvent(QPoint contentpos)
+{
+
+}
+void CBaseObject::mouseReleaseEvent(QPoint contentpos)
+{
+    sendEvent("clicked");
+}
+void CBaseObject::mouseMoveEvent(QPoint contentpos)
 {
 
 
 }
-void CBaseObject::mousePressEvent(QMouseEvent *, QPoint contentpos)
-{
 
-
-}
-void CBaseObject::mouseReleaseEvent(QMouseEvent *, QPoint contentpos)
-{
-
-
-}
-void CBaseObject::mouseMoveEvent(QMouseEvent *, QPoint contentpos)
-{
-
-
-}
-
-void CBaseObject::setCSSOverride(QString css)
+void CBaseObject::setCSSOverride(QString ss)
 {
     m_bNeedsRedraw = true;
-    m_sCSSOverrides = css;
+
+    QMap<QString,CSS::Property*>::Iterator it;
+    for (it=m_CSSOverrideProps.begin();it!=m_CSSOverrideProps.end();it++)
+        delete it.value();
+
+    CSS::Stylesheet* css = document()->stylesheet();
+    QStringList props = ss.split(";");
+    QStringList propv;
+    CSS::Property* prop;
+
+    //create css props
+    for (int i=0;i<props.size();i++)
+    {
+        propv = props[i].split(":");
+
+        prop = new CSS::Property(propv[1],css,css->property(this,propv[0])->scales(),CSS::height_props.contains(propv[0]));
+        m_CSSOverrideProps.insert(propv[0],prop);
+    }
+
+    //m_sCSSOverrides = css;
 }
 
-QString CBaseObject::cssOverrides()
+CSS::Property* CBaseObject::cssOverrideProp(QString prop)
+{
+    QMap<QString,CSS::Property*>::Iterator it;
+    it=m_CSSOverrideProps.find(prop);
+    if (it==m_CSSOverrideProps.end())
+        return 0;
+    return it.value();
+}
+
+/*QString CBaseObject::cssOverrides()
 {
     return m_sCSSOverrides;
-}
+}*/
 
 int CBaseObject::marginTop() const
 {

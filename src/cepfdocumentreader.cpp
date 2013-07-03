@@ -276,7 +276,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                 else
                     bActive = false;*/
 
-                o->addLayer(l/*,bActive*/);
+                //o->addLayer(l/*,bActive*/);
 
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
@@ -297,6 +297,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
                     parseObjectNode(&object,l,o,obj);
                 }
+
+                o->addLayer(l);
 
             }
 
@@ -324,7 +326,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                 else
                     bActive = false;*/
 
-                s->addLayer(l/*,bActive*/);
+                //s->addLayer(l/*,bActive*/);
 
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
@@ -345,6 +347,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
                     parseObjectNode(&object,l,o,obj);
                 }
+
+                s->addLayer(l);
 
             }
 
@@ -382,6 +386,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                 //param = funcreg.cap(2);
                 EPFComponent* src_obj=0;
                 EPFComponent* dst_obj=0;
+
+                //qDebug() << "add con" << connection.attribute("source").value() << connection.attribute("target").value();
 
                 if (m_objectmap.contains(connection.attribute("source").value()))
                     src_obj = m_objectmap[connection.attribute("source").value()];

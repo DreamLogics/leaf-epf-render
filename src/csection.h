@@ -94,6 +94,15 @@ public slots:
     //void updateFixedObjects(int dy);
     //void scrollSection(int dx, int dy);
 
+    void mouseDoubleClickEvent ( int x, int y );
+    void mousePressEvent( int x, int y );
+    void mouseReleaseEvent( int x, int y );
+    void mouseMoveEvent( int x, int y );
+
+private:
+
+    CBaseObject* objectOnPos(int x, int y);
+
 private:
     QList<CLayer*> m_Layers;
     QMap<QString,CBaseObject*> m_ObjectsCatalog;
