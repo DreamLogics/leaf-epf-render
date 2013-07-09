@@ -338,7 +338,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
             break;
     }
 
-    if (startframe == endframe && frame < endframe)
+    if (startframe >= endframe && frame < endframe)
     {
         //startframe wordt 1, props baseren op huidige object props
         startframe = 1;
@@ -365,21 +365,13 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
         //qDebug() << "build start frames";
 
         animframe = new CAnimFrame(endframep->section());
+        CSS::Stylesheet* sp = m_pDoc->stylesheet();
 
         for (i = 0;i<objs.size();i++)
         {
             obj = objs[i];
             startpropmap.clear();
-            //CLayout* lay = m_pDoc->layoutByID(layout);
-            //CStyleParser sp(lay,obj->getID(),endframep->section()->getID(),lay->height(),lay->width(),obj->styleClasses());
-            /*QString css;
-            css = "#" + obj->id() + "{";
-            css += obj->cssOverrides();
-            css += "}";
-            //CSS::Stylesheet sp(lay,m_pDoc->renderview()->height(),m_pDoc->renderview()->width());*/
-            CSS::Stylesheet* sp = m_pDoc->stylesheet();
-            //sp->addCSS(css);
-            //sp.setOverrides(obj->cssOverrides());
+
             QStringList sl = sp->selector(obj)->properties();
 
             for (int ii=0;ii<sl.size();ii++)
@@ -390,11 +382,14 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
             objpropmapstart.insert(obj,startpropmap);
             animframe->setPropertiesForObject(obj,startpropmap);
         }
-        if (frames.contains(0))
+        /*if (frames.contains(0))
             frames[0] = animframe;
         else
             frames.insert(0,animframe);
-        m_Frames[layout] = frames;
+        m_Frames[layout] = frames;*/
+
+        //we generate the frame after the current one
+        startframe = frame - 1;
     }
 
     animframe = new CAnimFrame(endframep->section());
@@ -417,15 +412,12 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
         //alle delta waardes mixen
         for (int pi=0;pi<props.size();pi++)
         {
-            //qDebug() << "Mix prop: "<<props[pi];
-            if (endpropmap.contains(props[pi]))
-                propval1 = endpropmap[props[pi]];
-            else
-            {
-                //voorgaande realframe zoeken die de prop wel had?
-                //niet hoort niet!
-                propval1 = "0";
-            }
+
+
+            propval1 = endpropmap[props[pi]];
+
+            qDebug() << "Mix prop: "<<props[pi] << propval1 << startpropmap[props[pi]];
+
             if (CSS::color_props.contains(props[pi]))
             {
                 //newpropval = mixColor(propval1,startpropmap[props[pi]],(double)(frame-startframe)/(double)(endframe-startframe-1));

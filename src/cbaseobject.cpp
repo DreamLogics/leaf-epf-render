@@ -266,8 +266,10 @@ void CBaseObject::setCSSOverride(QString ss)
     for (it=m_CSSOverrideProps.begin();it!=m_CSSOverrideProps.end();it++)
         delete it.value();
 
+    m_CSSOverrideProps.clear();
+
     CSS::Stylesheet* css = document()->stylesheet();
-    QStringList props = ss.split(";");
+    QStringList props = ss.split(";",QString::SkipEmptyParts);
     QStringList propv;
     CSS::Property* prop;
 
@@ -275,9 +277,16 @@ void CBaseObject::setCSSOverride(QString ss)
     for (int i=0;i<props.size();i++)
     {
         propv = props[i].split(":");
-
-        prop = new CSS::Property(propv[1],css,css->property(this,propv[0])->scales(),CSS::height_props.contains(propv[0]));
-        m_CSSOverrideProps.insert(propv[0],prop);
+        if (propv.size() == 2)
+        {
+            //qDebug() << "add override prop" << propv[0] << propv[1];
+            prop = new CSS::Property(propv[1],css,css->property(this,propv[0])->scales(),CSS::height_props.contains(propv[0]));
+            m_CSSOverrideProps.insert(propv[0],prop);
+        }
+        else
+        {
+            qDebug() << "prop without : " << props[i] << ss;
+        }
     }
 
     //m_sCSSOverrides = css;
@@ -289,6 +298,9 @@ CSS::Property* CBaseObject::cssOverrideProp(QString prop)
     it=m_CSSOverrideProps.find(prop);
     if (it==m_CSSOverrideProps.end())
         return 0;
+    CSS::Property* cprop = it.value();
+    QString t = cprop->toString();
+    //qDebug() << "override prop" <<  prop  << t;
     return it.value();
 }
 
