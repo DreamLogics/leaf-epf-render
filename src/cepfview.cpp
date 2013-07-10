@@ -39,6 +39,7 @@ CEPFView::CEPFView()
     //setScene(m_pDocScene);
     m_bIsLoading = true;
     m_iRenderDot = 0;
+    m_iScrollPos = 0;
     //setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
     //setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -75,6 +76,7 @@ void CEPFView::setDocument(CDocument *doc)
         //m_pDocScene->addItem(view);
 
         //connect(this,SIGNAL(scrollSection(int,int)),section,SLOT(scrollSection(int,int)));
+        connect(this,SIGNAL(updateRendered(QRectF)),section,SLOT(updateRendered(QRectF)));
 
 
         //view->setGeometry(width(),0,width(),height());
@@ -89,10 +91,12 @@ void CEPFView::setDocument(CDocument *doc)
     QTimer::singleShot(300,this,SLOT(updateDot()));
 
     disconnect(this,SIGNAL(loadDocument()),0,0);
+    disconnect(this,SIGNAL(layout(int,int)),0,0);
     connect(this,SIGNAL(loadDocument(int,int)),doc,SLOT(load(int,int)));
+    connect(this,SIGNAL(layout(int,int)),doc,SLOT(layout(int,int)));
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
 
-    emit loadDocument(height()-2,width()-2);
+    emit loadDocument(height(),width());
 }
 
 void CEPFView::setSection(int index)
@@ -236,7 +240,8 @@ void CEPFView::resizeEvent(QResizeEvent *event)
 {
     if (!m_bIsLoading && m_pDocument && m_pDocument->sectionCount() > 0)
     {
-        m_pDocument->layout(height(),width());
+        //m_pDocument->layout(height(),width());
+        emit layout(height(),width());
     }
 }
 
@@ -270,7 +275,8 @@ void CEPFView::paintEvent(QPaintEvent *ev)
     }
     else
     {
-        m_pDocument->section(0)->render(&p);
+        //m_pDocument->section(0)->render(&p);
+        p.drawImage(0,0,m_pDocument->section(0)->rendered());
     }
 
     p.end();

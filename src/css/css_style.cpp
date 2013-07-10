@@ -234,6 +234,11 @@ QString Property::toString()
     return m_sValue;
 }
 
+QString Property::value() const
+{
+    return m_sValue;
+}
+
 int Property::toInt()
 {
     QString val = toString();

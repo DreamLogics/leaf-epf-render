@@ -34,7 +34,7 @@
 namespace CSS
 {
 
-static QStringList color_props = (QStringList() << "color" << "background-color" << "color-overlay" << "color-multiply" << "color-replace");
+static QStringList color_props = (QStringList() << "color" << "background-color");
 static QStringList int_props = (QStringList() << "top" << "bottom" << "left" << "right" << "height" << "width" << "margin-top" << "margin-bottom" << "margin-left"
                                 << "margin-right" << "padding-top" << "padding-bottom" << "padding-left" << "padding-right");
 static QStringList double_props = (QStringList() << "opacity");
@@ -66,6 +66,8 @@ public:
     QString toString();
     int toInt();
     double toDouble();
+
+    QString value() const; //unscaled
 
     bool isNull();
 

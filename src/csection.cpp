@@ -161,42 +161,38 @@ QObject* CSection::getObjectByID(QString id)
 {
     return getObjectByID(id);
 }
-/*
+
 QImage& CSection::rendered()
 {
     return m_imgRendered;
-}*/
+}
 /*
-void CSection::updateRendered(const QList<QRectF> &region)
+void CSection::updateRendered(QRectF view)
 {
-    //qDebug() << "CSection::updateRendered()";
-    if (m_imgRendered.isNull() || m_imgRendered.height() != height() || m_imgRendered.width() != width())
-    {
-        //qDebug() << width() << height();
-        m_imgRendered = QImage(width(),height(),QImage::Format_RGB32);
-        m_imgRendered.fill(Qt::black);
+    if (view.size() != m_rView.size())
+        layout(view.height(),view.width());
 
-        QPainter p;
-        p.begin(&m_imgRendered);
-        render(&p);
-        p.end();
-        return;
-    }
-
+    m_rView = view;
     QPainter p;
+    m_imgRendered = QImage(view.size().toSize(),QImage::Format_RGB32);
     p.begin(&m_imgRendered);
-    for (int i=0;i<region.size();i++)
-    {
-        render(&p,region[i],region[i]);
-    }
+    render(&p,view);
     p.end();
+}
 
+void CSection::updateRendered()
+{
+    if (m_rView.isNull())
+        return;
+    updateRendered(m_rView);
 }
 */
 void CSection::layout(int height, int width)
 {
     m_pViewportItem->setSize(height,width);
     CSS::Stylesheet* css = document()->stylesheet();
+
+    m_rView.setSize(QSizeF(width,height));
 
     //qDebug() << "CSection::layout" << width << height;
 
@@ -253,6 +249,19 @@ void CSection::layout(int height, int width)
             }
         }
     }
+
+
+    QPainter p;
+    m_imgRendered = QImage(m_rView.size().toSize(),QImage::Format_RGB32);
+    p.begin(&m_imgRendered);
+    render(&p,m_rView);
+    p.end();
+
+}
+
+void CSection::setViewOffset(int dx, int dy)
+{
+    m_rView.moveTo(dx,dy);
 }
 
 CViewportItem* CSection::viewportItem()
@@ -265,13 +274,14 @@ void CSection::scrollSection(int dx, int dy)
     //m_pViewportItem->setPos(dx,dy);
 }
 */
-void CSection::render(QPainter *p)
+void CSection::render(QPainter *p,QRectF region)
 {
-    m_mRenderMutex.lock();
+    //m_mRenderMutex.lock();
 
     CSS::Stylesheet* css = document()->stylesheet();
     CBaseObject* obj;
     CLayer* l;
+    QRectF absreg(QPointF(0,0),region.size());
 
     for (int i=0;i<layerCount();i++)
     {
@@ -279,17 +289,25 @@ void CSection::render(QPainter *p)
         for (int n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
-            p->save();
-            /*if (css->property(obj,"position")->toString() == "fixed")
-                p->translate();
-            else*/
+
+            if (css->property(obj,"position")->toString() == "fixed" && obj->boundingRect().intersects(absreg))
+            {
+                p->save();
                 p->translate(obj->boundingRect().x(),obj->boundingRect().y());
-            obj->paintBuffered(p);
-            p->restore();
+                obj->paintBuffered(p);
+                p->restore();
+            }
+            else if (obj->boundingRect().intersects(region))
+            {
+                p->save();
+                p->translate(obj->boundingRect().x() - region.x(),obj->boundingRect().y() - region.y());
+                obj->paintBuffered(p);
+                p->restore();
+            }
         }
     }
 
-    m_mRenderMutex.unlock();
+    //m_mRenderMutex.unlock();
 }
 
 CBaseObject* CSection::objectOnPos(int x, int y)

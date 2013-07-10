@@ -319,7 +319,8 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
     CBaseObject* obj;
     QMap<QString,QString> endpropmap,startpropmap,propmapnew;
     QStringList props;
-    QString newpropval,propval1;
+    QString newpropval,propval1,propval2;
+    double position;
 
     //endframe vinden
     endframe = 0;
@@ -376,7 +377,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
 
             for (int ii=0;ii<sl.size();ii++)
             {
-                startpropmap.insert(sl[ii],sp->property(obj,sl[ii])->toString());
+                startpropmap.insert(sl[ii],sp->property(obj,sl[ii])->value());
                 //qDebug() << sl[ii] << sp.property(sl[ii]);
             }
             objpropmapstart.insert(obj,startpropmap);
@@ -412,32 +413,48 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
         //alle delta waardes mixen
         for (int pi=0;pi<props.size();pi++)
         {
+            propval1 = startpropmap[props[pi]];
+            propval2 = endpropmap[props[pi]];
+            position = (double)(frame-startframe)/(double)(endframe-startframe-1);
 
-
-            propval1 = endpropmap[props[pi]];
-
-            qDebug() << "Mix prop: "<<props[pi] << propval1 << startpropmap[props[pi]];
+            //qDebug() << "Mix prop: "<<props[pi] << propval1 << startpropmap[props[pi]];
 
             if (CSS::color_props.contains(props[pi]))
             {
                 //newpropval = mixColor(propval1,startpropmap[props[pi]],(double)(frame-startframe)/(double)(endframe-startframe-1));
-                newpropval = mixColor(startpropmap[props[pi]],propval1,(double)(frame-startframe)/(double)(endframe-startframe-1));
+                newpropval = mixColor(propval1,propval2,position);
                 propmapnew.insert(props[pi],newpropval);
             }
             else if (CSS::int_props.contains(props[pi]))
             {
                 //newpropval = mixInt(propval1,startpropmap[props[pi]],(double)(frame-startframe)/(double)(endframe-startframe-1));
-                newpropval = mixInt(startpropmap[props[pi]],propval1,(double)(frame-startframe)/(double)(endframe-startframe-1));
+                newpropval = mixInt(propval1,propval2,position);
                 propmapnew.insert(props[pi],newpropval);
             }
             else if (CSS::double_props.contains(props[pi]))
             {
-                newpropval = mixDouble(startpropmap[props[pi]],propval1,(double)(frame-startframe)/(double)(endframe-startframe-1));
+                newpropval = mixDouble(propval1,propval2,position);
                 propmapnew.insert(props[pi],newpropval);
+            }
+            else if (props[pi] == "color-overlay")
+            {
+                QStringList costart = propval1.split(QRegExp(" +"));
+                QStringList coend = propval2.split(QRegExp(" +"));
+
+                if (costart.size() == 3 && coend.size() == 3)
+                {
+                    //ignore the rendermode of the animation
+                    newpropval = mixColor(costart[0],coend[0],position) + " " + costart[1] + " " + mixDouble(costart[2],coend[2],position);
+                    propmapnew.insert(props[pi],newpropval);
+                }
+                else
+                {
+                    qDebug() << "color-overlay" << propval1 << propval2;
+                }
             }
             else
             {
-                propmapnew.insert(props[pi],propval1);
+                propmapnew.insert(props[pi],propval2);
             }
         }
         //checken of we props van de last frame missen, zo ja dan kopieren

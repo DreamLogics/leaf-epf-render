@@ -59,7 +59,7 @@ void CAnimFrame::apply()
             css += proplist[n] + ":" + props[proplist[n]] + ";";
         }
         obj->setCSSOverride(css);
-        qDebug() << obj->id() << css;
+        //qDebug() << obj->id() << css;
     }
 
 

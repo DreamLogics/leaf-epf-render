@@ -62,6 +62,11 @@ signals:
     void viewChanged(int dy);
     //void scrollSection(int dx, int dy);
 
+    //void updateRendered(QRectF);
+    void setViewOffset(int dx, int dy);
+
+    void layout(int height, int width);
+
     void mouseDoubleClickEvent ( int x, int y );
     void mousePressEvent( int x, int y );
     void mouseReleaseEvent( int x, int y );
@@ -95,6 +100,9 @@ private:
     int m_iTOCSection;
 
     int m_iRenderDot;
+
+    int m_iScrollPos;
+    int m_iScrollMax;
 
     //QGraphicsScene* m_pDocScene;
 };

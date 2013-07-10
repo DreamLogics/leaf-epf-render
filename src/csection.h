@@ -76,12 +76,12 @@ public:
 
     virtual CDocument* document();
 
-    //QImage& rendered();
+    QImage& rendered();
 
     virtual void layout(int height, int width);
     CViewportItem* viewportItem();
 
-    virtual void render(QPainter* p);
+    virtual void render(QPainter* p, QRectF region);
 
 public slots:
 
@@ -93,6 +93,9 @@ public slots:
     //void updateRendered( const QList<QRectF> &region );
     //void updateFixedObjects(int dy);
     //void scrollSection(int dx, int dy);
+    //void updateRendered(QRectF view);
+    //void updateRendered();
+    void setViewOffset(int dx, int dy);
 
     void mouseDoubleClickEvent ( int x, int y );
     void mousePressEvent( int x, int y );
@@ -112,10 +115,11 @@ private:
     CDocument* m_pDoc;
     bool m_bHidden;
 
-    //QImage m_imgRendered;
+    QImage m_imgRendered;
     CViewportItem* m_pViewportItem;
-    QMutex m_mRenderMutex;
-    
+    //QMutex m_mRenderMutex;
+
+    QRectF m_rView;
 };
 
 #endif // CSECTION_H
