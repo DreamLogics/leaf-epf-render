@@ -313,7 +313,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         for (pugi::xml_node section = sections.child("section"); section; section = section.next_sibling("section"))
         {
             //section maken
-            s = new CSection(section.attribute("id").value(),document,section.attribute("hidden").as_bool());
+            s = new CSection(section.attribute("id").value(),document,section.attribute("hidden").as_bool(),section.attribute("x").as_int(),section.attribute("y").as_int());
             sectionmap.insert(section.attribute("id").value(),o);
 
             for (layer = section.child("layer"); layer; layer = layer.next_sibling("layer"))

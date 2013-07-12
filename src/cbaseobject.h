@@ -68,8 +68,9 @@ public:
     virtual QRectF boundingRect() const;
 
     //void setPositionOffset(int dx, int dy);
-    void sheduleRepaint();
+    //void sheduleRepaint();
     void paintBuffered(QPainter* p);
+    void buffer();
 
     virtual void layout(QRectF relativeTo);
     /*virtual CBaseObject* relative();

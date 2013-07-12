@@ -31,9 +31,11 @@
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsItem>
 
+QMutex m_gRectMutex;
 
 CViewportItem::CViewportItem()
 {
+
 }
 
 void CViewportItem::paint(QPainter *painter/*, const QStyleOptionGraphicsItem *option, QWidget *widget*/)
@@ -54,15 +56,18 @@ void CViewportItem::setSize(int height, int width)
 }
 
 
-CSection::CSection(QString id, CDocument* doc,bool hidden) : QObject(doc), m_sID(id), m_pDoc(doc), m_bHidden(hidden)
+CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObject(doc), m_sID(id), m_pDoc(doc), m_bHidden(hidden)
 {
     setParent(doc);
 
-    connect(this,SIGNAL(changed(QList<QRectF>)),this,SLOT(updateRendered(QList<QRectF>)));
+    int fx=x;
+    while (doc->sectionByPosition(fx,y) != 0)
+        fx++;
+
+    m_iX = fx;
+    m_iY = y;
 
     m_pViewportItem = new CViewportItem();
-
-    //connect(this,SIGNAL(sceneRectChanged(QRectF)),this,SLOT(updateFixedObjects()),Qt::QueuedConnection);
 }
 
 CSection::~CSection()
@@ -161,11 +166,14 @@ QObject* CSection::getObjectByID(QString id)
 {
     return getObjectByID(id);
 }
-
-QImage& CSection::rendered()
+/*
+void CSection::rendered(QPainter *p)
 {
-    return m_imgRendered;
-}
+    m_gRenderMutex.lock();
+    //qDebug() << "rendered lock";
+    p->drawImage(0,0,m_imgRendered);
+    m_gRenderMutex.unlock();
+}*/
 /*
 void CSection::updateRendered(QRectF view)
 {
@@ -191,8 +199,6 @@ void CSection::layout(int height, int width)
 {
     m_pViewportItem->setSize(height,width);
     CSS::Stylesheet* css = document()->stylesheet();
-
-    m_rView.setSize(QSizeF(width,height));
 
     //qDebug() << "CSection::layout" << width << height;
 
@@ -249,20 +255,36 @@ void CSection::layout(int height, int width)
             }
         }
     }
-
-
+/*
+    m_gRenderMutex.lock();
+    //qDebug() << "layout lock";
     QPainter p;
     m_imgRendered = QImage(m_rView.size().toSize(),QImage::Format_RGB32);
     p.begin(&m_imgRendered);
     render(&p,m_rView);
     p.end();
-
+    m_gRenderMutex.unlock();
+*/
+    //document()->updateRenderView();
+    m_gRectMutex.lock();
+    m_rRect = QRectF(m_iX*width,m_iY*height,width,height);
+    m_gRectMutex.unlock();
 }
 
+int CSection::x()
+{
+    return m_iX;
+}
+
+int CSection::y()
+{
+    return m_iY;
+}
+/*
 void CSection::setViewOffset(int dx, int dy)
 {
     m_rView.moveTo(dx,dy);
-}
+}*/
 
 CViewportItem* CSection::viewportItem()
 {
@@ -277,6 +299,17 @@ void CSection::scrollSection(int dx, int dy)
 void CSection::render(QPainter *p,QRectF region)
 {
     //m_mRenderMutex.lock();
+
+    m_gRectMutex.lock();
+    if (!region.intersects(m_rRect))
+    {
+        m_gRectMutex.unlock();
+        return;
+    }
+
+    //p->setClipRect(region);
+    p->translate(m_rRect.x(),m_rRect.y());
+    m_gRectMutex.unlock();
 
     CSS::Stylesheet* css = document()->stylesheet();
     CBaseObject* obj;

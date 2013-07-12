@@ -78,6 +78,16 @@ CSection* CDocument::sectionByID(QString id)
     return 0;
 }
 
+CSection* CDocument::sectionByPosition(int x, int y)
+{
+    for (int i = 0;i<sectionCount();i++)
+    {
+        if (section(i)->x() == x && section(i)->y() == y)
+            return section(i);
+    }
+    return 0;
+}
+
 void CDocument::addSection(CSection* section)
 {
     m_Sections.append(section);
@@ -436,6 +446,8 @@ void CDocument::load(int height, int width)
     CLayer* layer;
     int i;
 
+    qDebug() << "load" << height << width;
+
     for (i=0;i<sectionCount();i++)
     {
         s = section(i);
@@ -478,10 +490,34 @@ void CDocument::onEPFEvent(EPFEvent *ev)
             }
         }
     }
+    else if (ev->event() == "setSection")
+    {
+        if (ev->parameter(0) != "")
+        {
+            CSection* section = sectionByID(ev->parameter(0));
+            if (section)
+                emit setSection(indexForSection(section));
+        }
+    }
 }
+
+int CDocument::indexForSection(CSection *s)
+{
+    for (int i=0;i<sectionCount();i++)
+    {
+        if (section(i) == s)
+            return i;
+    }
+    return -1;
+}
+
 /*
 void CDocument::makeConnection(EPFComponent *src, QString event, EPFComponent *target, QString function)
 {
     src->addConnection(target,event,function);
 }
 */
+void CDocument::updateRenderView()
+{
+    emit _updateRenderView();
+}

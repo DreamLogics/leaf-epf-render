@@ -32,6 +32,7 @@
 #include <QEvent>
 #include <QScrollBar>
 #include <QMouseEvent>
+#include <QRectF>
 
 CEPFView::CEPFView()
 {
@@ -95,6 +96,8 @@ void CEPFView::setDocument(CDocument *doc)
     connect(this,SIGNAL(loadDocument(int,int)),doc,SLOT(load(int,int)));
     connect(this,SIGNAL(layout(int,int)),doc,SLOT(layout(int,int)));
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
+    connect(doc,SIGNAL(_updateRenderView()),this,SLOT(update()));
+    connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
 
     emit loadDocument(height(),width());
 }
@@ -275,8 +278,11 @@ void CEPFView::paintEvent(QPaintEvent *ev)
     }
     else
     {
-        //m_pDocument->section(0)->render(&p);
-        p.drawImage(0,0,m_pDocument->section(0)->rendered());
+        CSection* s = m_pDocument->section(m_iCurrentSection);
+        //p.translate(-s->x()*width(),-s->y()*height());
+        for (int i=0;i<m_pDocument->sectionCount();i++)
+            m_pDocument->section(i)->render(&p,QRectF(s->x()*width(),s->y()*height(),width(),height()));
+
     }
 
     p.end();

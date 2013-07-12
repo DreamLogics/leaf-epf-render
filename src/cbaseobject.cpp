@@ -28,6 +28,9 @@
 #include "cepfview.h"
 #include <QDebug>
 #include <QGLFramebufferObject>
+#include <QMutex>
+
+QMutex g_RenderMutex;
 
 CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_sID(id), m_pLayer(layer)
@@ -37,7 +40,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_iMarginBottom = 0;
     m_iMarginLeft = 0;
     m_bEnabled = false;
-    m_bNeedsRedraw = true;
+    //m_bNeedsRedraw = true;
     //m_pBuffer = 0;
 
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
@@ -69,10 +72,14 @@ void CBaseObject::setBoundingRect(const QRectF &r)
     if (r != m_rRect)
     {
         //prepareGeometryChange();
-        if (m_rRect.size() != r.size())
-            m_bNeedsRedraw = true;
 
         m_rRect = r;
+
+        if (m_rRect.size() != r.size())
+        {
+            //m_bNeedsRedraw = true;
+            buffer();
+        }
     }
 }
 
@@ -185,10 +192,13 @@ void CBaseObject::layout(QRectF relrect)
     if (oldrect != newrect)
     {
         //prepareGeometryChange();
-        if (oldrect.size() != newrect.size())
-            m_bNeedsRedraw = true;
-
         m_rRect = newrect;
+
+        if (oldrect.size() != newrect.size())
+        {
+            //m_bNeedsRedraw = true;
+            buffer();
+        }
     }
 
     QObjectList clist = children();
@@ -260,7 +270,7 @@ void CBaseObject::mouseMoveEvent(QPoint contentpos)
 
 void CBaseObject::setCSSOverride(QString ss)
 {
-    m_bNeedsRedraw = true;
+    //m_bNeedsRedraw = true;
 
     QMap<QString,CSS::Property*>::Iterator it;
     for (it=m_CSSOverrideProps.begin();it!=m_CSSOverrideProps.end();it++)
@@ -290,6 +300,7 @@ void CBaseObject::setCSSOverride(QString ss)
     }
 
     //m_sCSSOverrides = css;
+    buffer();
 }
 
 CSS::Property* CBaseObject::cssOverrideProp(QString prop)
@@ -454,41 +465,42 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
 {
 
 }
-
+/*
 void CBaseObject::sheduleRepaint()
 {
     m_bNeedsRedraw = true;
 }
-
+*/
 void CBaseObject::paintBuffered(QPainter *p)
 {
-    if (m_bNeedsRedraw)
-    {
-        /*if (m_pBuffer)
-            delete m_pBuffer;*/
-
-        //QGLFramebufferObject fbo(m_rRect.size().toSize());
-
-        //m_pBuffer = new QGLFramebufferObject();
-
-        m_qiRenderBuffer = QImage(m_rRect.size().toSize(),QImage::Format_ARGB32_Premultiplied);
-        m_qiRenderBuffer.fill(0x00000000);
-
-        QPainter bp;
-        //bp.begin(&fbo);
-        bp.begin(&m_qiRenderBuffer);
-
-        //bp.fillRect(QRectF(0,0,m_rRect.width(),m_rRect.height()),QColor(0,0,0,0));
-
-        paint(&bp);
-
-        bp.end();
-
-        //m_qiRenderBuffer = fbo.toImage();
-
-        m_bNeedsRedraw = false;
-    }
-
-    //p->drawImage(0,0,m_pBuffer->toImage());
+    g_RenderMutex.lock();
     p->drawImage(0,0,m_qiRenderBuffer);
+    g_RenderMutex.unlock();
+}
+
+void CBaseObject::buffer()
+{
+    g_RenderMutex.lock();
+    /*if (m_pBuffer)
+        delete m_pBuffer;*/
+
+    //QGLFramebufferObject fbo(m_rRect.size().toSize());
+
+    //m_pBuffer = new QGLFramebufferObject();
+
+    m_qiRenderBuffer = QImage(m_rRect.size().toSize(),QImage::Format_ARGB32_Premultiplied);
+    m_qiRenderBuffer.fill(0x00000000);
+
+    QPainter bp;
+    //bp.begin(&fbo);
+    bp.begin(&m_qiRenderBuffer);
+
+    //bp.fillRect(QRectF(0,0,m_rRect.width(),m_rRect.height()),QColor(0,0,0,0));
+
+    paint(&bp);
+
+    bp.end();
+
+    //m_qiRenderBuffer = fbo.toImage();
+    g_RenderMutex.unlock();
 }

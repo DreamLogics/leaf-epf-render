@@ -69,7 +69,8 @@ void CAnimFrame::apply()
     //m_pSection->renderer()->updateView();
     //m_pSection->document()->renderview()->update();
     m_pSection->layout(m_pSection->document()->renderview()->height(),m_pSection->document()->renderview()->width());
-    m_pSection->document()->renderview()->update();
+    //m_pSection->document()->renderview()->update();
+    m_pSection->document()->updateRenderView();
 }
 
 bool CAnimFrame::hasObjectProps(CBaseObject *obj)

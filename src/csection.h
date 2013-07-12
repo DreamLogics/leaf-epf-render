@@ -56,7 +56,7 @@ class CSection : public QObject
 {
     Q_OBJECT
 public:
-    CSection(QString id, CDocument* doc,bool hidden);
+    CSection(QString id, CDocument* doc,bool hidden,int x=0, int y=0);
 
     ~CSection();
 
@@ -73,10 +73,12 @@ public:
 
     virtual bool isHidden();
     virtual QString id();
+    int x();
+    int y();
 
     virtual CDocument* document();
 
-    QImage& rendered();
+    //void rendered(QPainter* p);
 
     virtual void layout(int height, int width);
     CViewportItem* viewportItem();
@@ -95,7 +97,6 @@ public slots:
     //void scrollSection(int dx, int dy);
     //void updateRendered(QRectF view);
     //void updateRendered();
-    void setViewOffset(int dx, int dy);
 
     void mouseDoubleClickEvent ( int x, int y );
     void mousePressEvent( int x, int y );
@@ -115,11 +116,14 @@ private:
     CDocument* m_pDoc;
     bool m_bHidden;
 
-    QImage m_imgRendered;
+    //QImage m_imgRendered;
     CViewportItem* m_pViewportItem;
-    //QMutex m_mRenderMutex;
 
-    QRectF m_rView;
+
+    QRectF m_rRect;
+    int m_iX;
+    int m_iY;
+
 };
 
 #endif // CSECTION_H

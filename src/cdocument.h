@@ -56,6 +56,8 @@ public:
     int sectionCount();
     CSection* section(int index);
     CSection* sectionByID(QString);
+    CSection* sectionByPosition(int x, int y);
+    int indexForSection(CSection*);
     void addSection(CSection* section);
 
     int overlayCount();
@@ -99,9 +101,14 @@ public:
     //void makeConnection(EPFComponent* src, QString event, EPFComponent* target, QString function);
     virtual void onEPFEvent(EPFEvent *ev);
 
+    void updateRenderView();
+
 signals:
 
     void finishedLoading();
+    void _updateRenderView();
+
+    void setSection(int index);
 
 public slots:
 

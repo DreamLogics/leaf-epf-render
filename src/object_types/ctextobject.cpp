@@ -295,6 +295,8 @@ void CTextObject::layout(QRectF relrect)
     m_pTextDoc->drawContents(&p);
     p.end();*/
     //qDebug() << m_pTextDoc->toHtml();
+
+    buffer();
 }
 
 
