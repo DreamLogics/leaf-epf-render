@@ -40,7 +40,8 @@ CEPFView::CEPFView()
     //setScene(m_pDocScene);
     m_bIsLoading = true;
     m_iRenderDot = 0;
-    m_iScrollPos = 0;
+    m_iPreviousSection = -1;
+    m_dTransition = 0.0;
     //setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
     //setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -87,7 +88,7 @@ void CEPFView::setDocument(CDocument *doc)
             first = i;
     }
 
-    setSection(first);
+    m_iCurrentSection = first;
     m_bIsLoading = true;
     QTimer::singleShot(300,this,SLOT(updateDot()));
 
@@ -127,7 +128,20 @@ void CEPFView::setSection(int index)
     connect(this,SIGNAL(mousePressEvent(int,int)),s,SLOT(mousePressEvent(int,int)));
     connect(this,SIGNAL(mouseReleaseEvent(int,int)),s,SLOT(mouseReleaseEvent(int,int)));
 
+    m_iPreviousSection = m_iCurrentSection;
     m_iCurrentSection = index;
+    if (m_iPreviousSection == m_iCurrentSection)
+        m_iPreviousSection = -1;
+
+    m_TransFx = s->transitionType();
+
+    if (m_TransFx != CSection::NoneFx && m_iPreviousSection != -1)
+    {
+        m_dTransition = 1.0;
+        transitionAnim();
+    }
+
+    update();
 }
 
 void CEPFView::setSection(QString id)
@@ -173,6 +187,7 @@ int CEPFView::currentSection()
 void CEPFView::ready()
 {
     m_bIsLoading = false;
+    setSection(m_iCurrentSection);
     //setScene(m_pDocument->section(0));
     //ensureVisible(0,0,1,1);
 }
@@ -279,9 +294,103 @@ void CEPFView::paintEvent(QPaintEvent *ev)
     else
     {
         CSection* s = m_pDocument->section(m_iCurrentSection);
+        int nx,ny,psx,psy,sx,sy;
+
+        sx = s->x() * width();
+        sy = s->y() * height();
+
+        if (m_iPreviousSection != -1 && m_dTransition > 0)
+        {
+            CSection* ps = m_pDocument->section(m_iPreviousSection);
+
+            psx = ps->x() * width();
+            psy = ps->y() * height();
+
+            if (m_TransFx == CSection::SlideFx)
+            {
+                nx = (m_dTransition * psx) + ((1-m_dTransition) * sx);
+                ny = (m_dTransition * psy) + ((1-m_dTransition) * sy);
+                //p.translate(psx-nx,psy-ny);
+            }
+
+
+            //ps->render(&p,QRectF(nx,ny,width(),height()));
+            //p.resetTransform();
+        }
+        else
+        {
+            nx = (1-m_dTransition) * sx;
+            ny = (1-m_dTransition) * sy;
+        }
+
+        CSection* cs;
+
+
+        //for (int i=0;i<m_pDocument->sectionCount();i++)
+        int i;
+
+        if (m_iCurrentSection < m_iPreviousSection)
+            i=m_pDocument->sectionCount()-1;
+        else
+            i=0;
+
+        while (true)
+        {
+            if (m_TransFx == CSection::SlideFx || (m_TransFx != CSection::SlideFx && (i == m_iCurrentSection || i == m_iPreviousSection) ) )
+            {
+
+                cs = m_pDocument->section(i);
+                if (m_TransFx == CSection::SlideFx)
+                {
+                    p.resetTransform();
+                    p.translate(cs->x()*width()-nx,cs->y()*height()-ny);
+                }
+                else
+                {
+                    if (m_TransFx == CSection::FadeFx && i == m_iCurrentSection)
+                    {
+                        //qDebug() << "transition" << 1-m_dTransition << cs->id();
+                        p.setOpacity(1-m_dTransition);
+                    }
+                    else
+                        p.setOpacity(1.0);
+
+                    nx = cs->x() * width();
+                    ny = cs->y() * height();
+
+                }
+                cs->render(&p,QRectF(nx,ny,width(),height()));
+            }
+
+            if (m_iCurrentSection < m_iPreviousSection)
+                i--;
+            else
+                i++;
+
+            if (i<0 || i >= m_pDocument->sectionCount())
+                break;
+        }
+
+
+        /*if (m_TransFx == CSection::SlideFx)
+        {
+            p.translate(sx-nx,sy-ny);
+            //qDebug() << "nxy" << nx << ny;
+        }
+        else
+        {
+            if (m_TransFx == CSection::FadeFx)
+                p.setOpacity(1-m_dTransition);
+            nx = sx;
+            ny = sy;
+        }*/
+
+
+
+        //s->render(&p,QRectF(nx,ny,width(),height()));
         //p.translate(-s->x()*width(),-s->y()*height());
-        for (int i=0;i<m_pDocument->sectionCount();i++)
-            m_pDocument->section(i)->render(&p,QRectF(s->x()*width(),s->y()*height(),width(),height()));
+        //for (int i=0;i<m_pDocument->sectionCount();i++)
+        //    m_pDocument->section(i)->render(&p,QRectF(s->x()*width(),s->y()*height(),width(),height()));
 
     }
 
@@ -318,4 +427,13 @@ void CEPFView::mouseDoubleClickEvent(QMouseEvent *ev)
     x = ev->x();
     y = ev->y();
     emit mouseDoubleClickEvent(x,y);
+}
+
+void CEPFView::transitionAnim()
+{
+    //400 ms anim
+    m_dTransition -= 0.05;
+    update();
+    if (m_dTransition > 0)
+        QTimer::singleShot(20,this,SLOT(transitionAnim()));
 }

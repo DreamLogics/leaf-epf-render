@@ -67,6 +67,9 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
     m_iX = fx;
     m_iY = y;
 
+    m_iScrollX = 0;
+    m_iScrollY = 0;
+
     m_pViewportItem = new CViewportItem();
 }
 
@@ -308,13 +311,15 @@ void CSection::render(QPainter *p,QRectF region)
     }
 
     //p->setClipRect(region);
-    p->translate(m_rRect.x(),m_rRect.y());
     m_gRectMutex.unlock();
+
+    //qDebug() << id() << "section render";
 
     CSS::Stylesheet* css = document()->stylesheet();
     CBaseObject* obj;
     CLayer* l;
     QRectF absreg(QPointF(0,0),region.size());
+    QRectF relreg(QPointF(m_iScrollX,m_iScrollY),region.size());
 
     for (int i=0;i<layerCount();i++)
     {
@@ -330,12 +335,16 @@ void CSection::render(QPainter *p,QRectF region)
                 obj->paintBuffered(p);
                 p->restore();
             }
-            else if (obj->boundingRect().intersects(region))
+            else if (obj->boundingRect().intersects(relreg))
             {
                 p->save();
-                p->translate(obj->boundingRect().x() - region.x(),obj->boundingRect().y() - region.y());
+                p->translate(obj->boundingRect().x() - relreg.x(),obj->boundingRect().y() - relreg.y());
                 obj->paintBuffered(p);
                 p->restore();
+            }
+            else
+            {
+                //qDebug() << "dont render" << obj->id();
             }
         }
     }
@@ -413,4 +422,17 @@ void CSection::mouseMoveEvent( int x, int y )
     y -= obj->boundingRect().y();
 
     obj->mouseMoveEvent(QPoint(x,y));
+}
+
+CSection::TransitionFx CSection::transitionType()
+{
+    CSS::Stylesheet* css = document()->stylesheet();
+    QString type = css->property(this,"section-transition")->toString();
+
+    if (type == "slide")
+        return SlideFx;
+    else if (type == "fade")
+        return FadeFx;
+
+    return NoneFx;
 }

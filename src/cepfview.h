@@ -29,6 +29,7 @@
 #include <QList>
 //#include <QGraphicsView>
 #include <QGLWidget>
+#include "csection.h"
 
 class CDocument;
 //class QGraphicsScene;
@@ -55,6 +56,7 @@ public slots:
     void ready();
 
     void updateDot();
+    void transitionAnim();
 
 signals:
 
@@ -96,13 +98,15 @@ private:
 
     //QList<CSectionView*> m_SectionViews;
 
+    int m_iPreviousSection;
     int m_iCurrentSection;
     int m_iTOCSection;
 
     int m_iRenderDot;
 
-    int m_iScrollPos;
-    int m_iScrollMax;
+    CSection::TransitionFx m_TransFx;
+    double m_dTransition;
+
 
     //QGraphicsScene* m_pDocScene;
 };

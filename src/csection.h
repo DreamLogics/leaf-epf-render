@@ -85,6 +85,15 @@ public:
 
     virtual void render(QPainter* p, QRectF region);
 
+    enum TransitionFx
+    {
+        NoneFx = 0,
+        SlideFx,
+        FadeFx
+    };
+
+    TransitionFx transitionType();
+
 public slots:
 
     QObjectList layers();
@@ -123,6 +132,9 @@ private:
     QRectF m_rRect;
     int m_iX;
     int m_iY;
+
+    int m_iScrollX;
+    int m_iScrollY;
 
 };
 
