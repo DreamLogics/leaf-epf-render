@@ -1,6 +1,7 @@
 #ifndef EPFEVENT_H
 #define EPFEVENT_H
 
+#include "leaf-epf-render_global.h"
 #include <QString>
 #include <QStringList>
 #include <QMap>
@@ -47,7 +48,7 @@ private:
     EPFComponent* m_pTarget;
 };
 
-class EPFComponent
+class LEAFEPFRENDERSHARED_EXPORT EPFComponent
 {
 public:
     ~EPFComponent() {}

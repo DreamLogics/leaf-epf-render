@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EPF>
+	<info>
+		<prop key="dc:title">Test EPF</prop>
+	</info>
+	<layouts>
+		<layout id="layoutsmall" width="640" height="480" src="small.css"/>
+		<layout id="layoutbig" width="800" height="600" platform="desktop" src="big.css"/>
+	</layouts>
+	<sections>
+		<section id="section1" x="0" y="0">
+			<layer id="layer1">
+				<object id="bg" type="block"/>
+				<object id="texttest1" type="text"/>
+				<object id="texttest2" type=""/
+			</layer>
+		</section>
+		<section id="section2" x="1" y="0">
+			<layer id="layer1">
+				<object id="bg" type="block" properties=""/>
+			</layer>
+		</section>
+	</sections>
+</EPF>

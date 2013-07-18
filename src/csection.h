@@ -94,6 +94,14 @@ public:
 
     TransitionFx transitionType();
 
+    void setFocus(CBaseObject* obj);
+    CBaseObject* focus();
+
+    void setScrollMaxX(int max);
+    void setScrollMaxY(int max);
+    void setScrollX(int val);
+    void setScrollY(int val);
+
 public slots:
 
     QObjectList layers();
@@ -112,9 +120,12 @@ public slots:
     void mouseReleaseEvent( int x, int y );
     void mouseMoveEvent( int x, int y );
 
+    void keyEvent(int key, QString val);
+
 private:
 
     CBaseObject* objectOnPos(int x, int y);
+    void drawScrollbar();
 
 private:
     QList<CLayer*> m_Layers;
@@ -128,6 +139,8 @@ private:
     //QImage m_imgRendered;
     CViewportItem* m_pViewportItem;
 
+    CBaseObject* m_pFocusObj;
+
 
     QRectF m_rRect;
     int m_iX;
@@ -135,6 +148,11 @@ private:
 
     int m_iScrollX;
     int m_iScrollY;
+    int m_iScrollXMax;
+    int m_iScrollYMax;
+
+    QMutex m_mRectMutex;
+    QMutex m_mScrollMutex;
 
 };
 

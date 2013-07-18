@@ -337,6 +337,7 @@ void Stylesheet::parse(QString css)
                 {
                     proprules = propvalue.mid(f).toLower();
                     propvalue = propvalue.left(f).toLower();
+                    propvalue = propvalue.replace(outerspaces,"");
 
                     bScale = false;
                     bHeightProp = false;

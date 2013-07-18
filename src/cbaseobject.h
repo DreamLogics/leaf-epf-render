@@ -29,6 +29,7 @@
 #include "epfevent.h"
 #include <QRectF>
 #include <QImage>
+#include <QMutex>
 
 namespace CSS
 {
@@ -64,8 +65,7 @@ public:
     CSection* section();
     CDocument* document();
 
-    virtual void setBoundingRect(const QRectF&);
-    virtual QRectF boundingRect() const;
+
 
     //void setPositionOffset(int dx, int dy);
     //void sheduleRepaint();
@@ -83,6 +83,8 @@ public:
     virtual void mousePressEvent( QPoint pos );
     virtual void mouseReleaseEvent( QPoint pos );
     virtual void mouseMoveEvent( QPoint pos );
+
+    virtual void keyEvent(int key, QString val);
 
     //virtual CSS::Stylesheet* style();
 
@@ -132,6 +134,9 @@ public slots:
     virtual void addStyleClass(QString classname);
     virtual void removeStyleClass(QString classname);
 
+    virtual void setBoundingRect(const QRectF&);
+    virtual QRectF boundingRect() const;
+
 signals:
 
     void clicked();
@@ -175,6 +180,10 @@ private:
     CLayer* m_pLayer;
 
     QMap<QString,CSS::Property*> m_CSSOverrideProps;
+
+    QMutex m_RenderMutex;
+
+    int m_iRenderMode;
     
 };
 

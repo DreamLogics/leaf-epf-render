@@ -48,6 +48,7 @@ public:
 private:
 
     QString css();
+    int pointFromPixel(int px);
     
 signals:
     

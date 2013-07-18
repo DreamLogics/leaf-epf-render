@@ -31,7 +31,7 @@
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsItem>
 
-QMutex m_gRectMutex;
+
 
 CViewportItem::CViewportItem()
 {
@@ -56,7 +56,7 @@ void CViewportItem::setSize(int height, int width)
 }
 
 
-CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObject(doc), m_sID(id), m_pDoc(doc), m_bHidden(hidden)
+CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObject(doc), m_sID(id), m_pDoc(doc), m_bHidden(hidden), m_pFocusObj(0)
 {
     setParent(doc);
 
@@ -269,9 +269,9 @@ void CSection::layout(int height, int width)
     m_gRenderMutex.unlock();
 */
     //document()->updateRenderView();
-    m_gRectMutex.lock();
+    m_mRectMutex.lock();
     m_rRect = QRectF(m_iX*width,m_iY*height,width,height);
-    m_gRectMutex.unlock();
+    m_mRectMutex.unlock();
 }
 
 int CSection::x()
@@ -303,15 +303,15 @@ void CSection::render(QPainter *p,QRectF region)
 {
     //m_mRenderMutex.lock();
 
-    m_gRectMutex.lock();
+    m_mRectMutex.lock();
     if (!region.intersects(m_rRect))
     {
-        m_gRectMutex.unlock();
+        m_mRectMutex.unlock();
         return;
     }
 
     //p->setClipRect(region);
-    m_gRectMutex.unlock();
+    m_mRectMutex.unlock();
 
     //qDebug() << id() << "section render";
 
@@ -402,9 +402,13 @@ void CSection::mousePressEvent( int x, int y )
 
 void CSection::mouseReleaseEvent( int x, int y )
 {
+    m_pFocusObj = 0;
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
+
+    if (obj->enabled())
+        m_pFocusObj = obj;
 
     x -= obj->boundingRect().x();
     y -= obj->boundingRect().y();
@@ -435,4 +439,20 @@ CSection::TransitionFx CSection::transitionType()
         return FadeFx;
 
     return NoneFx;
+}
+
+void CSection::keyEvent(int key, QString val)
+{
+    if (!m_pFocusObj)
+        m_pFocusObj->keyEvent(key,val);
+}
+
+void CSection::setFocus(CBaseObject *obj)
+{
+    m_pFocusObj = obj;
+}
+
+CBaseObject* CSection::focus()
+{
+    return m_pFocusObj;
 }

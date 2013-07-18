@@ -276,7 +276,7 @@ void CDocument::layout(int height, int width)
         s->layout(height,width);
     }
 
-    return;
+    updateRenderView();
 }
 
 void CDocument::addLayout(CLayout *layout)

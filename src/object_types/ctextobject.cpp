@@ -33,6 +33,8 @@
 #include <QTextCursor>
 #include <QAbstractTextDocumentLayout>
 #include <QTextDocumentFragment>
+#include <QApplication>
+#include <QDesktopWidget>
 
 CBaseObject* CTextObjectFactory::create(QString id, CLayer *layer)
 {
@@ -324,6 +326,8 @@ QString CTextObject::css()
 
     QStringList proplist;
 
+    QString propval;
+
     for (int i=0;i<s.size();i++)
     {
         if (bInSel)
@@ -355,7 +359,11 @@ QString CTextObject::css()
 
                     for (int n=0;n<proplist.size();n++)
                     {
-                        newcss += proplist[n] + ": " + csel->property(proplist[n])->toString() + ";";
+                        propval = csel->property(proplist[n])->toString();
+                        if (proplist[n] == "font-size" && propval.endsWith("px"))
+                            propval = QString::number(pointFromPixel(propval.left(propval.size()-2).toInt()))+"pt";
+                        newcss += proplist[n] + ": " + propval + ";";
+                        //qDebug() << proplist[n] << propval;
                     }
 
                     newcss += "}";
@@ -371,4 +379,10 @@ QString CTextObject::css()
 
     return newcss;
 
+}
+
+int CTextObject::pointFromPixel(int px)
+{
+    int dpi=QApplication::desktop()->logicalDpiY();
+    return px * 72 / dpi;
 }

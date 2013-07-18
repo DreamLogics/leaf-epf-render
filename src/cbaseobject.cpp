@@ -28,9 +28,9 @@
 #include "cepfview.h"
 #include <QDebug>
 #include <QGLFramebufferObject>
-#include <QMutex>
 
-QMutex g_RenderMutex;
+
+
 
 CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_sID(id), m_pLayer(layer)
@@ -463,7 +463,16 @@ QVariant CBaseObject::itemChange(GraphicsItemChange change, const QVariant &valu
 */
 void CBaseObject::onEPFEvent(EPFEvent *ev)
 {
-
+    if (ev->event() == "addStyleClass")
+    {
+        if (ev->parameter(0) != "")
+            addStyleClass(ev->parameter(0));
+    }
+    else if (ev->event() == "removeStyleClass")
+    {
+        if (ev->parameter(0) != "")
+            removeStyleClass(ev->parameter(0));
+    }
 }
 /*
 void CBaseObject::sheduleRepaint()
@@ -473,14 +482,37 @@ void CBaseObject::sheduleRepaint()
 */
 void CBaseObject::paintBuffered(QPainter *p)
 {
-    g_RenderMutex.lock();
+    m_RenderMutex.lock();
+    if (m_iRenderMode == CSS::rmNone)
+    {
+        m_RenderMutex.unlock();
+        return;
+    }
+    switch (m_iRenderMode)
+    {
+    case CSS::rmOverlay:
+        p->setCompositionMode(QPainter::CompositionMode_Overlay);
+        break;
+    case CSS::rmMultiply:
+        p->setCompositionMode(QPainter::CompositionMode_Multiply);
+        break;
+    case CSS::rmReplace:
+        p->setCompositionMode(QPainter::CompositionMode_SourceIn);
+        break;
+    case CSS::rmScreen:
+        p->setCompositionMode(QPainter::CompositionMode_Screen);
+        break;
+    default:
+        p->setCompositionMode(QPainter::CompositionMode_SourceOver);
+        break;
+    }
     p->drawImage(0,0,m_qiRenderBuffer);
-    g_RenderMutex.unlock();
+    m_RenderMutex.unlock();
 }
 
 void CBaseObject::buffer()
 {
-    g_RenderMutex.lock();
+    m_RenderMutex.lock();
     /*if (m_pBuffer)
         delete m_pBuffer;*/
 
@@ -501,6 +533,14 @@ void CBaseObject::buffer()
 
     bp.end();
 
+    CSS::Stylesheet* css = document()->stylesheet();
+    m_iRenderMode = CSS::renderModeFromString(css->property(this,"render-mode")->toString());
+
     //m_qiRenderBuffer = fbo.toImage();
-    g_RenderMutex.unlock();
+    m_RenderMutex.unlock();
+}
+
+void CBaseObject::keyEvent(int key, QString val)
+{
+
 }
