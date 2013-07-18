@@ -40,6 +40,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_iMarginBottom = 0;
     m_iMarginLeft = 0;
     m_bEnabled = false;
+    m_iRotation = 0;
     //m_bNeedsRedraw = true;
     //m_pBuffer = 0;
 
@@ -506,6 +507,7 @@ void CBaseObject::paintBuffered(QPainter *p)
         p->setCompositionMode(QPainter::CompositionMode_SourceOver);
         break;
     }
+    p->rotate(m_iRotation);
     p->drawImage(0,0,m_qiRenderBuffer);
     m_RenderMutex.unlock();
 }
@@ -535,6 +537,8 @@ void CBaseObject::buffer()
 
     CSS::Stylesheet* css = document()->stylesheet();
     m_iRenderMode = CSS::renderModeFromString(css->property(this,"render-mode")->toString());
+
+    m_iRotation = css->property(this,"rotation")->toInt();
 
     //m_qiRenderBuffer = fbo.toImage();
     m_RenderMutex.unlock();

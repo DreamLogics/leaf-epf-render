@@ -1,6 +1,7 @@
 #include "css_painters.h"
 #include <QPainter>
 #include "cdocument.h"
+#include "cbaseobject.h"
 #include <QPen>
 #include <QtCore/qmath.h>
 #include <QImage>
@@ -263,6 +264,86 @@ void paintColorOverlay(QPainter *pPainter, QRectF qrRect, QString strColor, Rend
 
     pPainter->setCompositionMode(mode);
     pPainter->setOpacity(opac);
+}
+
+void paintBorder(QPainter* pPainter, CBaseObject* pObj)
+{
+    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    QRectF r = pObj->boundingRect();
+    r.moveTop(0);
+    r.moveLeft(0);
+
+    if (!css->property(pObj,"border")->isNull())
+    {
+        QRegExp cov("([0-9]+)[a-zA-Z ]+([a-zA-Z]+) +(#[0-9a-fA-F]{3,6})");
+        if (cov.indexIn(css->property(pObj,"border")->toString()) != -1)
+        {
+            paintBorder(pPainter,r,cov.cap(1).toDouble(),cov.cap(2),cov.cap(3));
+        }
+    }
+}
+
+void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj)
+{
+    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    QRectF r = pObj->boundingRect();
+    r.moveTop(0);
+    r.moveLeft(0);
+
+    if (!css->property(pObj,"background-color")->isNull())
+    {
+        CSS::paintBackgroundColor(pPainter,r,css->property(pObj,"background-color")->toString());
+    }
+}
+
+void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj)
+{
+    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    QRectF r = pObj->boundingRect();
+    r.moveTop(0);
+    r.moveLeft(0);
+
+    if (!css->property(pObj,"background-image")->isNull())
+    {
+        QString size;
+
+        if (!css->property(pObj,"background-size")->isNull())
+            size = css->property(pObj,"background-size")->toString();
+        else if (!css->property(pObj,"background-image-size")->isNull())
+            size = css->property(pObj,"background-image-size")->toString();
+
+        CSS::paintBackgroundImage(pPainter,r,size,css->property(pObj,"background-image")->toString(),pObj->document());
+    }
+
+}
+
+void paintOuterGlow(QPainter* pPainter, CBaseObject* pObj)
+{
+
+}
+void paintInnerGlow(QPainter* pPainter, CBaseObject* pObj)
+{
+
+}
+void paintDropShadow(QPainter* pPainter, CBaseObject* pObj)
+{
+
+}
+void paintColorOverlay(QPainter* pPainter, CBaseObject* pObj)
+{
+    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    QRectF r = pObj->boundingRect();
+    r.moveTop(0);
+    r.moveLeft(0);
+
+    if (!css->property(pObj,"color-overlay")->isNull())
+    {
+        QRegExp cov("(#[0-9a-fA-F]{3,6}) +([a-zA-Z]+) +([0-9\\.]+)");
+        if (cov.indexIn(css->property(pObj,"color-overlay")->toString()) != -1)
+        {
+            CSS::paintColorOverlay(pPainter,r,cov.cap(1),CSS::renderModeFromString(cov.cap(2)),cov.cap(3).toDouble());
+        }
+    }
 }
 
 }

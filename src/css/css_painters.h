@@ -4,7 +4,8 @@
 #include "css_style.h"
 #include <QRectF>
 class QPainter;
-class CDocument;
+//class CDocument;
+class CBaseObject;
 
 namespace CSS
 {
@@ -16,6 +17,15 @@ void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderM
 void paintInnerGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize);
 void paintDropShadow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iLightDir, int iDistance, int iSpread, int iSize);
 void paintColorOverlay(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity);
+
+
+void paintBorder(QPainter* pPainter, CBaseObject* pObj);
+void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj);
+void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj);
+void paintOuterGlow(QPainter* pPainter, CBaseObject* pObj);
+void paintInnerGlow(QPainter* pPainter, CBaseObject* pObj);
+void paintDropShadow(QPainter* pPainter, CBaseObject* pObj);
+void paintColorOverlay(QPainter* pPainter, CBaseObject* pObj);
 
 }
 

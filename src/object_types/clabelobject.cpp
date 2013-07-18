@@ -20,32 +20,42 @@
 **
 ****************************************************************************/
 
-#ifndef CBLOCKOBJECT_H
-#define CBLOCKOBJECT_H
+#include "clabelobject.h"
+#include <QPainter>
+#include <QStyleOptionGraphicsItem>
+#include <QWidget>
+#include "css/css_painters.h"
+#include <QDebug>
 
-#include "cbaseobject.h"
-#include "iepfobjectfactory.h"
-
-class QPainter;
-
-class CBlockObjectFactory : public IEPFObjectFactory
+CBaseObject* CLabelObjectFactory::create(QString id, CLayer *layer)
 {
-    virtual CBaseObject* create(QString id, CLayer *layer);
-};
+    return new CLabelObject(id,layer);
+}
 
-class CBlockObject : public CBaseObject
+CLabelObject::CLabelObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 {
-    Q_OBJECT
-public:
-    CBlockObject(QString id, CLayer* layer);
-    
-    virtual void preload();
-    virtual void paint(QPainter *painter);
 
-signals:
-    
-public slots:
-    
-};
+}
 
-#endif // CBLOCKOBJECT_H
+void CLabelObject::preload()
+{
+    m_sText = property("text");
+}
+
+void CLabelObject::paint(QPainter *painter)
+{
+    CSS::Stylesheet* css = document()->stylesheet();
+    QRectF r = boundingRect();
+    r.moveTop(0);
+    r.moveLeft(0);
+
+    CSS::paintBackgroundColor(painter,this);
+    CSS::paintBackgroundImage(painter,this);
+    CSS::paintColorOverlay(painter,this);
+
+    /*painter->setFont(QFont("sans-serif",10));
+    painter->setPen(QColor("red"));
+    painter->drawText(r.left()+16,r.bottom()-16,id());
+
+    painter->drawRect(r);*/
+}

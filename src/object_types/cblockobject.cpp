@@ -44,36 +44,9 @@ void CBlockObject::preload()
 
 void CBlockObject::paint(QPainter *painter)
 {
-    CSS::Stylesheet* css = document()->stylesheet();
-    QRectF r = boundingRect();
-    r.moveTop(0);
-    r.moveLeft(0);
-
-    if (!css->property(this,"background-color")->isNull())
-    {
-        CSS::paintBackgroundColor(painter,r,css->property(this,"background-color")->toString());
-    }
-
-    if (!css->property(this,"background-image")->isNull())
-    {
-        QString size;
-
-        if (!css->property(this,"background-size")->isNull())
-            size = css->property(this,"background-size")->toString();
-        else if (!css->property(this,"background-image-size")->isNull())
-            size = css->property(this,"background-image-size")->toString();
-
-        CSS::paintBackgroundImage(painter,r,size,css->property(this,"background-image")->toString(),document());
-    }
-
-    if (!css->property(this,"color-overlay")->isNull())
-    {
-        QRegExp cov("(#[0-9a-fA-F]{3,6}) +([a-zA-Z]+) +([0-9\\.]+)");
-        if (cov.indexIn(css->property(this,"color-overlay")->toString()) != -1)
-        {
-            CSS::paintColorOverlay(painter,r,cov.cap(1),CSS::renderModeFromString(cov.cap(2)),cov.cap(3).toDouble());
-        }
-    }
+    CSS::paintBackgroundColor(painter,this);
+    CSS::paintBackgroundImage(painter,this);
+    CSS::paintColorOverlay(painter,this);
 
     /*painter->setFont(QFont("sans-serif",10));
     painter->setPen(QColor("red"));

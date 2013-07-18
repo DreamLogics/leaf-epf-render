@@ -20,32 +20,36 @@
 **
 ****************************************************************************/
 
-#ifndef CBLOCKOBJECT_H
-#define CBLOCKOBJECT_H
+#ifndef CLABELOBJECT_H
+#define CLABELOBJECT_H
 
 #include "cbaseobject.h"
 #include "iepfobjectfactory.h"
 
 class QPainter;
 
-class CBlockObjectFactory : public IEPFObjectFactory
+class CLabelObjectFactory : public IEPFObjectFactory
 {
     virtual CBaseObject* create(QString id, CLayer *layer);
 };
 
-class CBlockObject : public CBaseObject
+class CLabelObject : public CBaseObject
 {
     Q_OBJECT
 public:
-    CBlockObject(QString id, CLayer* layer);
-    
+    CLabelObject(QString id, CLayer* layer);
+
     virtual void preload();
     virtual void paint(QPainter *painter);
 
 signals:
-    
+
 public slots:
-    
+
+private:
+
+    QString m_sText;
+
 };
 
-#endif // CBLOCKOBJECT_H
+#endif // CLABELOBJECT_H

@@ -69,7 +69,7 @@ public:
 
     //void setPositionOffset(int dx, int dy);
     //void sheduleRepaint();
-    void paintBuffered(QPainter* p);
+    virtual void paintBuffered(QPainter* p);
     void buffer();
 
     virtual void layout(QRectF relativeTo);
@@ -184,6 +184,7 @@ private:
     QMutex m_RenderMutex;
 
     int m_iRenderMode;
+    int m_iRotation;
     
 };
 

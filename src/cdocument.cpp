@@ -464,6 +464,7 @@ void CDocument::load(int height, int width)
     layout(height,width);
 
     //QTimer::singleShot(1000,this,SIGNAL(finishedLoading()));
+    sendEvent("finishedLoading");
 
     emit finishedLoading();
 }
