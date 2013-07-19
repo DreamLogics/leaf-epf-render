@@ -124,6 +124,8 @@ public:
 
     virtual void onEPFEvent(EPFEvent *ev);
 
+    bool fixedParent();
+
 protected:
 
     //virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -182,10 +184,12 @@ private:
     QMap<QString,CSS::Property*> m_CSSOverrideProps;
 
     QMutex m_RenderMutex;
+    QMutex m_FPMutex;
 
     int m_iRenderMode;
     int m_iRotation;
-    
+
+    bool m_bFixedParent;
 };
 
 #endif // CBASEOBJECT_H

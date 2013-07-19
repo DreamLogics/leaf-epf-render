@@ -97,10 +97,15 @@ public:
     void setFocus(CBaseObject* obj);
     CBaseObject* focus();
 
-    void setScrollMaxX(int max);
-    void setScrollMaxY(int max);
+    void setScrollXMax(int max);
+    void setScrollYMax(int max);
     void setScrollX(int val);
     void setScrollY(int val);
+
+    int scrollX();
+    int scrollY();
+    int scrollXMax();
+    int scrollYMax();
 
 public slots:
 
@@ -125,7 +130,7 @@ public slots:
 private:
 
     CBaseObject* objectOnPos(int x, int y);
-    void drawScrollbar();
+    void drawScrollbar(QPainter* p);
 
 private:
     QList<CLayer*> m_Layers;

@@ -41,6 +41,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_iMarginLeft = 0;
     m_bEnabled = false;
     m_iRotation = 0;
+    m_bFixedParent = false;
     //m_bNeedsRedraw = true;
     //m_pBuffer = 0;
 
@@ -201,6 +202,16 @@ void CBaseObject::layout(QRectF relrect)
             buffer();
         }
     }
+    m_FPMutex.lock();
+
+    CBaseObject* obj = dynamic_cast<CBaseObject*>(parent());
+    if (obj)
+    {
+        if (css->property(obj,"position")->toString() == "fixed" || obj->fixedParent())
+            m_bFixedParent = true;
+    }
+
+    m_FPMutex.unlock();
 
     QObjectList clist = children();
     CBaseObject* cobj;
@@ -547,4 +558,12 @@ void CBaseObject::buffer()
 void CBaseObject::keyEvent(int key, QString val)
 {
 
+}
+
+bool CBaseObject::fixedParent()
+{
+    m_FPMutex.lock();
+    bool b = m_bFixedParent;
+    m_FPMutex.unlock();
+    return b;
 }

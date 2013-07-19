@@ -33,6 +33,7 @@
 #include <QScrollBar>
 #include <QMouseEvent>
 #include <QRectF>
+#include <QWheelEvent>
 
 CEPFView::CEPFView()
 {
@@ -399,6 +400,8 @@ void CEPFView::paintEvent(QPaintEvent *ev)
 
 void CEPFView::mousePressEvent(QMouseEvent *ev)
 {
+    if (m_bIsLoading)
+        return;
     int x,y;
     x = ev->x();
     y = ev->y();
@@ -407,6 +410,8 @@ void CEPFView::mousePressEvent(QMouseEvent *ev)
 
 void CEPFView::mouseReleaseEvent(QMouseEvent *ev)
 {
+    if (m_bIsLoading)
+        return;
     int x,y;
     x = ev->x();
     y = ev->y();
@@ -415,6 +420,8 @@ void CEPFView::mouseReleaseEvent(QMouseEvent *ev)
 
 void CEPFView::mouseMoveEvent(QMouseEvent *ev)
 {
+    if (m_bIsLoading)
+        return;
     int x,y;
     x = ev->x();
     y = ev->y();
@@ -423,6 +430,8 @@ void CEPFView::mouseMoveEvent(QMouseEvent *ev)
 
 void CEPFView::mouseDoubleClickEvent(QMouseEvent *ev)
 {
+    if (m_bIsLoading)
+        return;
     int x,y;
     x = ev->x();
     y = ev->y();
@@ -436,4 +445,21 @@ void CEPFView::transitionAnim()
     update();
     if (m_dTransition > 0)
         QTimer::singleShot(20,this,SLOT(transitionAnim()));
+}
+
+void CEPFView::wheelEvent(QWheelEvent *ev)
+{
+    if (m_bIsLoading)
+        return;
+    CSection *s = m_pDocument->section(m_iCurrentSection);
+    if (s)
+    {
+        //s->setScrollY(ev->delta());
+        //qDebug() << ev->delta();
+        if (ev->orientation() == Qt::Vertical)
+            s->setScrollY(s->scrollY()-ev->delta());
+        else
+            s->setScrollX(s->scrollX()-ev->delta());
+        update();
+    }
 }

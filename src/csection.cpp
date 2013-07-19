@@ -69,6 +69,8 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
 
     m_iScrollX = 0;
     m_iScrollY = 0;
+    m_iScrollXMax = 0;
+    m_iScrollYMax = 0;
 
     m_pViewportItem = new CViewportItem();
 }
@@ -209,13 +211,14 @@ void CSection::layout(int height, int width)
 
     int i,n,h;
     CLayer* l;
-    CBaseObject* obj;
+    CBaseObject* obj,*lobj;
     QRectF relrect;
     QString pos;
     for (i=0;i<layerCount();i++) //first layout all static and relative objects which are relative to the document
     {
         l = layer(i);
         obj=0;
+        lobj=0;
         relrect = QRectF(0,0,0,0);
         for (n=0;n<l->objectCount();n++)
         {
@@ -226,9 +229,10 @@ void CSection::layout(int height, int width)
             {
                 obj->layout(relrect);
                 relrect.setTop(obj->boundingRect().bottom());
+                lobj = obj;
             }
         }
-        if (obj)
+        if (lobj)
         {
             h=obj->boundingRect().bottom() + obj->marginBottom();
             if (h>docheight)
@@ -251,10 +255,17 @@ void CSection::layout(int height, int width)
                 {
                     //obj->setParent(m_pViewportItem);
                     relrect = QRectF(0,0,width,height);
+                    obj->layout(relrect);
                 }
                 else
+                {
                     relrect = docbound;
-                obj->layout(relrect);
+                    obj->layout(relrect);
+                    h=obj->boundingRect().bottom() + obj->marginBottom();
+                    if (h>docheight)
+                        docheight = h;
+                }
+
             }
         }
     }
@@ -272,6 +283,11 @@ void CSection::layout(int height, int width)
     m_mRectMutex.lock();
     m_rRect = QRectF(m_iX*width,m_iY*height,width,height);
     m_mRectMutex.unlock();
+
+    //qDebug() << "scrollmax" << docheight - height;
+    setScrollYMax(docheight - height);
+
+    document()->updateRenderView();
 }
 
 int CSection::x()
@@ -319,7 +335,7 @@ void CSection::render(QPainter *p,QRectF region)
     CBaseObject* obj;
     CLayer* l;
     QRectF absreg(QPointF(0,0),region.size());
-    QRectF relreg(QPointF(m_iScrollX,m_iScrollY),region.size());
+    QRectF relreg(QPointF(scrollX(),scrollY()),region.size());
 
     for (int i=0;i<layerCount();i++)
     {
@@ -328,7 +344,7 @@ void CSection::render(QPainter *p,QRectF region)
         {
             obj = l->object(n);
 
-            if (css->property(obj,"position")->toString() == "fixed" && obj->boundingRect().intersects(absreg))
+            if ((css->property(obj,"position")->toString() == "fixed" && obj->boundingRect().intersects(absreg)) || obj->fixedParent())
             {
                 p->save();
                 p->translate(obj->boundingRect().x(),obj->boundingRect().y());
@@ -348,6 +364,8 @@ void CSection::render(QPainter *p,QRectF region)
             }
         }
     }
+
+    drawScrollbar(p);
 
     //m_mRenderMutex.unlock();
 }
@@ -455,4 +473,143 @@ void CSection::setFocus(CBaseObject *obj)
 CBaseObject* CSection::focus()
 {
     return m_pFocusObj;
+}
+
+void CSection::drawScrollbar(QPainter *p)
+{
+    int h = p->device()->height();
+    int w = p->device()->width();
+
+    int scrollx = scrollX();
+    int scrolly = scrollY();
+    int scrollxmax = scrollXMax();
+    int scrollymax = scrollYMax();
+
+    QPen pen(QColor(128,128,128));
+    p->setPen(pen);
+
+    if (scrollxmax > 0 && scrollymax == 0) //horizontal scrollbar
+    {
+        int scrollerwidth = w - scrollxmax;
+
+        if (scrollerwidth < 100)
+            scrollerwidth = 100;
+
+        int scrollareax = w - scrollerwidth;
+        int scrolleroffsetx = scrollx * scrollareax / scrollxmax;
+
+        p->fillRect(0,h-10,w,10,QColor(128,128,128,128));
+    }
+    else if (scrollymax > 0 && scrollxmax == 0) //vertical scrollbar
+    {
+        int scrollerheight = h - scrollymax;
+
+        if (scrollerheight < 100)
+            scrollerheight = 100;
+
+        int scrollareay = h - scrollerheight;
+        int scrolleroffsety = scrolly * scrollareay / scrollymax;
+
+        p->fillRect(w-10,0,10,h,QColor(128,128,128,128));
+
+        p->fillRect(w-10,scrolleroffsety,10,scrollerheight,QColor(40,40,40,160));
+        p->drawRect(w-10,scrolleroffsety,w-1,scrollerheight-1);
+    }
+    else if (scrollxmax > 0) //y > 0 already implied / both scrollbars
+    {
+        int scrollerheight = h - scrollymax;
+        int scrollerwidth = w - scrollxmax;
+
+        if (scrollerheight < 100)
+            scrollerheight = 100;
+        if (scrollerwidth < 100)
+            scrollerwidth = 100;
+
+        int scrollareay = h - scrollerheight;
+        int scrollareax = w - scrollerwidth;
+        int scrolleroffsety = scrolly * scrollareay / scrollymax;
+        int scrolleroffsetx = scrollx * scrollareax / scrollxmax;
+
+        p->fillRect(0,h-10,w,10,QColor(128,128,128,128));
+        p->fillRect(w-10,0,10,h,QColor(128,128,128,128));
+    }
+
+}
+
+void CSection::setScrollX(int val)
+{
+    m_mScrollMutex.lock();
+    if (val >= 0 && val <= m_iScrollXMax)
+        m_iScrollX = val;
+    else if (val < 0)
+        m_iScrollX = 0;
+    else if (val > m_iScrollXMax)
+        m_iScrollX = m_iScrollXMax;
+    m_mScrollMutex.unlock();
+}
+
+void CSection::setScrollY(int val)
+{
+    m_mScrollMutex.lock();
+    if (val >= 0 && val <= m_iScrollYMax)
+        m_iScrollY = val;
+    else if (val < 0)
+        m_iScrollY = 0;
+    else if (val > m_iScrollYMax)
+        m_iScrollY = m_iScrollYMax;
+    m_mScrollMutex.unlock();
+}
+
+void CSection::setScrollXMax(int val)
+{
+    if (val < 0)
+        return;
+    m_mScrollMutex.lock();
+    if (m_iScrollX > val)
+        m_iScrollX = val;
+    m_iScrollXMax = val;
+    m_mScrollMutex.unlock();
+}
+
+void CSection::setScrollYMax(int val)
+{
+    if (val < 0)
+        return;
+    m_mScrollMutex.lock();
+    if (m_iScrollY > val)
+        m_iScrollY = val;
+    m_iScrollYMax = val;
+    m_mScrollMutex.unlock();
+}
+
+int CSection::scrollX()
+{
+    m_mScrollMutex.lock();
+    int i = m_iScrollX;
+    m_mScrollMutex.unlock();
+    return i;
+}
+
+int CSection::scrollY()
+{
+    m_mScrollMutex.lock();
+    int i = m_iScrollY;
+    m_mScrollMutex.unlock();
+    return i;
+}
+
+int CSection::scrollXMax()
+{
+    m_mScrollMutex.lock();
+    int i = m_iScrollXMax;
+    m_mScrollMutex.unlock();
+    return i;
+}
+
+int CSection::scrollYMax()
+{
+    m_mScrollMutex.lock();
+    int i = m_iScrollYMax;
+    m_mScrollMutex.unlock();
+    return i;
 }
