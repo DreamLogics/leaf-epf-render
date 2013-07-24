@@ -59,6 +59,8 @@ void CTextObject::paint(QPainter *painter)
     r.moveTop(0);
     r.moveLeft(0);
 
+    //painter->fillRect(r,QColor("white"));
+
     if (!css->property(this,"background-color")->isNull())
     {
         CSS::paintBackgroundColor(painter,r,css->property(this,"background-color")->toString());
@@ -245,7 +247,8 @@ void CTextObject::layout(QRectF relrect)
     QRegExp imgfinder("< *img[^>]*>");
     QRegExp srcfinder("src *= *\"([^\"]+)\"");
     QByteArray data;
-    QString fn;
+    QString fn,rn;
+    QStringList sl;
 
     while (1)
     {
@@ -255,7 +258,14 @@ void CTextObject::layout(QRectF relrect)
         srcfinder.indexIn(imgfinder.cap());
         fn = srcfinder.cap(1);
         fn = QUrl::fromPercentEncoding(fn.toUtf8());
-        data = document()->resource(fn);
+
+        sl = fn.split("/");
+        if (sl.size() > 1)
+            rn = sl[sl.size()-1];
+        else
+            rn = fn;
+
+        data = document()->resource(rn);
         if (data.size() > 0)
         {
             m_pTextDoc->addResource(QTextDocument::ImageResource, QUrl( fn ), data);
@@ -310,6 +320,16 @@ QString CTextObject::overflow()
 
 QString CTextObject::css()
 {
+    CSS::Stylesheet* stylesheet = document()->stylesheet();
+    CSS::Property* csssrc = stylesheet->property(this,"css-source");
+    if (!csssrc->isNull())
+    {
+        QByteArray data = document()->resource(csssrc->toString());
+        if (data.size() > 0)
+            return QString::fromUtf8(data.constData(),data.size());
+    }
+
+
     QString s = document()->currentLayout()->css();
     QString newcss;
     QString sel;

@@ -318,6 +318,7 @@ void CSection::scrollSection(int dx, int dy)
 void CSection::render(QPainter *p,QRectF region)
 {
     //m_mRenderMutex.lock();
+    QRectF sectionrect;
 
     m_mRectMutex.lock();
     if (!region.intersects(m_rRect))
@@ -326,6 +327,7 @@ void CSection::render(QPainter *p,QRectF region)
         return;
     }
 
+    sectionrect = m_rRect;
     //p->setClipRect(region);
     m_mRectMutex.unlock();
 
@@ -336,6 +338,9 @@ void CSection::render(QPainter *p,QRectF region)
     CLayer* l;
     QRectF absreg(QPointF(0,0),region.size());
     QRectF relreg(QPointF(scrollX(),scrollY()),region.size());
+
+    //TODO load from css
+    p->fillRect(absreg,QColor("white"));
 
     for (int i=0;i<layerCount();i++)
     {

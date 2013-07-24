@@ -156,6 +156,10 @@ void CEPFView::setSection(QString id)
 void CEPFView::nextSection()
 {
     int i;
+
+    if (m_iCurrentSection >= m_pDocument->sectionCount())
+        return;
+
     for (i=m_iCurrentSection+1;i<m_pDocument->sectionCount();i++)
     {
         if (!m_pDocument->section(i)->isHidden())
@@ -170,6 +174,10 @@ void CEPFView::nextSection()
 void CEPFView::previousSection()
 {
     int i;
+
+    if (m_iCurrentSection <= 0)
+        return;
+
     for (i=m_iCurrentSection-1;i<m_pDocument->sectionCount();i--)
     {
         if (!m_pDocument->section(i)->isHidden())

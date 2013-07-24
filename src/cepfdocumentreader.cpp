@@ -254,7 +254,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         CBaseObject* obj;
 
         //int renderstyle;
-        bool bActive;
+        //bool bActive;
 
         //overlays
 
@@ -316,10 +316,14 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             s = new CSection(section.attribute("id").value(),document,section.attribute("hidden").as_bool(),section.attribute("x").as_int(),section.attribute("y").as_int());
             sectionmap.insert(section.attribute("id").value(),o);
 
+            qDebug() << "section" << s->id();
+
             for (layer = section.child("layer"); layer; layer = layer.next_sibling("layer"))
             {
 
                 l = new CLayer(layer.attribute("id").value(),s);
+
+                qDebug() << "layer" << l->id();
 
                 /*if (layer.attribute("active").as_int() == 1)
                     bActive = true;
@@ -331,6 +335,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                 //objects maken
                 for (object = layer.child("object"); object; object = object.next_sibling("object"))
                 {
+                    qDebug() << "Going to make object...";
                     obj = createObject(object.attribute("type").value(),object.attribute("id").value(),l,object.attribute("properties").value(),object.attribute("styles").value(),object.attribute("enabled").as_bool());
                     m_objectmap.insert(QString(section.attribute("id").value())+":"+QString(object.attribute("id").value()),obj);
 
@@ -465,8 +470,13 @@ CBaseObject* CEPFDocumentReader::createObject(QString type, QString id, CLayer* 
         for (int i=0;i<styles.size();i++)
             obj->addStyleClass(styles[i]);
 
+        qDebug() << "Object made of type: " << type << "with id" << id;
+
         return obj;
     }
+
+
+
     return new CUnsupportedObject(id,layer);
 }
 
