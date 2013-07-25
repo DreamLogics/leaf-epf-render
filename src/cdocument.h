@@ -127,6 +127,8 @@ public slots:
     void load(int height, int width);
     void layout(int height, int width);
 
+    void saveBuffers();
+
 private:
     QList<CSection*> m_Sections;
     QList<COverlay*> m_Overlays;

@@ -131,8 +131,8 @@ void CBaseObject::layout(QRectF relrect)
     setMargin(css->property(this,"margin-top")->toInt(),css->property(this,"margin-left")->toInt(),css->property(this,"margin-bottom")->toInt(),css->property(this,"margin-right")->toInt());
     //setPadding(css->property(this,"padding-top")->toInt(),css->property(this,"padding-left")->toInt(),css->property(this,"padding-bottom")->toInt(),css->property(this,"padding-right")->toInt());
 
-    newrect.setHeight(css->property(this,"height")->toInt());
-    newrect.setWidth(css->property(this,"width")->toInt());
+    newrect.setHeight(css->property(this,"height")->toInt()+css->property(this,"mod-height")->toInt());
+    newrect.setWidth(css->property(this,"width")->toInt()+css->property(this,"mod-width")->toInt());
 
     //qDebug() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << css->property(this,"height")->toString();
 
@@ -173,7 +173,8 @@ void CBaseObject::layout(QRectF relrect)
     }
     else
     {
-        newrect.moveTop(relrect.top());
+        newrect.moveTop(relrect.top()+marginTop());
+        newrect.moveLeft(marginLeft());
     }
 
 
@@ -519,7 +520,33 @@ void CBaseObject::paintBuffered(QPainter *p)
         break;
     }
     p->rotate(m_iRotation);
-    p->drawImage(0,0,m_qiRenderBuffer);
+
+    int cx = p->transform().dx();
+    int dw = p->device()->width();
+    int cy = p->transform().dy();
+    int dh = p->device()->height();
+
+    //draw in chunks
+    //int chunksize = 512;
+    QImage chunk;
+    for (int x=0;x<m_qiRenderBuffer.width();x+=dw)
+    {
+        if (cx + x+dw < 0)
+            continue;
+        if (cx + x > dw)
+            break;
+        for (int y=0;y<m_qiRenderBuffer.height();y+=dh)
+        {
+            if (cy + y+dh < 0)
+                continue;
+            if (cy + y > dh)
+                break;
+            chunk = m_qiRenderBuffer.copy(x,y,dw,dh);
+            p->drawImage(x,y,chunk);
+            //p->drawImage(x,y,m_qiRenderBuffer,x,y,1024,1024);
+        }
+    }
+
     m_RenderMutex.unlock();
 }
 
@@ -566,4 +593,11 @@ bool CBaseObject::fixedParent()
     bool b = m_bFixedParent;
     m_FPMutex.unlock();
     return b;
+}
+
+void CBaseObject::saveBuffer()
+{
+    m_RenderMutex.lock();
+    m_qiRenderBuffer.save("buffer/"+section()->id()+"-"+id()+".png","PNG");
+    m_RenderMutex.unlock();
 }

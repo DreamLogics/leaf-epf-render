@@ -522,3 +522,23 @@ void CDocument::updateRenderView()
 {
     emit _updateRenderView();
 }
+
+void CDocument::saveBuffers()
+{
+    CSection* s;
+    CLayer* l;
+    CBaseObject* obj;
+    for (int i=0;i<sectionCount();i++)
+    {
+        s = section(i);
+        for (int n=0;n<s->layerCount();n++)
+        {
+            l=s->layer(n);
+            for (int c=0;c<l->objectCount();c++)
+            {
+                obj = l->object(c);
+                obj->saveBuffer();
+            }
+        }
+    }
+}

@@ -127,10 +127,22 @@ void CTextObject::layout(QRectF relrect)
     if (src != "") //als we geen src hebben nemen we de overflow
     {
         QByteArray htmldata = document()->resource(src);
+        QString body = QString::fromUtf8(htmldata.constData(),htmldata.size());;
+        QRegExp bodyfinder("< *(body|BODY)[^>]*>");
+        QRegExp bodyendfinder("< */ *(body|BODY)[^>]*>");
+
+        int bodystart = body.indexOf(bodyfinder);
+        if (bodystart != -1)
+            body = body.mid(bodystart + bodyfinder.cap(0).size());
+
+        int bodyend = body.indexOf(bodyendfinder);
+        if (bodyend != -1)
+            body = body.left(bodyend);
+
 
         html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
         html += "</head><body id=\""+id()+"\">";
-        html += QString::fromUtf8(htmldata.constData(),htmldata.size());
+        html += body;
         html += "</body></html>";
 
         //qDebug() << html;

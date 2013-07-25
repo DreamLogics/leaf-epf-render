@@ -126,6 +126,8 @@ public:
 
     bool fixedParent();
 
+    void saveBuffer();
+
 protected:
 
     //virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);

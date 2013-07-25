@@ -246,7 +246,11 @@ int Property::toInt()
     if (nr.indexIn(val) == -1)
         return 0;
 
-    return nr.cap(1).toInt();
+    int i=nr.cap(1).toInt();
+
+    if (val.left(1) == "-")
+        i*=-1;
+    return i;
 }
 
 double Property::toDouble()

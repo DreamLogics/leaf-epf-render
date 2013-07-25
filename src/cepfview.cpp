@@ -203,7 +203,15 @@ void CEPFView::ready()
 
 void CEPFView::tocSection()
 {
-
+    QString tocs = m_pDocument->property("toc");
+    int toci = indexForSection(tocs);
+    if (toci == m_iCurrentSection)
+    {
+        setSection(m_iPreviousSection);
+        return;
+    }
+    if (toci >= 0 < toci < m_pDocument->sectionCount())
+        setSection(toci);
 }
 /*
 void CEPFView::drawForeground(QPainter *p, const QRectF &rect)
@@ -345,7 +353,7 @@ void CEPFView::paintEvent(QPaintEvent *ev)
 
         while (true)
         {
-            if (m_TransFx == CSection::SlideFx || (m_TransFx != CSection::SlideFx && (i == m_iCurrentSection || i == m_iPreviousSection) ) )
+            if (m_TransFx == CSection::SlideFx || (m_TransFx == CSection::FadeFx && (i == m_iCurrentSection || i == m_iPreviousSection) ) || i == m_iCurrentSection )
             {
 
                 cs = m_pDocument->section(i);
@@ -470,4 +478,9 @@ void CEPFView::wheelEvent(QWheelEvent *ev)
             s->setScrollX(s->scrollX()-ev->delta());
         update();
     }
+}
+
+int CEPFView::indexForSection(QString id)
+{
+    return m_pDocument->indexForSection(m_pDocument->sectionByID(id));
 }

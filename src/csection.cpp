@@ -208,8 +208,9 @@ void CSection::layout(int height, int width)
     //qDebug() << "CSection::layout" << width << height;
 
     int docheight=0;
+    int docwidth=0;
 
-    int i,n,h;
+    int i,n,h,w;
     CLayer* l;
     CBaseObject* obj,*lobj;
     QRectF relrect;
@@ -235,12 +236,15 @@ void CSection::layout(int height, int width)
         if (lobj)
         {
             h=obj->boundingRect().bottom() + obj->marginBottom();
+            w=obj->boundingRect().right() + obj->marginRight();
             if (h>docheight)
                 docheight = h;
+            if (w>docwidth)
+                docwidth=w;
         }
     }
 
-    const QRectF docbound(0,0,width,docheight);
+    const QRectF docbound(0,0,docwidth,docheight);
 
     for (i=0;i<layerCount();i++) //now layout all objects relative to the document but not static
     {
@@ -331,13 +335,15 @@ void CSection::render(QPainter *p,QRectF region)
     //p->setClipRect(region);
     m_mRectMutex.unlock();
 
-    //qDebug() << id() << "section render";
+
 
     CSS::Stylesheet* css = document()->stylesheet();
     CBaseObject* obj;
     CLayer* l;
     QRectF absreg(QPointF(0,0),region.size());
     QRectF relreg(QPointF(scrollX(),scrollY()),region.size());
+
+    //qDebug() << id() << "section render" << relreg;
 
     //TODO load from css
     p->fillRect(absreg,QColor("white"));
