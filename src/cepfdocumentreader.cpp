@@ -79,7 +79,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
     qint32 filesize;
     qint32 filesizecompressed;
     qint32 dataoffset;
-    //qint32 crc32;
+    qint32 crc32;
     QString resname;
     QString extrafield;
 
@@ -144,7 +144,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                 return 0;
             }
 
-            ds >> restype >> resnamesize >> resextrasize >> filesize >> filesizecompressed >> dataoffset/* >> crc32*/;
+            ds >> restype >> resnamesize >> resextrasize >> filesize >> filesizecompressed >> dataoffset >> crc32;
 
             //TODO empty files
             if (!(resnamesize > 0 && filesize > 0 && filesizecompressed >= 0 && dataoffset > 0 && dataoffset < offsetind
@@ -160,7 +160,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             extrafield = QString::fromUtf8(data.constData(),data.size());
 
             //maak resource entry
-            document->addResource(resname,filename,extrafield/*,crc32*/,dataoffset,filesize,filesizecompressed,restype);
+            document->addResource(resname,filename,extrafield,crc32,dataoffset,filesize,filesizecompressed,restype);
 
 
         }
@@ -170,7 +170,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         //lees de container.xml
         if (compressed)
         {
-            if(!CZLib::decompress(&container,containersize/*,containercrc32*/))
+            if(!CZLib::decompress(&container,containersize,containercrc32))
             {
                 (*error) = "Compression error in container.xml.";
                 delete document;

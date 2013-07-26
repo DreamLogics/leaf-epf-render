@@ -30,6 +30,7 @@
 #include <QStringList>
 #include <QObjectList>
 #include "epfevent.h"
+#include <QMutex>
 
 //class COEPFRender;
 
@@ -88,7 +89,7 @@ public:
     {
         QString container;
         QString extra;
-        //qint32 checksum;
+        qint32 checksum;
         qint32 offset;
         qint32 size;
         qint32 size_compressed;
@@ -96,12 +97,15 @@ public:
     };
 
     QByteArray resource(QString resource);
-    void addResource(QString resource, QString resource_file, QString extra, /*qint32 checksum, */qint32 offset, qint32 size, qint32 size_compressed, qint16 type);
+    void addResource(QString resource, QString resource_file, QString extra, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed, qint16 type);
 
     //void makeConnection(EPFComponent* src, QString event, EPFComponent* target, QString function);
     virtual void onEPFEvent(EPFEvent *ev);
 
     void updateRenderView();
+
+    bool shouldStopLayout();
+    void stopLayout(bool b);
 
 signals:
 
@@ -142,6 +146,12 @@ private:
     CEPFView* m_pRenderView;
     COverlay* m_pActiveOverlay;
     CSS::Stylesheet* m_pStylesheet;
+
+    bool m_bShouldStopLayout;
+    QMutex m_mShouldStopLayoutMutex;
+
+    int m_iLayoutHeight;
+    int m_iLayoutWidth;
 };
 
 #endif // CDOCUMENT_H

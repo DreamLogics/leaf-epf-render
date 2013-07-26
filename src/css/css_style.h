@@ -54,6 +54,14 @@ enum RenderMode
     rmScreen
 };
 
+enum ScaleMode
+{
+    smNone = 0,
+    smScale,
+    smScaleWidth,
+    smScaleHeight
+};
+
 RenderMode renderModeFromString(QString str);
 
 class Stylesheet;
@@ -61,7 +69,7 @@ class Stylesheet;
 class Property
 {
 public:
-    Property(QString value, Stylesheet* css, bool scales, bool isHeightProp, bool null=false);
+    Property(QString value, Stylesheet* css, /*bool scales*/ScaleMode scale, bool isHeightProp, bool null=false);
 
     QString toString();
     int toInt();
@@ -71,15 +79,20 @@ public:
 
     bool isNull();
 
-    void setValue(QString val, bool scale=false);
+    /*void setValue(QString val, bool scale=false);
     void setValue(int val, bool scale=false);
-    void setValue(double val, bool scale=false);
+    void setValue(double val, bool scale=false);*/
+    void setValue(QString val, ScaleMode scale=smNone);
+    void setValue(int val, ScaleMode scale=smNone);
+    void setValue(double val, ScaleMode scale=smNone);
 
-    bool scales();
+    //bool scales();
+    ScaleMode scaleMode();
 
 private:
     QString m_sValue;
-    bool m_bScale;
+    //bool m_bScale;
+    ScaleMode m_eScale;
     bool m_bNull;
     bool m_bHeightProp;
     Stylesheet* m_pCSS;

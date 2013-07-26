@@ -71,14 +71,20 @@ qint32 CZLib::compressRaw (unsigned char* dest,quint32* destLen, const unsigned 
     return err;
 }
 */
-bool CZLib::compress(QByteArray* data/*, int *crccc*/)
+bool CZLib::compress(QByteArray* data, qint32 *adler32)
 {
     /*ZipCRC crc;
 
     (*crccc) = crc.getCRC((const unsigned char*)(data->constData()),data->size());*/
 
     (*data) = qCompress(*data);
-    data->remove(0,4);
+    //qDebug() << data->toHex();
+    data->remove(0,6);
+
+    QDataStream ds(data->mid(data->size()-4));
+    ds >> (*adler32);
+
+    data->remove(data->size()-4,4);
 
     return true;
 
@@ -108,13 +114,18 @@ bool CZLib::compress(QByteArray* data/*, int *crccc*/)
     return true;*/
 }
 
-bool CZLib::decompress(QByteArray* data, int inflatesize/*, int crc32*/)
+bool CZLib::decompress(QByteArray* data, int inflatesize, qint32 adler32)
 {
-    QByteArray size;
+    QByteArray size,adler;
     QDataStream ds(&size,QIODevice::WriteOnly);
-    ds << inflatesize;
+    ds << inflatesize << (qint16)0x789C;
+    QDataStream ads(&adler,QIODevice::WriteOnly);
+    ads << adler32;
+
 
     data->prepend(size);
+    data->append(adler);
+    //qDebug() << data->toHex();
     (*data) = qUncompress(*data);
 
     if (data->size() <= 0)

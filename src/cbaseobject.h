@@ -128,6 +128,8 @@ public:
 
     void saveBuffer();
 
+    bool changed();
+
 protected:
 
     //virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -192,6 +194,9 @@ private:
     int m_iRotation;
 
     bool m_bFixedParent;
+
+    bool m_bChanged;
+    QMutex m_mChangedMutex;
 };
 
 #endif // CBASEOBJECT_H

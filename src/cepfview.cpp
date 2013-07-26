@@ -43,6 +43,13 @@ CEPFView::CEPFView()
     m_iRenderDot = 0;
     m_iPreviousSection = -1;
     m_dTransition = 0.0;
+    m_pResizeTimer = new QTimer();
+
+    m_pResizeTimer->setInterval(1000);
+
+    m_bInResize = false;
+
+    connect(m_pResizeTimer,SIGNAL(timeout()),this,SLOT(resizeDone()));
     //setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
     //setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -276,8 +283,18 @@ void CEPFView::resizeEvent(QResizeEvent *event)
     if (!m_bIsLoading && m_pDocument && m_pDocument->sectionCount() > 0)
     {
         //m_pDocument->layout(height(),width());
-        emit layout(height(),width());
+        //m_pDocument->stopLayout(true);
+        //emit layout(height(),width());
+        m_pResizeTimer->start();
+        //m_bInResize = true;
     }
+}
+
+void CEPFView::resizeDone()
+{
+    m_pResizeTimer->stop();
+    //m_bInResize = false;
+    emit layout(height(),width());
 }
 
 void CEPFView::paintEvent(QPaintEvent *ev)

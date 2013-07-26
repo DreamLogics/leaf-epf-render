@@ -41,6 +41,7 @@ CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(plat
     m_pRenderView = 0;
     m_pActiveOverlay = 0;
     m_pStylesheet = 0;
+    m_bShouldStopLayout = false;
 }
 
 CDocument::~CDocument()
@@ -154,6 +155,8 @@ void CDocument::layout(int height, int width)
 {
     int mm = height * width;
     int d,dc,r,match,i;
+
+    stopLayout(false);
 
     dc = -1;
 
@@ -272,6 +275,8 @@ void CDocument::layout(int height, int width)
     CSection* s;
     for (i=0;i<sectionCount();i++)
     {
+        if (shouldStopLayout())
+            return;
         s = section(i);
         s->layout(height,width);
     }
@@ -314,7 +319,7 @@ QByteArray CDocument::resource(QString resource)
                 data = f.readAll();
 
                 if (res.size_compressed != 0)
-                    CZLib::decompress(&data,res.size/*,res.checksum*/);
+                    CZLib::decompress(&data,res.size,res.checksum);
             }
             else
             {
@@ -323,7 +328,7 @@ QByteArray CDocument::resource(QString resource)
                     data = f.read(s);
 
                     if (res.size_compressed != 0)
-                        CZLib::decompress(&data,res.size/*,res.checksum*/);
+                        CZLib::decompress(&data,res.size,res.checksum);
                 }
             }
 
@@ -340,7 +345,7 @@ QByteArray CDocument::resource(QString resource)
     return data;
 }
 
-void CDocument::addResource(QString resource, QString container_file, QString extra, /*qint32 checksum, */qint32 offset, qint32 size, qint32 size_compressed, qint16 type)
+void CDocument::addResource(QString resource, QString container_file, QString extra, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed, qint16 type)
 {
     struct Resource res;
     if (type == 1 || type == 3)
@@ -348,7 +353,7 @@ void CDocument::addResource(QString resource, QString container_file, QString ex
     else
         res.container = container_file;
     res.extra = extra;
-    /*res.checksum = checksum;*/
+    res.checksum = checksum;
     res.type = type;
     res.offset = offset;
     res.size = size;
@@ -541,4 +546,19 @@ void CDocument::saveBuffers()
             }
         }
     }
+}
+
+bool CDocument::shouldStopLayout()
+{
+    m_mShouldStopLayoutMutex.lock();
+    bool b = m_bShouldStopLayout;
+    m_mShouldStopLayoutMutex.unlock();
+    return b;
+}
+
+void CDocument::stopLayout(bool b)
+{
+    m_mShouldStopLayoutMutex.lock();
+    m_bShouldStopLayout = b;
+    m_mShouldStopLayoutMutex.unlock();
 }

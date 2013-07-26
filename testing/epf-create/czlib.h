@@ -1,19 +1,14 @@
 #ifndef CZLIB_H
 #define CZLIB_H
 
-#include <qglobal.h>
-
-class QByteArray;
+#include <QByteArray>
 
 class CZLib
 {
 public:
 
-    bool compress(QByteArray* data/*, int *crc32*/);
-    bool decompress(QByteArray* data, int inflatesize/*, int crc32*/);
-
-    //qint32 uncompressRaw (unsigned char* dest, quint32* destLen, const unsigned char* source, quint32 sourceLen);
-    //qint32 compressRaw (unsigned char* dest,quint32* destLen, const unsigned char* source, quint32 sourceLen,qint32 level);
+    static bool compress(QByteArray* data, qint32 *adler32);
+    static bool decompress(QByteArray* data, int inflatesize, qint32 crc32);
 
     class ZipCRC
     {

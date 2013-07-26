@@ -47,7 +47,7 @@ bool COEPFDocumentWriter::writeDocument(QString dir, QString *err)
         data = container.readAll();
         container.close();
         size = data.size();
-        if (!zipper.compress(&data/*,&crc32*/))
+        if (!zipper.compress(&data,&crc32))
         {
             (*err) = "Compression error.";
             return false;
@@ -57,7 +57,7 @@ bool COEPFDocumentWriter::writeDocument(QString dir, QString *err)
         outp.write(data);
         //ds << data;
 
-        if (!zipper.decompress(&data,size/*,crc32*/))
+        if (!zipper.decompress(&data,size,crc32))
         {
             (*err) = "de-compression error.";
             return false;
@@ -78,7 +78,7 @@ bool COEPFDocumentWriter::writeDocument(QString dir, QString *err)
                 ds << reslist.at(i).filesize;
                 ds << reslist.at(i).filesizecompressed;
                 ds << reslist.at(i).dataoffset;
-                //ds << reslist.at(i).crc32;
+                ds << reslist.at(i).crc32;
                 //ds << reslist.at(i).resname.toStdString().c_str();
                 outp.write(reslist.at(i).resname.toStdString().c_str(),reslist.at(i).resnamesize);
                 //outp.write(reslist.at(i).extra.toStdString().c_str(),reslist.at(i).resextrasize);
@@ -114,7 +114,7 @@ void COEPFDocumentWriter::parseContentDir(QFile *ds, QString dir, QList<resource
             {
                 data = f.readAll();
                 res.filesize = data.size();
-                zipper.compress(&data/*,&res.crc32*/);
+                zipper.compress(&data,&res.crc32);
                 res.filesizecompressed = data.size();
                 res.dataoffset = ds->pos();
                 res.resname = info.at(i).fileName();

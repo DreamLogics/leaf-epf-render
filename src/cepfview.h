@@ -34,6 +34,7 @@
 class CDocument;
 //class QGraphicsScene;
 //class CSectionView;
+class QTimer;
 
 class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QGLWidget
 {
@@ -57,6 +58,8 @@ public slots:
 
     void updateDot();
     void transitionAnim();
+
+    void resizeDone();
 
 signals:
 
@@ -107,6 +110,10 @@ private:
 
     CSection::TransitionFx m_TransFx;
     double m_dTransition;
+
+    QTimer* m_pResizeTimer;
+
+    bool m_bInResize;
 
 
     //QGraphicsScene* m_pDocScene;

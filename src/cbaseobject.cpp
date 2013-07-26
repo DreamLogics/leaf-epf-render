@@ -28,7 +28,7 @@
 #include "cepfview.h"
 #include <QDebug>
 #include <QGLFramebufferObject>
-
+#include <QTime>
 
 
 
@@ -44,6 +44,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_bFixedParent = false;
     //m_bNeedsRedraw = true;
     //m_pBuffer = 0;
+    m_bChanged = false;
 
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
@@ -197,6 +198,10 @@ void CBaseObject::layout(QRectF relrect)
         //prepareGeometryChange();
         m_rRect = newrect;
 
+        m_mChangedMutex.lock();
+        m_bChanged = true;
+        m_mChangedMutex.unlock();
+
         if (oldrect.size() != newrect.size())
         {
             //m_bNeedsRedraw = true;
@@ -219,6 +224,8 @@ void CBaseObject::layout(QRectF relrect)
     QRectF relr = m_rRect;
     for (int i=0;i<clist.size();i++)
     {
+        if (document()->shouldStopLayout())
+            return;
         cobj = dynamic_cast<CBaseObject*>(clist[i]);
         if (cobj)
         {
@@ -303,7 +310,7 @@ void CBaseObject::setCSSOverride(QString ss)
         if (propv.size() == 2)
         {
             //qDebug() << "add override prop" << propv[0] << propv[1];
-            prop = new CSS::Property(propv[1],css,css->property(this,propv[0])->scales(),CSS::height_props.contains(propv[0]));
+            prop = new CSS::Property(propv[1],css,css->property(this,propv[0])->scaleMode(),CSS::height_props.contains(propv[0]));
             m_CSSOverrideProps.insert(propv[0],prop);
         }
         else
@@ -528,24 +535,35 @@ void CBaseObject::paintBuffered(QPainter *p)
 
     //draw in chunks
     //int chunksize = 512;
-    QImage chunk;
-    for (int x=0;x<m_qiRenderBuffer.width();x+=dw)
+    qDebug() << "drawing" << id();
+    QTime t = QTime::currentTime();
+
+    if (m_qiRenderBuffer.width() <= dw && m_qiRenderBuffer.height() <= dh)
+        p->drawImage(0,0,m_qiRenderBuffer);
+    else
     {
-        if (cx + x+dw < 0)
-            continue;
-        if (cx + x > dw)
-            break;
-        for (int y=0;y<m_qiRenderBuffer.height();y+=dh)
+        QImage chunk;
+        for (int x=0;x<m_qiRenderBuffer.width();x+=dw)
         {
-            if (cy + y+dh < 0)
+            if (cx + x+dw < 0)
                 continue;
-            if (cy + y > dh)
+            if (cx + x > dw)
                 break;
-            chunk = m_qiRenderBuffer.copy(x,y,dw,dh);
-            p->drawImage(x,y,chunk);
-            //p->drawImage(x,y,m_qiRenderBuffer,x,y,1024,1024);
+            for (int y=0;y<m_qiRenderBuffer.height();y+=dh)
+            {
+                if (cy + y+dh < 0)
+                    continue;
+                if (cy + y > dh)
+                    break;
+                chunk = m_qiRenderBuffer.copy(x,y,dw,dh);
+                p->drawImage(x,y,chunk);
+                //p->drawImage(x,y,m_qiRenderBuffer,x,y,1024,1024);
+            }
         }
     }
+    //paint(p);
+
+    qDebug() << "rendertime:" << t.msecsTo(QTime::currentTime());
 
     m_RenderMutex.unlock();
 }
@@ -600,4 +618,14 @@ void CBaseObject::saveBuffer()
     m_RenderMutex.lock();
     m_qiRenderBuffer.save("buffer/"+section()->id()+"-"+id()+".png","PNG");
     m_RenderMutex.unlock();
+}
+
+bool CBaseObject::changed()
+{
+    bool b;
+    m_mChangedMutex.lock();
+    b=m_bChanged;
+    m_bChanged = false;
+    m_mChangedMutex.unlock();
+    return b;
 }

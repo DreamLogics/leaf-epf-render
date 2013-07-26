@@ -30,7 +30,7 @@
 #include <QDebug>
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsItem>
-
+#include <QTime>
 
 
 CViewportItem::CViewportItem()
@@ -205,7 +205,9 @@ void CSection::layout(int height, int width)
     m_pViewportItem->setSize(height,width);
     CSS::Stylesheet* css = document()->stylesheet();
 
-    //qDebug() << "CSection::layout" << width << height;
+    qDebug() << "CSection::layout" << width << height;
+
+    QTime t = QTime::currentTime();
 
     int docheight=0;
     int docwidth=0;
@@ -223,6 +225,8 @@ void CSection::layout(int height, int width)
         relrect = QRectF(0,0,0,0);
         for (n=0;n<l->objectCount();n++)
         {
+            if (document()->shouldStopLayout())
+                return;
             obj = l->object(n);
             pos = css->property(obj,"position")->toString();
             //qDebug() << "position" << pos;
@@ -251,6 +255,8 @@ void CSection::layout(int height, int width)
         l = layer(i);
         for (n=0;n<l->objectCount();n++)
         {
+            if (document()->shouldStopLayout())
+                return;
             obj = l->object(n);
             pos = css->property(obj,"position")->toString();
             if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*/*CLayer*/>(obj->parent()))
@@ -291,6 +297,8 @@ void CSection::layout(int height, int width)
     //qDebug() << "scrollmax" << docheight - height;
     setScrollYMax(docheight - height);
 
+    qDebug() << "time elapsed: " << t.msecsTo(QTime::currentTime());
+
     document()->updateRenderView();
 }
 
@@ -323,6 +331,7 @@ void CSection::render(QPainter *p,QRectF region)
 {
     //m_mRenderMutex.lock();
     QRectF sectionrect;
+    QTime t = QTime::currentTime();
 
     m_mRectMutex.lock();
     if (!region.intersects(m_rRect))
@@ -342,6 +351,8 @@ void CSection::render(QPainter *p,QRectF region)
     CLayer* l;
     QRectF absreg(QPointF(0,0),region.size());
     QRectF relreg(QPointF(scrollX(),scrollY()),region.size());
+    //QList<QRectF> changedregions;
+
 
     //qDebug() << id() << "section render" << relreg;
 
@@ -354,6 +365,30 @@ void CSection::render(QPainter *p,QRectF region)
         for (int n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
+            /*QRegion clipregion;
+
+            if (!obj->changed())
+            {
+                bool bSkip=true;
+                //check all changed regions to see if a redraw of the area is needed
+                for (int r=0;r<changedregions.size();r++)
+                {
+                    if (changedregions[r].intersects(obj->boundingRect()))
+                    {
+                        clipregion+=changedregions[r].toRect();
+                        bSkip = false;
+                    }
+                }
+                if (bSkip)
+                    continue;
+            }
+            else
+            {
+                clipregion += obj->boundingRect().toRect();
+                changedregions.append(obj->boundingRect());
+            }
+
+            p->setClipRegion(clipregion);*/
 
             if ((css->property(obj,"position")->toString() == "fixed" && obj->boundingRect().intersects(absreg)) || obj->fixedParent())
             {
@@ -377,6 +412,8 @@ void CSection::render(QPainter *p,QRectF region)
     }
 
     drawScrollbar(p);
+
+    qDebug() << "Section render time elapsed: " << t.msecsTo(QTime::currentTime());
 
     //m_mRenderMutex.unlock();
 }

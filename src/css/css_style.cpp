@@ -83,7 +83,7 @@ Property* Stylesheet::property(QString selector, QString key)
         bool hp = false;
         if (height_props.contains(key))
             hp = true;
-        Property* prop = new Property("",this,false,hp,true);
+        Property* prop = new Property("",this,smNone,hp,true);
         Selector* s = new Selector(this);
         s->setProperty(key,prop);
         m_selectors.insert(selector,s);
@@ -177,7 +177,7 @@ Property* Selector::property(QString key)
         return m_props[key];
 
     //create prop
-    Property* prop = new Property("",m_pCSS,true,height_props.contains(key),true);
+    Property* prop = new Property("",m_pCSS,smNone,height_props.contains(key),true);
     m_props.insert(key,prop);
     return prop;
 }
@@ -194,14 +194,19 @@ void Selector::setProperty(QString key, Property *prop)
     m_props.insert(key,prop);
 }
 
-Property::Property(QString value, Stylesheet* css, bool scale, bool isHeightProp, bool null) : m_bNull(null), m_bScale(scale), m_sValue(value), m_pCSS(css), m_bHeightProp(isHeightProp)
+Property::Property(QString value, Stylesheet* css, ScaleMode scale, bool isHeightProp, bool null) : m_bNull(null), m_eScale(scale), m_sValue(value), m_pCSS(css), m_bHeightProp(isHeightProp)
 {
     m_bReadOnly = false;
 }
 
-bool Property::scales()
+/*bool Property::scales()
 {
     return m_bScale;
+}*/
+
+ScaleMode Property::scaleMode()
+{
+    return m_eScale;
 }
 
 bool Property::isNull()
@@ -211,7 +216,7 @@ bool Property::isNull()
 
 QString Property::toString()
 {
-    if (m_bScale)
+    if (m_eScale != smNone)
     {
         QRegExp n("[0-9]+\\.*[0-9]*");
         int o = n.indexIn(m_sValue);
@@ -220,10 +225,17 @@ QString Property::toString()
         if (o == -1)
             return m_sValue;
 
-        if (m_bHeightProp)
-            v *= m_pCSS->heightScaleFactor();
-        else
+        if (m_eScale == smScale)
+        {
+            if (m_bHeightProp)
+                v *= m_pCSS->heightScaleFactor();
+            else
+                v *= m_pCSS->widthScaleFactor();
+        }
+        else if (m_eScale == smScaleWidth)
             v *= m_pCSS->widthScaleFactor();
+        else if (m_eScale == smScaleHeight)
+            v *= m_pCSS->heightScaleFactor();
 
         if (n.cap(0).indexOf(".") == -1)
             return m_sValue.mid(0,o) + QString::number((int)(v)) + m_sValue.mid(o+n.cap(0).size());
@@ -262,26 +274,26 @@ double Property::toDouble()
     return nr.cap(1).toDouble();
 }
 
-void Property::setValue(double val, bool scale)
+void Property::setValue(double val, ScaleMode scale)
 {
     if (m_bReadOnly)
         return;
     m_bNull = false;
-    m_bScale = scale;
+    m_eScale = scale;
     m_sValue = QString::number(val);
 }
 
-void Property::setValue(int val, bool scale)
+void Property::setValue(int val, ScaleMode scale)
 {
     m_bNull = false;
-    m_bScale = scale;
+    m_eScale = scale;
     m_sValue = QString::number(val);
 }
 
-void Property::setValue(QString val, bool scale)
+void Property::setValue(QString val, ScaleMode scale)
 {
     m_bNull = false;
-    m_bScale = scale;
+    m_eScale = scale;
     m_sValue = val;
 }
 
@@ -300,7 +312,8 @@ void Stylesheet::parse(QString css)
     Property* prop;
 
     int f;
-    bool bScale,bHeightProp;
+    bool /*bScale,*/bHeightProp;
+    ScaleMode scale;
 
     QRegExp outerspaces("(^ +| +$)");
 
@@ -343,14 +356,24 @@ void Stylesheet::parse(QString css)
                     propvalue = propvalue.left(f).toLower();
                     propvalue = propvalue.replace(outerspaces,"");
 
-                    bScale = false;
+                    //bScale = false;
+                    scale = smNone;
                     bHeightProp = false;
 
                     if (height_props.contains(propkey))
                         bHeightProp = true;
 
+                    /*if (proprules.indexOf("!scale") != -1)
+                        bScale = true;*/
+
                     if (proprules.indexOf("!scale") != -1)
-                        bScale = true;
+                        scale = smScale;
+
+                    if (proprules.indexOf("!scale-width") != -1)
+                        scale = smScaleWidth;
+
+                    if (proprules.indexOf("!scale-height") != -1)
+                        scale = smScaleHeight;
 
 
                 }
@@ -361,7 +384,8 @@ void Stylesheet::parse(QString css)
                     if (height_props.contains(propkey))
                         bHeightProp = true;
 
-                    bScale = false;
+                    //bScale = false;
+                    scale = smNone;
                 }
 
                 if (propkey == "margin")
@@ -369,58 +393,58 @@ void Stylesheet::parse(QString css)
                     QStringList marginprops = propvalue.split(QRegExp(" +"));
                     if (marginprops.size() == 4)
                     {
-                        prop = new Property(marginprops[0],this,bScale,true);
+                        prop = new Property(marginprops[0],this,scale,true);
                         s->setProperty("margin-top",prop);
 
-                        prop = new Property(marginprops[1],this,bScale,false);
+                        prop = new Property(marginprops[1],this,scale,false);
                         s->setProperty("margin-right",prop);
 
-                        prop = new Property(marginprops[2],this,bScale,true);
+                        prop = new Property(marginprops[2],this,scale,true);
                         s->setProperty("margin-bottom",prop);
 
-                        prop = new Property(marginprops[3],this,bScale,false);
+                        prop = new Property(marginprops[3],this,scale,false);
                         s->setProperty("margin-left",prop);
                     }
                     else if (marginprops.size() == 3)
                     {
-                        prop = new Property(marginprops[0],this,bScale,true);
+                        prop = new Property(marginprops[0],this,scale,true);
                         s->setProperty("margin-top",prop);
 
-                        prop = new Property(marginprops[1],this,bScale,false);
+                        prop = new Property(marginprops[1],this,scale,false);
                         s->setProperty("margin-right",prop);
 
-                        prop = new Property(marginprops[2],this,bScale,true);
+                        prop = new Property(marginprops[2],this,scale,true);
                         s->setProperty("margin-bottom",prop);
 
-                        prop = new Property(marginprops[1],this,bScale,false);
+                        prop = new Property(marginprops[1],this,scale,false);
                         s->setProperty("margin-left",prop);
                     }
                     else if (marginprops.size() == 2)
                     {
-                        prop = new Property(marginprops[0],this,bScale,true);
+                        prop = new Property(marginprops[0],this,scale,true);
                         s->setProperty("margin-top",prop);
 
-                        prop = new Property(marginprops[1],this,bScale,false);
+                        prop = new Property(marginprops[1],this,scale,false);
                         s->setProperty("margin-right",prop);
 
-                        prop = new Property(marginprops[0],this,bScale,true);
+                        prop = new Property(marginprops[0],this,scale,true);
                         s->setProperty("margin-bottom",prop);
 
-                        prop = new Property(marginprops[1],this,bScale,false);
+                        prop = new Property(marginprops[1],this,scale,false);
                         s->setProperty("margin-left",prop);
                     }
                     else
                     {
-                        prop = new Property(propvalue,this,bScale,true);
+                        prop = new Property(propvalue,this,scale,true);
                         s->setProperty("margin-top",prop);
 
-                        prop = new Property(propvalue,this,bScale,false);
+                        prop = new Property(propvalue,this,scale,false);
                         s->setProperty("margin-right",prop);
 
-                        prop = new Property(propvalue,this,bScale,true);
+                        prop = new Property(propvalue,this,scale,true);
                         s->setProperty("margin-bottom",prop);
 
-                        prop = new Property(propvalue,this,bScale,false);
+                        prop = new Property(propvalue,this,scale,false);
                         s->setProperty("margin-left",prop);
                     }
                 }
@@ -429,64 +453,64 @@ void Stylesheet::parse(QString css)
                     QStringList paddingprops = propvalue.split(QRegExp(" +"));
                     if (paddingprops.size() == 4)
                     {
-                        prop = new Property(paddingprops[0],this,bScale,true);
+                        prop = new Property(paddingprops[0],this,scale,true);
                         s->setProperty("padding-top",prop);
 
-                        prop = new Property(paddingprops[1],this,bScale,false);
+                        prop = new Property(paddingprops[1],this,scale,false);
                         s->setProperty("padding-right",prop);
 
-                        prop = new Property(paddingprops[2],this,bScale,true);
+                        prop = new Property(paddingprops[2],this,scale,true);
                         s->setProperty("padding-bottom",prop);
 
-                        prop = new Property(paddingprops[3],this,bScale,false);
+                        prop = new Property(paddingprops[3],this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
                     else if (paddingprops.size() == 3)
                     {
-                        prop = new Property(paddingprops[0],this,bScale,true);
+                        prop = new Property(paddingprops[0],this,scale,true);
                         s->setProperty("padding-top",prop);
 
-                        prop = new Property(paddingprops[1],this,bScale,false);
+                        prop = new Property(paddingprops[1],this,scale,false);
                         s->setProperty("padding-right",prop);
 
-                        prop = new Property(paddingprops[2],this,bScale,true);
+                        prop = new Property(paddingprops[2],this,scale,true);
                         s->setProperty("padding-bottom",prop);
 
-                        prop = new Property(paddingprops[1],this,bScale,false);
+                        prop = new Property(paddingprops[1],this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
                     else if (paddingprops.size() == 2)
                     {
-                        prop = new Property(paddingprops[0],this,bScale,true);
+                        prop = new Property(paddingprops[0],this,scale,true);
                         s->setProperty("padding-top",prop);
 
-                        prop = new Property(paddingprops[1],this,bScale,false);
+                        prop = new Property(paddingprops[1],this,scale,false);
                         s->setProperty("padding-right",prop);
 
-                        prop = new Property(paddingprops[0],this,bScale,true);
+                        prop = new Property(paddingprops[0],this,scale,true);
                         s->setProperty("padding-bottom",prop);
 
-                        prop = new Property(paddingprops[1],this,bScale,false);
+                        prop = new Property(paddingprops[1],this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
                     else
                     {
-                        prop = new Property(propvalue,this,bScale,true);
+                        prop = new Property(propvalue,this,scale,true);
                         s->setProperty("padding-top",prop);
 
-                        prop = new Property(propvalue,this,bScale,false);
+                        prop = new Property(propvalue,this,scale,false);
                         s->setProperty("padding-right",prop);
 
-                        prop = new Property(propvalue,this,bScale,true);
+                        prop = new Property(propvalue,this,scale,true);
                         s->setProperty("padding-bottom",prop);
 
-                        prop = new Property(propvalue,this,bScale,false);
+                        prop = new Property(propvalue,this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
                 }
                 else
                 {
-                    prop = new Property(propvalue,this,bScale,bHeightProp);
+                    prop = new Property(propvalue,this,scale,bHeightProp);
                     s->setProperty(propkey,prop);
                 }
             }
