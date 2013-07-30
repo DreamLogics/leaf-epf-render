@@ -449,6 +449,7 @@ void CDocument::load(int height, int width)
 {
     CSection* s;
     CLayer* layer;
+    CBaseObject* obj;
     int i;
 
     qDebug() << "load" << height << width;
@@ -462,7 +463,11 @@ void CDocument::load(int height, int width)
         {
             layer = s->layer(n);
             for (int l=0;l<layer->objectCount();l++)
-                layer->object(l)->preload();
+            {
+                obj = layer->object(l);
+                qDebug() << "preload" << obj->id();
+                obj->preload();
+            }
         }
     }
 

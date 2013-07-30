@@ -473,8 +473,7 @@ void CSection::mouseReleaseEvent( int x, int y )
     if (!obj)
         return;
 
-    if (obj->enabled())
-        m_pFocusObj = obj;
+    m_pFocusObj = obj;
 
     x -= obj->boundingRect().x();
     y -= obj->boundingRect().y();

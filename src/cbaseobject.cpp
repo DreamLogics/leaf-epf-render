@@ -96,8 +96,7 @@ QRectF CBaseObject::boundingRect() const
 
 void CBaseObject::preload()
 {
-
-
+    qDebug() << "preload func";
 }
 
 QString CBaseObject::id() const
