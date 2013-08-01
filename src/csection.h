@@ -107,6 +107,8 @@ public:
     int scrollXMax();
     int scrollYMax();
 
+    void clearBuffers();
+
 public slots:
 
     QObjectList layers();
@@ -158,6 +160,9 @@ private:
 
     QMutex m_mRectMutex;
     QMutex m_mScrollMutex;
+    QMutex m_mTransitionFxMutex;
+
+    TransitionFx m_iTransitionFx;
 
 };
 

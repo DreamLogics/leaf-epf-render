@@ -128,10 +128,11 @@ public slots:
 
     void setActiveOverlay(QString overlay_id);
 
-    void load(int height, int width);
-    void layout(int height, int width);
+    void load(int height, int width, int sectionid);
+    void layout(int height, int width, int section, bool bCurrentSectionOnly);
 
     void saveBuffers();
+    void clearBuffers();
 
 private:
     QList<CSection*> m_Sections;

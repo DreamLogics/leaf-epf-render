@@ -151,7 +151,7 @@ CLayout* CDocument::layoutByID(QString id,bool b)
     return 0;
 }
 
-void CDocument::layout(int height, int width)
+void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectionOnly)
 {
     int mm = height * width;
     int d,dc,r,match,i;
@@ -272,16 +272,23 @@ void CDocument::layout(int height, int width)
         m_pStylesheet->setScale(hf,wf);
     }
 
+    section(sectionid)->layout(height,width);
+
+    updateRenderView();
+
+    if (bCurrentSectionOnly)
+        return;
+
     CSection* s;
     for (i=0;i<sectionCount();i++)
     {
         if (shouldStopLayout())
             return;
+        if (i == sectionid)
+            continue;
         s = section(i);
         s->layout(height,width);
     }
-
-    updateRenderView();
 }
 
 void CDocument::addLayout(CLayout *layout)
@@ -445,7 +452,7 @@ void CDocument::setActiveOverlay(QString overlay_id)
     setActiveOverlay(overlayByID(overlay_id));
 }
 
-void CDocument::load(int height, int width)
+void CDocument::load(int height, int width, int sectionid)
 {
     CSection* s;
     CLayer* layer;
@@ -471,7 +478,7 @@ void CDocument::load(int height, int width)
         }
     }
 
-    layout(height,width);
+    layout(height,width,sectionid,false);
 
     //QTimer::singleShot(1000,this,SIGNAL(finishedLoading()));
     sendEvent("finishedLoading");
@@ -566,4 +573,12 @@ void CDocument::stopLayout(bool b)
     m_mShouldStopLayoutMutex.lock();
     m_bShouldStopLayout = b;
     m_mShouldStopLayoutMutex.unlock();
+}
+
+void CDocument::clearBuffers()
+{
+    for (int i=0;i<sectionCount();i++)
+    {
+        section(i)->clearBuffers();
+    }
 }

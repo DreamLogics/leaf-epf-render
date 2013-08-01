@@ -65,6 +65,8 @@ void CTextObject::paint(QPainter *painter)
     {
         CSS::paintBackgroundColor(painter,r,css->property(this,"background-color")->toString());
     }
+    /*else
+        CSS::paintBackgroundColor(painter,r,"#ffffff");*/
 
     if (!css->property(this,"background-image")->isNull())
     {
@@ -80,6 +82,8 @@ void CTextObject::paint(QPainter *painter)
 
     if (!m_pTextDoc)
         return;
+
+
 
     painter->translate(0,m_iRenderOffset);
     m_pTextDoc->drawContents(painter);

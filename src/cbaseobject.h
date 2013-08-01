@@ -130,6 +130,8 @@ public:
 
     bool changed();
 
+    void clearBuffers();
+
 protected:
 
     //virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);

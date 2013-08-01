@@ -294,6 +294,17 @@ void CSection::layout(int height, int width)
     m_rRect = QRectF(m_iX*width,m_iY*height,width,height);
     m_mRectMutex.unlock();
 
+    QString type = css->property(this,"section-transition")->toString();
+
+    m_mTransitionFxMutex.lock();
+    if (type == "slide")
+        m_iTransitionFx = SlideFx;
+    else if (type == "fade")
+        m_iTransitionFx = FadeFx;
+    else
+        m_iTransitionFx = NoneFx;
+    m_mTransitionFxMutex.unlock();
+
     //qDebug() << "scrollmax" << docheight - height;
     setScrollYMax(docheight - height);
 
@@ -444,6 +455,8 @@ CBaseObject* CSection::objectOnPos(int x, int y)
 
 void CSection::mouseDoubleClickEvent ( int x, int y )
 {
+    x += scrollX();
+    y += scrollY();
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
@@ -456,6 +469,8 @@ void CSection::mouseDoubleClickEvent ( int x, int y )
 
 void CSection::mousePressEvent( int x, int y )
 {
+    x += scrollX();
+    y += scrollY();
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
@@ -468,6 +483,8 @@ void CSection::mousePressEvent( int x, int y )
 
 void CSection::mouseReleaseEvent( int x, int y )
 {
+    x += scrollX();
+    y += scrollY();
     m_pFocusObj = 0;
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
@@ -483,6 +500,8 @@ void CSection::mouseReleaseEvent( int x, int y )
 
 void CSection::mouseMoveEvent( int x, int y )
 {
+    x += scrollX();
+    y += scrollY();
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
@@ -495,15 +514,12 @@ void CSection::mouseMoveEvent( int x, int y )
 
 CSection::TransitionFx CSection::transitionType()
 {
-    CSS::Stylesheet* css = document()->stylesheet();
-    QString type = css->property(this,"section-transition")->toString();
+    TransitionFx fx;
+    m_mTransitionFxMutex.lock();
+    fx = m_iTransitionFx;
+    m_mTransitionFxMutex.unlock();
 
-    if (type == "slide")
-        return SlideFx;
-    else if (type == "fade")
-        return FadeFx;
-
-    return NoneFx;
+    return fx;
 }
 
 void CSection::keyEvent(int key, QString val)
@@ -659,4 +675,19 @@ int CSection::scrollYMax()
     int i = m_iScrollYMax;
     m_mScrollMutex.unlock();
     return i;
+}
+
+void CSection::clearBuffers()
+{
+    CLayer* l;
+    CBaseObject* obj;
+    for (int i=0;i<layerCount();i++)
+    {
+        l = layer(i);
+        for (int n=0;n<l->objectCount();n++)
+        {
+            obj = l->object(n);
+            obj->clearBuffers();
+        }
+    }
 }

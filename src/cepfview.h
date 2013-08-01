@@ -63,14 +63,14 @@ public slots:
 
 signals:
 
-    void loadDocument(int height, int width);
+    void loadDocument(int height, int width, int currentsection);
     void viewChanged(int dy);
     //void scrollSection(int dx, int dy);
 
     //void updateRendered(QRectF);
     void setViewOffset(int dx, int dy);
 
-    void layout(int height, int width);
+    void layout(int height, int width, int sectionid, bool bCurrentSectionOnly);
 
     void mouseDoubleClickEvent ( int x, int y );
     void mousePressEvent( int x, int y );

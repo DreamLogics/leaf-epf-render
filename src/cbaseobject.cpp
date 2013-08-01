@@ -581,6 +581,7 @@ void CBaseObject::buffer()
     m_qiRenderBuffer.fill(0x00000000);
 
     QPainter bp;
+    //bp.setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing);
     //bp.begin(&fbo);
     bp.begin(&m_qiRenderBuffer);
 
@@ -627,4 +628,11 @@ bool CBaseObject::changed()
     m_bChanged = false;
     m_mChangedMutex.unlock();
     return b;
+}
+
+void CBaseObject::clearBuffers()
+{
+    m_RenderMutex.lock();
+    m_qiRenderBuffer = QImage();
+    m_RenderMutex.unlock();
 }

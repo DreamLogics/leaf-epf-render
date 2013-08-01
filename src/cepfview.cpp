@@ -49,6 +49,8 @@ CEPFView::CEPFView()
 
     m_bInResize = false;
 
+    m_pDocument = 0;
+
     connect(m_pResizeTimer,SIGNAL(timeout()),this,SLOT(resizeDone()));
     //setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
@@ -58,6 +60,12 @@ CEPFView::CEPFView()
 
 void CEPFView::setDocument(CDocument *doc)
 {
+    if (m_pDocument)
+    {
+        m_pDocument->clearBuffers();
+        disconnect(this,SIGNAL(updateRendered(QRectF)),0,0);
+    }
+
     m_pDocument = doc;
     int i,first=-1;
 
@@ -102,13 +110,13 @@ void CEPFView::setDocument(CDocument *doc)
 
     disconnect(this,SIGNAL(loadDocument()),0,0);
     disconnect(this,SIGNAL(layout(int,int)),0,0);
-    connect(this,SIGNAL(loadDocument(int,int)),doc,SLOT(load(int,int)));
-    connect(this,SIGNAL(layout(int,int)),doc,SLOT(layout(int,int)));
+    connect(this,SIGNAL(loadDocument(int,int,int)),doc,SLOT(load(int,int,int)));
+    connect(this,SIGNAL(layout(int,int,int,bool)),doc,SLOT(layout(int,int,int,bool)));
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
     connect(doc,SIGNAL(_updateRenderView()),this,SLOT(update()));
     connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
 
-    emit loadDocument(height(),width());
+    emit loadDocument(height(),width(),first);
 }
 
 void CEPFView::setSection(int index)
@@ -284,7 +292,7 @@ void CEPFView::resizeEvent(QResizeEvent *event)
     {
         //m_pDocument->layout(height(),width());
         //m_pDocument->stopLayout(true);
-        //emit layout(height(),width());
+        emit layout(height(),width(),m_iCurrentSection,true);
         m_pResizeTimer->start();
         //m_bInResize = true;
     }
@@ -294,7 +302,7 @@ void CEPFView::resizeDone()
 {
     m_pResizeTimer->stop();
     //m_bInResize = false;
-    emit layout(height(),width());
+    emit layout(height(),width(),m_iCurrentSection,false);
 }
 
 void CEPFView::paintEvent(QPaintEvent *ev)
@@ -327,6 +335,9 @@ void CEPFView::paintEvent(QPaintEvent *ev)
     }
     else
     {
+        //p.setRenderHint(QPainter::HighQualityAntialiasing);
+        p.setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing);
+
         CSection* s = m_pDocument->section(m_iCurrentSection);
         int nx,ny,psx,psy,sx,sy;
 
