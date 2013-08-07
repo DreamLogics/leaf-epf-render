@@ -37,6 +37,7 @@
 #include <QThread>
 #include <QObject>
 #include "epfevent.h"
+#include "canimation.h"
 
 #include "object_types/cblockobject.h"
 #include "object_types/ctextobject.h"
@@ -391,31 +392,34 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                 //param = funcreg.cap(2);
                 EPFComponent* src_obj=0;
                 EPFComponent* dst_obj=0;
+                QString src = connection.attribute("source").value();
+                QString tgt = connection.attribute("target").value();
 
                 //qDebug() << "add con" << connection.attribute("source").value() << connection.attribute("target").value();
 
-                if (m_objectmap.contains(connection.attribute("source").value()))
-                    src_obj = m_objectmap[connection.attribute("source").value()];
-                else if (sectionmap.contains(connection.attribute("source").value()))
-                    src_obj = m_objectmap[connection.attribute("source").value()];
-                else if (anims.contains(connection.attribute("source").value()))
-                    src_obj = m_objectmap[connection.attribute("source").value()];
-                else if (!strcmp(connection.attribute("source").value(),"document"))
+                if (m_objectmap.contains(src))
+                    src_obj = m_objectmap[src];
+                else if (sectionmap.contains(src))
+                    src_obj = m_objectmap[src];
+                else if (anims.contains(src))
+                    src_obj = dynamic_cast<EPFComponent*>(document->animation(src));
+                else if (src == "document")
                     src_obj = document;
 
-                if (m_objectmap.contains(connection.attribute("target").value()))
-                    dst_obj = m_objectmap[connection.attribute("target").value()];
-                else if (sectionmap.contains(connection.attribute("target").value()))
-                    dst_obj = m_objectmap[connection.attribute("target").value()];
-                else if (anims.contains(connection.attribute("target").value()))
-                    dst_obj = m_objectmap[connection.attribute("target").value()];
-                else if (!strcmp(connection.attribute("target").value(),"document"))
+                if (m_objectmap.contains(tgt))
+                    dst_obj = m_objectmap[tgt];
+                else if (sectionmap.contains(tgt))
+                    dst_obj = m_objectmap[tgt];
+                else if (anims.contains(tgt))
+                    dst_obj = dynamic_cast<EPFComponent*>(document->animation(tgt));
+                else if (tgt == "document")
                     dst_obj = document;
 
                 if (src_obj && dst_obj)
                 {
                     //QObject::connect(src_obj,SIGNAL());
                     //SLOT(tset);
+                    //qDebug() << "connection made" << src << "event" << connection.attribute("event").value() << "target" << tgt << "func" << func;
                     src_obj->addConnection(dst_obj,connection.attribute("event").value(),func);
                 }
             }

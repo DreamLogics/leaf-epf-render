@@ -286,6 +286,7 @@ void CAnimation::playNextFrame()
         if (!m_bLoop)
         {
             m_pTimer->stop();
+            sendEvent("finished");
             emit finished();
         }
     }
@@ -473,4 +474,9 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
     m_pGeneratedFrame = animframe;
 
     return animframe;
+}
+
+void CAnimation::onEPFEvent(EPFEvent *ev)
+{
+
 }

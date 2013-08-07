@@ -258,6 +258,9 @@ void CSection::layout(int height, int width)
             if (document()->shouldStopLayout())
                 return;
             obj = l->object(n);
+            obj->updateRenderMode();
+            if (obj->renderMode() == CSS::rmNone)
+                continue;
             pos = css->property(obj,"position")->toString();
             if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*/*CLayer*/>(obj->parent()))
             {
@@ -432,9 +435,14 @@ void CSection::render(QPainter *p,QRectF region)
 CBaseObject* CSection::objectOnPos(int x, int y)
 {
     QPoint pos(x,y);
+    x -= scrollX();
+    y -= scrollY();
+    QPoint posfixed(x,y);
+    CSS::Stylesheet* css = document()->stylesheet();
 
     CLayer* l;
     CBaseObject* obj;
+    QString posi;
 
     for (int i=0;i<layerCount();i++)
     {
@@ -444,7 +452,8 @@ CBaseObject* CSection::objectOnPos(int x, int y)
             obj = l->object(n);
             if (obj->enabled())
             {
-                if (obj->boundingRect().contains(pos))
+                posi = css->property(obj,"position")->toString();
+                if ((obj->boundingRect().contains(pos) && posi != "fixed") || (obj->boundingRect().contains(posfixed) && posi == "fixed"))
                     return obj;
             }
         }

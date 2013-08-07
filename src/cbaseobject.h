@@ -65,7 +65,8 @@ public:
     CSection* section();
     CDocument* document();
 
-
+    int renderMode();
+    void updateRenderMode();
 
     //void setPositionOffset(int dx, int dy);
     //void sheduleRepaint();
@@ -157,6 +158,14 @@ signals:
     void onFocus();
     void onLoseFocus();
 
+protected:
+
+    int m_iRenderMode;
+    int m_iRotation;
+    double m_dOpacity;
+
+    QMutex m_RenderPropsMutex;
+
 private:
 
     QRectF m_rRect;
@@ -191,9 +200,10 @@ private:
 
     QMutex m_RenderMutex;
     QMutex m_FPMutex;
+    QMutex m_RMMutex;
 
-    int m_iRenderMode;
-    int m_iRotation;
+
+
 
     bool m_bFixedParent;
 

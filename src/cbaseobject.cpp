@@ -122,11 +122,18 @@ void CBaseObject::layout(QRectF relrect)
 
 
 
+
     QRectF oldrect = m_rRect;
     QRectF newrect = m_rRect;
     //QRectF relrect = r->boundingRect();
 
     CSS::Stylesheet* css = document()->stylesheet();
+
+    m_RenderPropsMutex.lock();
+
+    m_dOpacity = css->property(this,"opacity")->toDouble();
+
+    m_RenderPropsMutex.unlock();
 
     setMargin(css->property(this,"margin-top")->toInt(),css->property(this,"margin-left")->toInt(),css->property(this,"margin-bottom")->toInt(),css->property(this,"margin-right")->toInt());
     //setPadding(css->property(this,"padding-top")->toInt(),css->property(this,"padding-left")->toInt(),css->property(this,"padding-bottom")->toInt(),css->property(this,"padding-right")->toInt());
@@ -456,11 +463,16 @@ void CBaseObject::addStyleClass(QString classname)
 {
     if (m_StyleClasses.contains(classname))
         return;
+    //FIXME!
+    if (document()->renderview())
+        section()->layout(document()->renderview()->height(),document()->renderview()->width());
     m_StyleClasses.append(classname);
 }
 void CBaseObject::removeStyleClass(QString classname)
 {
     m_StyleClasses.removeAll(classname);
+    if (document()->renderview())
+        section()->layout(document()->renderview()->height(),document()->renderview()->width());
 }
 
 CSection* CBaseObject::section()
@@ -484,6 +496,7 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
 {
     if (ev->event() == "addStyleClass")
     {
+        qDebug() << "addstyleclass" << ev->parameter(0);
         if (ev->parameter(0) != "")
             addStyleClass(ev->parameter(0));
     }
@@ -526,6 +539,11 @@ void CBaseObject::paintBuffered(QPainter *p)
         break;
     }
     p->rotate(m_iRotation);
+
+    m_RenderPropsMutex.lock();
+    p->setOpacity(p->opacity() * m_dOpacity);
+
+    m_RenderPropsMutex.unlock();
 
     int cx = p->transform().dx();
     int dw = p->device()->width();
@@ -592,7 +610,7 @@ void CBaseObject::buffer()
     bp.end();
 
     CSS::Stylesheet* css = document()->stylesheet();
-    m_iRenderMode = CSS::renderModeFromString(css->property(this,"render-mode")->toString());
+
 
     m_iRotation = css->property(this,"rotation")->toInt();
 
@@ -635,4 +653,20 @@ void CBaseObject::clearBuffers()
     m_RenderMutex.lock();
     m_qiRenderBuffer = QImage();
     m_RenderMutex.unlock();
+}
+
+int CBaseObject::renderMode()
+{
+    int rm;
+    m_RMMutex.lock();
+    rm = m_iRenderMode;
+    m_RMMutex.unlock();
+    return rm;
+}
+
+void CBaseObject::updateRenderMode()
+{
+    m_RMMutex.lock();
+    m_iRenderMode = CSS::renderModeFromString(document()->stylesheet()->property(this,"render-mode")->toString());
+    m_RMMutex.unlock();
 }

@@ -117,6 +117,14 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
         {
             prop = property(it.key(),key);
         }
+        else
+        {
+            it=m_selectors.find("."+classes[i]);
+            if (it != m_selectors.end())
+            {
+                prop = property(it.key(),key);
+            }
+        }
         /*for (it=m_selectors.begin();it != m_selectors.end();it++)
         {
             selector = it.key();

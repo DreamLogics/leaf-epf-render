@@ -27,11 +27,12 @@
 #include <QMap>
 #include <QStringList>
 #include <QTimer>
+#include "epfevent.h"
 
 class CDocument;
 class CAnimFrame;
 
-class CAnimation : public QObject
+class CAnimation : public QObject, public EPFComponent
 {
     Q_OBJECT
 public:
@@ -41,6 +42,8 @@ public:
     virtual void play(bool loop);
     virtual void stop();
     virtual void reset();
+
+    virtual void onEPFEvent(EPFEvent *ev);
 
 public slots:
 
