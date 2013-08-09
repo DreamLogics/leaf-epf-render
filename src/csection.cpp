@@ -72,6 +72,12 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
     m_iScrollXMax = 0;
     m_iScrollYMax = 0;
 
+    m_pFocusObj = 0;
+    m_pControlObj = 0;
+
+    m_iLayoutHeight = -1;
+    m_iLayoutWidth = -1;
+
     m_pViewportItem = new CViewportItem();
 }
 
@@ -202,6 +208,9 @@ void CSection::updateRendered()
 */
 void CSection::layout(int height, int width)
 {
+    m_iLayoutWidth = width;
+    m_iLayoutHeight = height;
+
     m_pViewportItem->setSize(height,width);
     CSS::Stylesheet* css = document()->stylesheet();
 
@@ -314,6 +323,14 @@ void CSection::layout(int height, int width)
     qDebug() << "time elapsed: " << t.msecsTo(QTime::currentTime());
 
     document()->updateRenderView();
+}
+
+void CSection::layout()
+{
+    if (m_iLayoutHeight == -1 || m_iLayoutWidth == -1)
+        return;
+
+    layout(m_iLayoutHeight,m_iLayoutWidth);
 }
 
 int CSection::x()
@@ -466,6 +483,13 @@ void CSection::mouseDoubleClickEvent ( int x, int y )
 {
     x += scrollX();
     y += scrollY();
+
+    if (m_pControlObj)
+    {
+        m_pControlObj->mouseDoubleClickEvent(QPoint(x,y));
+        return;
+    }
+
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
@@ -480,6 +504,13 @@ void CSection::mousePressEvent( int x, int y )
 {
     x += scrollX();
     y += scrollY();
+
+    if (m_pControlObj)
+    {
+        m_pControlObj->mousePressEvent(QPoint(x,y));
+        return;
+    }
+
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
@@ -494,7 +525,15 @@ void CSection::mouseReleaseEvent( int x, int y )
 {
     x += scrollX();
     y += scrollY();
+
     m_pFocusObj = 0;
+
+    if (m_pControlObj)
+    {
+        m_pControlObj->mouseReleaseEvent(QPoint(x,y));
+        return;
+    }
+
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
@@ -511,6 +550,13 @@ void CSection::mouseMoveEvent( int x, int y )
 {
     x += scrollX();
     y += scrollY();
+
+    if (m_pControlObj)
+    {
+        m_pControlObj->mouseMoveEvent(QPoint(x,y));
+        return;
+    }
+
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
@@ -533,8 +579,15 @@ CSection::TransitionFx CSection::transitionType()
 
 void CSection::keyEvent(int key, QString val)
 {
-    if (!m_pFocusObj)
+    if (m_pControlObj)
+    {
+        m_pControlObj->keyEvent(key,val);
+        return;
+    }
+
+    if (m_pFocusObj)
         m_pFocusObj->keyEvent(key,val);
+
 }
 
 void CSection::setFocus(CBaseObject *obj)
@@ -699,4 +752,15 @@ void CSection::clearBuffers()
             obj->clearBuffers();
         }
     }
+}
+
+void CSection::takeControl(CBaseObject *obj)
+{
+    m_pControlObj = obj;
+}
+
+void CSection::releaseControl(CBaseObject *obj)
+{
+    if (obj == m_pControlObj)
+        m_pControlObj = 0;
 }

@@ -81,6 +81,7 @@ public:
     //void rendered(QPainter* p);
 
     virtual void layout(int height, int width);
+    virtual void layout();
     CViewportItem* viewportItem();
 
     virtual void render(QPainter* p, QRectF region);
@@ -108,6 +109,9 @@ public:
     int scrollYMax();
 
     void clearBuffers();
+
+    void takeControl(CBaseObject* obj);
+    void releaseControl(CBaseObject* obj);
 
 public slots:
 
@@ -148,6 +152,8 @@ private:
 
     CBaseObject* m_pFocusObj;
 
+    CBaseObject* m_pControlObj;
+
 
     QRectF m_rRect;
     int m_iX;
@@ -157,6 +163,9 @@ private:
     int m_iScrollY;
     int m_iScrollXMax;
     int m_iScrollYMax;
+
+    int m_iLayoutHeight;
+    int m_iLayoutWidth;
 
     QMutex m_mRectMutex;
     QMutex m_mScrollMutex;
