@@ -176,6 +176,7 @@ private:
     //QString m_sCSSOverrides;
 
     QImage m_qiRenderBuffer;
+    //QList<QImage> m_RenderBuffers;
     bool m_bNeedsRedraw;
 
     bool m_bEnabled;

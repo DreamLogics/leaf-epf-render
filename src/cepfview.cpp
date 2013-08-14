@@ -34,6 +34,7 @@
 #include <QMouseEvent>
 #include <QRectF>
 #include <QWheelEvent>
+#include <QTouchEvent>
 
 CEPFView::CEPFView()
 {
@@ -511,4 +512,18 @@ void CEPFView::wheelEvent(QWheelEvent *ev)
 int CEPFView::indexForSection(QString id)
 {
     return m_pDocument->indexForSection(m_pDocument->sectionByID(id));
+}
+
+bool CEPFView::event(QEvent *ev)
+{
+    bool b = QGLWidget::event(ev);
+    if (ev->type() == QEvent::TouchBegin)
+    {
+        QTouchEvent* tev = dynamic_cast<QTouchEvent*>(ev);
+        if (tev)
+        {
+
+        }
+    }
+    return b;
 }

@@ -90,6 +90,8 @@ protected:
     virtual void mouseMoveEvent( QMouseEvent *ev );
     virtual void wheelEvent(QWheelEvent *ev);
 
+    virtual bool event(QEvent *ev);
+
 private:
 
     int indexForSection(QString id);

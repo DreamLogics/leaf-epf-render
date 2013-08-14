@@ -23,6 +23,10 @@
 #ifndef IDEVICE_H
 #define IDEVICE_H
 
+#include "leaf-epf-render_global.h"
+
+class QByteArray;
+
 class IDevice
 {
 public:
@@ -35,6 +39,7 @@ public:
     //virtual void playMedia(QByteArray*) = 0;
 
     virtual const char* deviceIdentifier() const = 0;
+    virtual int deviceFlags() const = 0;
 
     virtual double getAccelerationX() = 0;
     virtual double getAccelerationY() = 0;
@@ -48,6 +53,20 @@ public:
     virtual int getYaw() = 0;
     virtual int getRoll() = 0;
 
+    enum devFlags
+    {
+        dfTouchScreen = 0x1,
+        dfCanResize = 0x2
+    };
+
 };
+
+class LEAFEPFRENDERSHARED_EXPORT Device
+{
+public:
+    static IDevice* currentDevice();
+    static void setCurrentDevice(IDevice* dev);
+};
+
 
 #endif // IDEVICE_H

@@ -32,7 +32,8 @@ SOURCES += cdocument.cpp \
     czlib.cpp \
     css/css_painters.cpp \
     epfevent.cpp \
-    object_types/clabelobject.cpp
+    object_types/clabelobject.cpp \
+    device.cpp
 
 HEADERS += leaf-epf-render_global.h \
     cdocument.h \

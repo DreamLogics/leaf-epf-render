@@ -560,6 +560,7 @@ void CBaseObject::paintBuffered(QPainter *p)
     else
     {
         QImage chunk;
+        //const uchar* bufferdata = m_qiRenderBuffer.bits();
         for (int x=0;x<m_qiRenderBuffer.width();x+=dw)
         {
             if (cx + x+dw < 0)
@@ -572,8 +573,14 @@ void CBaseObject::paintBuffered(QPainter *p)
                     continue;
                 if (cy + y > dh)
                     break;
+
                 chunk = m_qiRenderBuffer.copy(x,y,dw,dh);
-                p->drawImage(x,y,chunk);
+                //for (int line=0;line<dh;line++)
+                {
+                    //const uchar* buffer = bufferdata + (4 * (x + (m_qiRenderBuffer.width()*(y+line))));
+                    //chunk = QImage(buffer,dw,1,m_qiRenderBuffer.format());
+                    p->drawImage(x,y,chunk);
+                }
                 //p->drawImage(x,y,m_qiRenderBuffer,x,y,1024,1024);
             }
         }
