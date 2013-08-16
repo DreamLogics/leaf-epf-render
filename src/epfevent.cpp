@@ -51,8 +51,12 @@ void EPFComponent::sendEvent(QString event, QStringList parameters)
     QMap<QString, QList<EPFConnection*> >::iterator it;
     it = m_Connections.find(event);
 
+    //qDebug() << event;
+
     if (it == m_Connections.end())
         return;
+
+    //qDebug() << "has connections";
 
     QList<EPFConnection*> list = it.value();
     EPFConnection* connection;

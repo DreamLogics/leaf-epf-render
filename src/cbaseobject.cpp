@@ -170,10 +170,10 @@ void CBaseObject::layout(QRectF relrect)
         else if (!css->property(this,"bottom")->isNull())
             newrect.moveBottom(relrect.bottom() - css->property(this,"bottom")->toInt());
 
-        if (!css->property(this,"right")->isNull() && css->property(this,"left")->isNull())
+        if (!css->property(this,"right")->isNull() && !css->property(this,"left")->isNull())
         {
             newrect.setRight(relrect.right() - css->property(this,"right")->toInt());
-            newrect.setLeft(m_rRect.right() - css->property(this,"width")->toInt());
+            newrect.setLeft(newrect.left() - css->property(this,"width")->toInt());
         }
         else if (!css->property(this,"right")->isNull())
             newrect.moveRight(relrect.right() - css->property(this,"right")->toInt());

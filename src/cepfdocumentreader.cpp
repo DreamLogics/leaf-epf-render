@@ -351,7 +351,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     //s->addObject(obj,object.attribute("id").value(),object.attribute("layer").as_int());
                     l->addObject(obj);
 
-                    parseObjectNode(&object,l,o,obj);
+                    parseObjectNode(&object,l,s,obj);
                 }
 
                 s->addLayer(l);
@@ -382,6 +382,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         QString func,param;
         //QStringList parameters;
         //QRegExp funcreg("([^\\(]+)\\(([^\\)]*)\\)");
+
+        //qDebug() << m_objectmap;
 
         for (pugi::xml_node connection = connections.child("connection"); connection; connection = connection.next_sibling("connection"))
         {

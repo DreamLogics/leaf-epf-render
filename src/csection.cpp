@@ -460,6 +460,7 @@ CBaseObject* CSection::objectOnPos(int x, int y)
     CLayer* l;
     CBaseObject* obj;
     QString posi;
+    bool isfixed;
 
     for (int i=0;i<layerCount();i++)
     {
@@ -469,8 +470,14 @@ CBaseObject* CSection::objectOnPos(int x, int y)
             obj = l->object(n);
             if (obj->enabled())
             {
+                isfixed = false;
                 posi = css->property(obj,"position")->toString();
-                if ((obj->boundingRect().contains(pos) && posi != "fixed") || (obj->boundingRect().contains(posfixed) && posi == "fixed"))
+                if (posi == "fixed")
+                    isfixed = true;
+                else if (obj->fixedParent())
+                    isfixed = true;
+
+                if ((obj->boundingRect().contains(pos) && !isfixed) || (obj->boundingRect().contains(posfixed) && isfixed))
                     return obj;
             }
         }
