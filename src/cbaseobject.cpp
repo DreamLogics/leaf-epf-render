@@ -587,6 +587,9 @@ void CBaseObject::paintBuffered(QPainter *p)
     }
     //paint(p);
 
+    //p->drawText(2,20,id());
+    //backarrow !!!!
+
     qDebug() << "rendertime:" << t.msecsTo(QTime::currentTime());
 
     m_RenderMutex.unlock();

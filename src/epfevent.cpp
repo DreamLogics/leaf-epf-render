@@ -89,6 +89,8 @@ EPFConnection::EPFConnection(QString eventstr, EPFComponent *target, QString fun
         m_strEvent = funcreg.cap(1);
         m_EventParam = funcreg.cap(2).split(",");
     }
+    else if (eventstr.endsWith("()"))
+        m_strEvent = eventstr.left(eventstr.size()-2);
     else
         m_strEvent = eventstr;
 
@@ -97,6 +99,8 @@ EPFConnection::EPFConnection(QString eventstr, EPFComponent *target, QString fun
         m_strFunction = funcreg.cap(1);
         m_FuncParam = funcreg.cap(2).split(",");
     }
+    else if (functionstr.endsWith("()"))
+        m_strFunction = functionstr.left(functionstr.size()-2);
     else
         m_strFunction = functionstr;
 
