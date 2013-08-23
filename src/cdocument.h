@@ -66,7 +66,8 @@ public:
     COverlay* overlayByID(QString);
     void addOverlay(COverlay* overlay);
 
-    CSS::Stylesheet* stylesheet();
+    CSS::Stylesheet* stylesheet(bool hold_control=false);
+    void releaseStylesheet();
 
     void setActiveOverlay(COverlay* overlay);
     COverlay* activeOverlay();
@@ -150,6 +151,8 @@ private:
 
     bool m_bShouldStopLayout;
     QMutex m_mShouldStopLayoutMutex;
+
+    QMutex m_mCSSMutex;
 
     int m_iLayoutHeight;
     int m_iLayoutWidth;

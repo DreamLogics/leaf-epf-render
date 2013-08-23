@@ -377,7 +377,7 @@ void CSection::render(QPainter *p,QRectF region)
 
 
 
-    CSS::Stylesheet* css = document()->stylesheet();
+    CSS::Stylesheet* css = document()->stylesheet(true);
     CBaseObject* obj;
     CLayer* l;
     QRectF absreg(QPointF(0,0),region.size());
@@ -441,6 +441,8 @@ void CSection::render(QPainter *p,QRectF region)
             }
         }
     }
+
+    document()->releaseStylesheet();
 
     drawScrollbar(p);
 

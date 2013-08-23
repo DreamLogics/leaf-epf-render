@@ -153,12 +153,13 @@ CLayout* CDocument::layoutByID(QString id,bool b)
 
 void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectionOnly)
 {
-    int mm = height * width;
-    int d,dc,r,match,i;
+    double target,closest,dc,r;
+    int i,match=-1;
 
     stopLayout(false);
 
-    dc = -1;
+    target = height / width;
+    closest = 0;
 
     for (i=0;i<m_Layouts.size();i++)
     {
@@ -168,93 +169,56 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
         if (m_sLanguage != m_Layouts[i]->language())
             continue;
 
-        r = m_Layouts[i]->height() * m_Layouts[i]->width();
-        d = r - mm;
-        if (d<0)
-            d *= -1;
+        r = m_Layouts[i]->height() / m_Layouts[i]->width();
+        dc = r - target;
 
-        if (d <= dc || dc == -1)
+        if (dc == 0 || (dc < closest && closest != 0))
         {
             match = i;
-            dc = d;
+            closest = dc;
         }
 
     }
 
-    if (dc == -1)
+    if (match == -1)
     {
         //zonder language preference
         for (i=0;i<m_Layouts.size();i++)
         {
             if (!m_Platforms.contains(m_Layouts[i]->platform()))
                 continue;
-            r = m_Layouts[i]->height() * m_Layouts[i]->width();
-            d = r - mm;
-            if (d<0)
-                d *= -1;
+            r = m_Layouts[i]->height() / m_Layouts[i]->width();
+            dc = r - target;
 
-            if (d <= dc || dc == -1)
+            if (dc == 0 || (dc < closest && closest != 0))
             {
                 match = i;
-                dc = d;
+                closest = dc;
             }
-
         }
     }
 
-    if (dc == -1)
+    if (match == -1)
     {
         //geen layout gevonden, dan maar zonder platform preference kijken
         for (i=0;i<m_Layouts.size();i++)
         {
-            r = m_Layouts[i]->height() * m_Layouts[i]->width();
-            d = r - mm;
-            if (d<0)
-                d *= -1;
+            r = m_Layouts[i]->height() / m_Layouts[i]->width();
+            dc = r - target;
 
-            if (d <= dc || dc == -1)
+            if (dc == 0 || (dc < closest && closest != 0))
             {
                 match = i;
-                dc = d;
+                closest = dc;
             }
-
         }
     }
 
-    if (dc == -1)
+    if (match == -1)
         return;
 
     //we hebben er 1 gevonden
-    //lijst maken met alle layouts die een gelijke oppervlakte hebben
-    QList<int> ml;
-
-    for (i=0;i<m_Layouts.size();i++)
-    {
-        r = m_Layouts[i]->height() * m_Layouts[i]->width();
-        if (dc == r && i != match)
-            ml.push_back(i);
-    }
-
-    if (ml.size() > 0)
-    {
-        dc = -1;
-        mm = m_Layouts[match]->height();
-        //gelijke oppervlakte gevonden, hoogtes vergelijken
-        for (i = 0;i<ml.size();i++)
-        {
-            r = m_Layouts[ml[i]]->height();
-            d = r - mm;
-            if (d<0)
-                d *= -1;
-
-            if (d <= dc || dc == -1)
-            {
-                match = ml[i];
-                dc = d;
-            }
-        }
-    }
-
+    m_mCSSMutex.lock();
     if (m_pCurrentLayout != m_Layouts[match])
     {
         m_pCurrentLayout = m_Layouts[match];
@@ -271,6 +235,7 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
         wf/=m_pCurrentLayout->width();
         m_pStylesheet->setScale(hf,wf);
     }
+    m_mCSSMutex.unlock();
 
     section(sectionid)->layout(height,width);
 
@@ -486,9 +451,16 @@ void CDocument::load(int height, int width, int sectionid)
     emit finishedLoading();
 }
 
-CSS::Stylesheet* CDocument::stylesheet()
+CSS::Stylesheet* CDocument::stylesheet(bool hold_control)
 {
+    if (hold_control)
+        m_mCSSMutex.lock();
     return m_pStylesheet;
+}
+
+void CDocument::releaseStylesheet()
+{
+    m_mCSSMutex.unlock();
 }
 
 void CDocument::onEPFEvent(EPFEvent *ev)

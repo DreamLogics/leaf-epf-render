@@ -96,7 +96,7 @@ Property* Stylesheet::property(QString selector, QString key)
 Property* Stylesheet::property(CBaseObject *obj, QString key)
 {
     Property* prop = 0;
-    QString selector;
+    //QString selector;
     QStringList classes = obj->styleClasses();
     QMap<QString,Selector*>::Iterator it;
 
