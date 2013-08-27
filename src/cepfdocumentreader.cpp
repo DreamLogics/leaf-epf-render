@@ -47,7 +47,7 @@
 
 CEPFDocumentReader::CEPFDocumentReader()
 {
-    registerObjectType("text",new CTextObjectFactory());
+    //registerObjectType("text",new CTextObjectFactory());
     registerObjectType("image",new CImageObjectFactory());
     registerObjectType("block",new CBlockObjectFactory());
     registerObjectType("media",new CMediaObjectFactory());

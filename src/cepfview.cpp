@@ -63,12 +63,15 @@ void CEPFView::setDocument(CDocument *doc)
 {
     if (m_pDocument)
     {
-        m_pDocument->clearBuffers();
+        //m_pDocument->clearBuffers();
+        emit clearBuffers();
         disconnect(this,SIGNAL(updateRendered(QRectF)),0,0);
     }
 
     m_pDocument = doc;
     int i,first=-1;
+
+    qDebug() << "setting document";
 
     /*for (i=0;i<m_SectionViews.size();i++)
         delete m_SectionViews[i];*/
@@ -116,6 +119,7 @@ void CEPFView::setDocument(CDocument *doc)
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
     connect(doc,SIGNAL(_updateRenderView()),this,SLOT(update()));
     connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
+    connect(this,SIGNAL(clearBuffers()),doc,SLOT(clearBuffers()));
 
     emit loadDocument(height(),width(),first);
 }
@@ -526,4 +530,9 @@ bool CEPFView::event(QEvent *ev)
         }
     }
     return b;
+}
+
+void CEPFView::clearDocBuffers()
+{
+    emit clearBuffers();
 }

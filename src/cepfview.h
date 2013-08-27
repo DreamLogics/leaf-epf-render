@@ -46,6 +46,8 @@ public:
     void setDocument(CDocument* doc);
     int currentSection();
 
+    void clearDocBuffers();
+
 public slots:
 
     void setSection(QString id);
@@ -76,6 +78,8 @@ signals:
     void mousePressEvent( int x, int y );
     void mouseReleaseEvent( int x, int y );
     void mouseMoveEvent( int x, int y );
+
+    void clearBuffers();
 
 protected:
 

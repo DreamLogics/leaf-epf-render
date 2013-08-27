@@ -45,6 +45,8 @@ public:
     virtual void layout(QRectF relativeTo);
     QString overflow();
 
+    virtual void clearBuffers();
+
 private:
 
     QString css();

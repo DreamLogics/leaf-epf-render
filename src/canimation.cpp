@@ -366,7 +366,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
 
         //qDebug() << "build start frames";
 
-        animframe = new CAnimFrame(endframep->section());
+        //animframe = new CAnimFrame(endframep->section());
         CSS::Stylesheet* sp = m_pDoc->stylesheet();
 
         for (i = 0;i<objs.size();i++)
@@ -382,7 +382,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
                 //qDebug() << sl[ii] << sp.property(sl[ii]);
             }
             objpropmapstart.insert(obj,startpropmap);
-            animframe->setPropertiesForObject(obj,startpropmap);
+            //animframe->setPropertiesForObject(obj,startpropmap);
         }
         /*if (frames.contains(0))
             frames[0] = animframe;

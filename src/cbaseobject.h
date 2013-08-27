@@ -131,7 +131,7 @@ public:
 
     bool changed();
 
-    void clearBuffers();
+    virtual void clearBuffers();
 
 protected:
 

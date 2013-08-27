@@ -45,6 +45,7 @@ CTextObject::CTextObject(QString id, CLayer* layer) :
     CBaseObject(id,layer)
 {
     m_pTextDoc = 0;
+    m_iRenderOffset = 0;
 }
 
 void CTextObject::preload()
@@ -421,4 +422,11 @@ int CTextObject::pointFromPixel(int px)
 {
     int dpi=QApplication::desktop()->logicalDpiY();
     return px * 72 / dpi;
+}
+
+void CTextObject::clearBuffers()
+{
+    CBaseObject::clearBuffers();
+    delete m_pTextDoc;
+    m_pTextDoc = new QTextDocument();
 }

@@ -553,4 +553,8 @@ void CDocument::clearBuffers()
     {
         section(i)->clearBuffers();
     }
+    m_pCurrentLayout = 0;
+    if (m_pStylesheet)
+        delete m_pStylesheet;
+    m_pStylesheet = 0;
 }
