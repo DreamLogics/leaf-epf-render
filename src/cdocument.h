@@ -99,6 +99,8 @@ public:
 
     QByteArray resource(QString resource);
     void addResource(QString resource, QString resource_file, QString extra, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed, qint16 type);
+    int resource(QString resource, char* buffer, int len, int offset=0);
+    Resource resourceInfo(QString resource);
 
     //void makeConnection(EPFComponent* src, QString event, EPFComponent* target, QString function);
     virtual void onEPFEvent(EPFEvent *ev);

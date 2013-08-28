@@ -317,6 +317,81 @@ QByteArray CDocument::resource(QString resource)
     return data;
 }
 
+int CDocument::resource(QString resource, char *buffer, int len, int offset)
+{
+    if (!m_Resources.contains(resource))
+    {
+        qDebug() << "Requested non existing resource:" << resource;
+        return 0;
+    }
+
+    int br=0;
+    struct Resource res = m_Resources[resource];
+
+    if (res.type == 0 || res.type == 1 || res.type == 3)
+    {
+
+        QFile f(res.container);
+
+        int s = res.size_compressed;
+
+        if (res.size_compressed == 0)
+            s = res.size;
+        else
+        {
+            qDebug() << "compressed stream impl";
+            return 0;
+        }
+
+        if (f.open(QIODevice::ReadOnly))
+        {
+            if (res.type == 3)
+            {
+                if (f.seek(offset))
+                    br = f.read(buffer,len);
+            }
+            else
+            {
+                if (f.seek(res.offset + offset))
+                {
+                    br = f.read(buffer,len);
+                }
+            }
+
+            f.close();
+        }
+    }
+    else if (res.type == 4)
+    {
+        qDebug() << "remote res not implemented";
+    }
+    else
+        qDebug() << "unsupported resource type";
+
+    return br;
+}
+
+CDocument::Resource CDocument::resourceInfo(QString resource)
+{
+    struct Resource res;
+    res.checksum = -1;
+    res.container = "";
+    res.extra = "";
+    res.offset = -1;
+    res.size = -1;
+    res.size_compressed = -1;
+    res.type = -1;
+
+    if (!m_Resources.contains(resource))
+    {
+        qDebug() << "Requested non existing resource:" << resource;
+        return res;
+    }
+
+    res = m_Resources[resource];
+    return res;
+}
+
 void CDocument::addResource(QString resource, QString container_file, QString extra, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed, qint16 type)
 {
     struct Resource res;

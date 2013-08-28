@@ -61,12 +61,12 @@ CEPFView::CEPFView()
 
 void CEPFView::setDocument(CDocument *doc)
 {
-    if (m_pDocument)
+    /*if (m_pDocument)
     {
         //m_pDocument->clearBuffers();
         emit clearBuffers();
         disconnect(this,SIGNAL(updateRendered(QRectF)),0,0);
-    }
+    }*/
 
     m_pDocument = doc;
     int i,first=-1;
