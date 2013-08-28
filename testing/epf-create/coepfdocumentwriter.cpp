@@ -102,6 +102,7 @@ void COEPFDocumentWriter::parseContentDir(QFile *ds, QString dir, QList<resource
 {
     struct resource res;
     QDir d(dir);
+    QStringList excludecompress = QStringList() << "ogv" << "ogg";
     QFileInfoList info = d.entryInfoList();
     QByteArray data;
     CZLib zipper;
@@ -114,8 +115,16 @@ void COEPFDocumentWriter::parseContentDir(QFile *ds, QString dir, QList<resource
             {
                 data = f.readAll();
                 res.filesize = data.size();
-                zipper.compress(&data,&res.crc32);
-                res.filesizecompressed = data.size();
+                if (excludecompress.contains(info.at(i).fileName().right(3)))
+                {
+                    res.filesizecompressed = 0;
+                    res.crc32 = 0;
+                }
+                else
+                {
+                    zipper.compress(&data,&res.crc32);
+                    res.filesizecompressed = data.size();
+                }
                 res.dataoffset = ds->pos();
                 res.resname = info.at(i).fileName();
                 res.resnamesize = res.resname.size();
