@@ -45,6 +45,7 @@ void CBlockObject::preload()
 void CBlockObject::paint(QPainter *painter)
 {
     CSS::paintBackgroundColor(painter,this);
+    CSS::paintBackgroundGradient(painter,this);
     CSS::paintBackgroundImage(painter,this);
     CSS::paintColorOverlay(painter,this);
 

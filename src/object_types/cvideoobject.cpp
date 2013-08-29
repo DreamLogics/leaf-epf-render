@@ -20,23 +20,28 @@
 **
 ****************************************************************************/
 
-#include "cmediaobject.h"
+#include "cvideoobject.h"
 
-CBaseObject* CMediaObjectFactory::create(QString id, CLayer *layer)
+CBaseObject* CVideoObjectFactory::create(QString id, CLayer *layer)
 {
-    return new CMediaObject(id,layer);
+    return new CVideoObject(id,layer);
 }
 
-CMediaObject::CMediaObject(QString id, CLayer *layer) : CBaseObject(id,layer)
+CVideoObject::CVideoObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 {
 }
 
-void CMediaObject::preload()
+void CVideoObject::preload()
 {
 
 }
 
-void CMediaObject::paint(QPainter *painter)
+void CVideoObject::paint(QPainter *painter)
+{
+
+}
+
+void CVideoObject::paintBuffered(QPainter *p)
 {
 
 }

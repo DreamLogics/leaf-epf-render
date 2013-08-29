@@ -21,6 +21,7 @@ void paintColorOverlay(QPainter* pPainter, QRectF qrRect, QString strColor, Rend
 
 void paintBorder(QPainter* pPainter, CBaseObject* pObj);
 void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj);
+void paintBackgroundGradient(QPainter* pPainter, CBaseObject* pObj);
 void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj);
 void paintOuterGlow(QPainter* pPainter, CBaseObject* pObj);
 void paintInnerGlow(QPainter* pPainter, CBaseObject* pObj);

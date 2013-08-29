@@ -41,7 +41,8 @@
 
 #include "object_types/cblockobject.h"
 #include "object_types/ctextobject.h"
-#include "object_types/cmediaobject.h"
+#include "object_types/cvideoobject.h"
+#include "object_types/caudioobject.h"
 #include "object_types/cimageobject.h"
 #include "object_types/cscriptobject.h"
 
@@ -50,7 +51,8 @@ CEPFDocumentReader::CEPFDocumentReader()
     registerObjectType("text",new CTextObjectFactory());
     registerObjectType("image",new CImageObjectFactory());
     registerObjectType("block",new CBlockObjectFactory());
-    registerObjectType("media",new CMediaObjectFactory());
+    registerObjectType("video",new CVideoObjectFactory());
+    registerObjectType("audio",new CAudioObjectFactory());
     registerObjectType("scripted",new CScriptObjectFactory());
 }
 

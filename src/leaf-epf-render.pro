@@ -22,7 +22,6 @@ SOURCES += cdocument.cpp \
     canimframe.cpp \
     object_types/ctextobject.cpp \
     object_types/cscriptobject.cpp \
-    object_types/cmediaobject.cpp \
     object_types/cimageobject.cpp \
     object_types/cblockobject.cpp \
     cunsupportedobject.cpp \
@@ -33,7 +32,9 @@ SOURCES += cdocument.cpp \
     css/css_painters.cpp \
     epfevent.cpp \
     object_types/clabelobject.cpp \
-    device.cpp
+    device.cpp \
+    object_types/cvideoobject.cpp \
+    object_types/caudioobject.cpp
 
 HEADERS += leaf-epf-render_global.h \
     cdocument.h \
@@ -48,7 +49,6 @@ HEADERS += leaf-epf-render_global.h \
     canimframe.h \
     object_types/ctextobject.h \
     object_types/cscriptobject.h \
-    object_types/cmediaobject.h \
     object_types/cimageobject.h \
     object_types/cblockobject.h \
     cunsupportedobject.h \
@@ -62,7 +62,9 @@ HEADERS += leaf-epf-render_global.h \
     css/css_painters.h \
     css/css_default.h \
     epfevent.h \
-    object_types/clabelobject.h
+    object_types/clabelobject.h \
+    object_types/cvideoobject.h \
+    object_types/caudioobject.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

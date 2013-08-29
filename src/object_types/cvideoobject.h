@@ -20,25 +20,26 @@
 **
 ****************************************************************************/
 
-#ifndef CMEDIAOBJECT_H
-#define CMEDIAOBJECT_H
+#ifndef CVideoOBJECT_H
+#define CVideoOBJECT_H
 
 #include "cbaseobject.h"
 #include "iepfobjectfactory.h"
 
-class CMediaObjectFactory : public IEPFObjectFactory
+class CVideoObjectFactory : public IEPFObjectFactory
 {
     virtual CBaseObject* create(QString id, CLayer *layer);
 };
 
-class CMediaObject : public CBaseObject
+class CVideoObject : public CBaseObject
 {
     Q_OBJECT
 public:
-    CMediaObject(QString id, CLayer* layer);
+    CVideoObject(QString id, CLayer* layer);
 
     virtual void preload();
     virtual void paint(QPainter *painter);
+    virtual void paintBuffered(QPainter *p);
 };
 
-#endif // CMEDIAOBJECT_H
+#endif // CVideoOBJECT_H

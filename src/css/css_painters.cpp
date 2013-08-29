@@ -6,6 +6,7 @@
 #include <QtCore/qmath.h>
 #include <QImage>
 #include <QDebug>
+#include <QLinearGradient>
 
 namespace CSS
 {
@@ -315,6 +316,44 @@ void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj)
         CSS::paintBackgroundImage(pPainter,r,size,css->property(pObj,"background-image")->toString(),pObj->document());
     }
 
+}
+
+void paintBackgroundGradient(QPainter *pPainter, CBaseObject *pObj)
+{
+    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    QRectF r = pObj->boundingRect();
+    r.moveTop(0);
+    r.moveLeft(0);
+
+    CSS::Property* bggrad = css->property(pObj,"background-gradient");
+
+    if (!bggrad->isNull())
+    {
+        QRegExp gradpointreg("\\( *([0-9\\.]+) *, *(#[0-9a-fA-F]{3,6}) *, *([0-9\\.]+) *\\)");
+        QString gradtype = css->property(pObj,"background-gradient")->toString();
+        int offset=0;
+        QString propval = bggrad->toString();
+
+        if (gradtype == "radial")
+        {
+
+        }
+        else
+        {
+            QLinearGradient lgrad;
+            while (gradpointreg.indexIn(propval,offset) != -1)
+            {
+                QColor c(gradpointreg.cap(2));
+                c.setAlphaF(gradpointreg.cap(3).toDouble());
+                lgrad.setColorAt(gradpointreg.cap(1).toDouble(),c);
+                offset += gradpointreg.cap(0).size();
+            }
+            lgrad.setStart(r.width()/2,0);
+            lgrad.setFinalStop(r.width()/2,r.height());
+            pPainter->fillRect(r,lgrad);
+        }
+
+    }
 }
 
 void paintOuterGlow(QPainter* pPainter, CBaseObject* pObj)
