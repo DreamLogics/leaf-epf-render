@@ -138,6 +138,9 @@ public:
 
     void addCSS(QString css);
 
+    void setVariable(QString,QString);
+    QString variable(QString);
+
 private:
 
     void parse(QString css);
@@ -147,7 +150,7 @@ private:
     double m_dHSF;
     double m_dWSF;
     CDocument* m_pDocument;
-
+    QMap<QString,QString> m_variables;
 };
 
 }

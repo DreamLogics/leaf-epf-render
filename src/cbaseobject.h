@@ -133,6 +133,15 @@ public:
 
     virtual void clearBuffers();
 
+    enum StyleState
+    {
+        ssNone=0,
+        ssHover
+    };
+
+    StyleState styleState();
+    void setStyleState(StyleState ss);
+
 protected:
 
     //virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);

@@ -645,7 +645,6 @@ void CSection::drawScrollbar(QPainter *p)
         int scrolleroffsety = scrolly * scrollareay / scrollymax;
 
         p->fillRect(w-10,0,10,h,QColor(128,128,128,128));
-
         p->fillRect(w-10,scrolleroffsety,10,scrollerheight,QColor(40,40,40,160));
         p->drawRect(w-10,scrolleroffsety,w-1,scrollerheight-1);
     }

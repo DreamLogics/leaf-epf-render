@@ -27,6 +27,7 @@
 #include "csection.h"
 #include "css_default.h"
 #include <QDebug>
+#include <qmath.h>
 
 using namespace CSS;
 
@@ -93,6 +94,21 @@ Property* Stylesheet::property(QString selector, QString key)
     return m_selectors[selector]->property(key);
 }
 
+void Stylesheet::setVariable(QString key, QString val)
+{
+    if (m_variables.contains(key))
+        m_variables[key] = val;
+    else
+        m_variables.insert(key,val);
+}
+
+QString Stylesheet::variable(QString key)
+{
+    if (m_variables.contains(key))
+        return m_variables[key];
+    return QString();
+}
+
 Property* Stylesheet::property(CBaseObject *obj, QString key)
 {
     Property* prop = 0;
@@ -136,6 +152,9 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
             }
         }*/
     }
+
+    if (prop && prop->isNull())
+        prop = 0;
 
     if (prop)
     {
@@ -246,7 +265,9 @@ QString Property::toString()
             v *= m_pCSS->heightScaleFactor();
 
         if (n.cap(0).indexOf(".") == -1)
-            return m_sValue.mid(0,o) + QString::number((int)(v)) + m_sValue.mid(o+n.cap(0).size());
+        {
+            return m_sValue.mid(0,o) + QString::number(qCeil(v)) + m_sValue.mid(o+n.cap(0).size());
+        }
 
         return m_sValue.mid(0,o) + QString::number(v) + m_sValue.mid(o+n.cap(0).size());
 
@@ -326,6 +347,7 @@ void Stylesheet::parse(QString css)
     QRegExp outerspaces("(^ +| +$)");
 
     QRegExp propgroupfinder("([^\\{]+)\\{([^\\}]+)\\}");
+    QRegExp varfinder("\\$[a-zA-Z_-0-9]+ *= *[^;]+;");
 
     int offset = 0;
 
@@ -515,6 +537,20 @@ void Stylesheet::parse(QString css)
                         prop = new Property(propvalue,this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
+                }
+                else if (propkey == "border")
+                {
+                    prop = new Property(propvalue,this,scale,false);
+                    s->setProperty("border-top",prop);
+
+                    prop = new Property(propvalue,this,scale,false);
+                    s->setProperty("border-right",prop);
+
+                    prop = new Property(propvalue,this,scale,false);
+                    s->setProperty("border-bottom",prop);
+
+                    prop = new Property(propvalue,this,scale,false);
+                    s->setProperty("border-left",prop);
                 }
                 else
                 {

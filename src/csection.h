@@ -170,6 +170,10 @@ private:
     QMutex m_mRectMutex;
     QMutex m_mScrollMutex;
     QMutex m_mTransitionFxMutex;
+    QMutex m_mScrollStyleMutex;
+
+    QColor m_qcScrollbarColor;
+    QColor m_qcScrollerColor;
 
     TransitionFx m_iTransitionFx;
 

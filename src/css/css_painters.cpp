@@ -7,14 +7,52 @@
 #include <QImage>
 #include <QDebug>
 #include <QLinearGradient>
+#include <qmath.h>
+#include <QRadialGradient>
 
 namespace CSS
 {
 
 
-void paintBorder(QPainter* pPainter, QRectF qrBorderRect, double dWidth, QString strColor, QString strStyle)
+void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordertop, CSS::Property* borderbottom, CSS::Property* borderleft, CSS::Property* borderright)
 {
+    QString borderstyle;
+    QRectF r;
+    QRegExp borderreg("([0-9]+)[^ ]* +([a-z]+) +(#[0-9a-fA-F]{3,6})");
 
+    if (!bordertop->isNull() && borderreg.indexIn(bordertop->toString()) != -1)
+    {
+        borderstyle = borderreg.cap(2);
+        r.setHeight(borderreg.cap(1).toInt());
+        r.setWidth(qrBorderRect.width());
+        pPainter->fillRect(r,QColor(borderreg.cap(3)));
+    }
+
+    if (!borderbottom->isNull() && borderreg.indexIn(borderbottom->toString()) != -1)
+    {
+        borderstyle = borderreg.cap(2);
+        r.setHeight(borderreg.cap(1).toInt());
+        r.setWidth(qrBorderRect.width());
+        r.moveBottom(qrBorderRect.height());
+        pPainter->fillRect(r,QColor(borderreg.cap(3)));
+    }
+
+    if (!borderleft->isNull() && borderreg.indexIn(borderleft->toString()) != -1)
+    {
+        borderstyle = borderreg.cap(2);
+        r.setWidth(borderreg.cap(1).toInt());
+        r.setHeight(qrBorderRect.height());
+        pPainter->fillRect(r,QColor(borderreg.cap(3)));
+    }
+
+    if (!borderright->isNull() && borderreg.indexIn(borderright->toString()) != -1)
+    {
+        borderstyle = borderreg.cap(2);
+        r.setWidth(borderreg.cap(1).toInt());
+        r.setHeight(qrBorderRect.height());
+        r.moveRight(qrBorderRect.width());
+        pPainter->fillRect(r,QColor(borderreg.cap(3)));
+    }
 }
 
 void paintBackgroundColor(QPainter* pPainter, QRectF qrBgRect, QString strColor)
@@ -274,14 +312,7 @@ void paintBorder(QPainter* pPainter, CBaseObject* pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    if (!css->property(pObj,"border")->isNull())
-    {
-        QRegExp cov("([0-9]+)[a-zA-Z ]+([a-zA-Z]+) +(#[0-9a-fA-F]{3,6})");
-        if (cov.indexIn(css->property(pObj,"border")->toString()) != -1)
-        {
-            paintBorder(pPainter,r,cov.cap(1).toDouble(),cov.cap(2),cov.cap(3));
-        }
-    }
+    paintBorder(pPainter,r,css->property(pObj,"border-top"),css->property(pObj,"border-bottom"),css->property(pObj,"border-left"),css->property(pObj,"border-right"));
 }
 
 void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj)
@@ -325,18 +356,82 @@ void paintBackgroundGradient(QPainter *pPainter, CBaseObject *pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    CSS::Property* bggrad = css->property(pObj,"background-gradient");
+    paintBackgroundGradient(pPainter, r, css->property(pObj,"background-gradient"),css->property(pObj,"background-gradient-type"),css->property(pObj,"background-gradient-spread"),css->property(pObj,"background-gradient-angle"),css->property(pObj,"background-gradient-center"),css->property(pObj,"background-gradient-focal"));
+}
+
+void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property* bggrad, CSS::Property* gradtypeprop, CSS::Property* gradspreadprop, CSS::Property* anglegrad, CSS::Property* gradcenter, CSS::Property* gradfocal)
+{
+    //CSS::Stylesheet* css = pObj->document()->stylesheet();
 
     if (!bggrad->isNull())
     {
         QRegExp gradpointreg("\\( *([0-9\\.]+) *, *(#[0-9a-fA-F]{3,6}) *, *([0-9\\.]+) *\\)");
-        QString gradtype = css->property(pObj,"background-gradient")->toString();
+        QString gradtype = gradtypeprop->toString();
+        QString gradspread = gradspreadprop->toString();
         int offset=0;
         QString propval = bggrad->toString();
 
+        int degree = anglegrad->toInt();
+        int radius = degree;
+        if (degree < -360 || degree > 360)
+            degree = 0;
+        if (degree < 0)
+            degree = 360 + degree;
+        int part = degree / 45;
+        degree = degree % 45;
+        double radian = degree * M_PI / 180;
+        int x1,x2;
+        int y1,y2;
+
         if (gradtype == "radial")
         {
+            QRadialGradient rgrad;
+            while (gradpointreg.indexIn(propval,offset) != -1)
+            {
+                QColor c(gradpointreg.cap(2));
+                c.setAlphaF(gradpointreg.cap(3).toDouble());
+                rgrad.setColorAt(gradpointreg.cap(1).toDouble(),c);
+                offset += gradpointreg.cap(0).size();
+            }
 
+            QRegExp xyreg("([0-9\\.]+) +([0-9\\.]+)");
+            double centerx,centery;
+            double focalx,focaly;
+
+            if (xyreg.indexIn(gradcenter->toString()) != -1)
+            {
+                centerx = r.width() * xyreg.cap(1).toDouble();
+                centery = r.height() * xyreg.cap(2).toDouble();
+            }
+            else
+            {
+                centerx = r.width() / 2;
+                centery = r.height() / 2;
+            }
+            if (xyreg.indexIn(gradfocal->toString()) != -1)
+            {
+                focalx = r.width() * xyreg.cap(1).toDouble();
+                focaly = r.height() * xyreg.cap(2).toDouble();
+            }
+            else
+            {
+                focalx = r.width() / 2;
+                focaly = r.height() / 2;
+            }
+
+            if (radius == 0)
+                radius = 360;
+
+            if (gradspread == "repeat")
+                rgrad.setSpread(QGradient::RepeatSpread);
+            else if (gradspread == "reflect")
+                rgrad.setSpread(QGradient::ReflectSpread);
+
+            rgrad.setCenter(centerx,centery);
+            rgrad.setFocalPoint(focalx,focaly);
+            rgrad.setRadius(radius);
+
+            pPainter->fillRect(r,rgrad);
         }
         else
         {
@@ -348,8 +443,79 @@ void paintBackgroundGradient(QPainter *pPainter, CBaseObject *pObj)
                 lgrad.setColorAt(gradpointreg.cap(1).toDouble(),c);
                 offset += gradpointreg.cap(0).size();
             }
-            lgrad.setStart(r.width()/2,0);
-            lgrad.setFinalStop(r.width()/2,r.height());
+
+            x1 = x2 = r.width()/2;
+            y1 = 0;
+            y2 = r.height();
+
+            if (!anglegrad->isNull())
+            {
+                double delta = qTan(radian);
+
+                switch (part)
+                {
+                case 1:
+                    delta *= r.width()/2;
+                    x1 = r.width();
+                    x2 = 0;
+                    y1 += delta;
+                    y2 -= delta;
+                    break;
+                case 2:
+                    delta *= r.width()/2;
+                    x1 = r.width();
+                    x2 = 0;
+                    y1 = r.height()/2 + delta;
+                    y2 = r.height()/2 - delta;
+                    break;
+                case 3:
+                    delta *= r.height()/2;
+                    y1 = y2;
+                    y2 = 0;
+                    x1 = r.width() - delta;
+                    x2 = delta;
+                    break;
+                case 4:
+                    delta *= r.height()/2;
+                    y1 = y2;
+                    y2 = 0;
+                    x1 = r.width()/2 - delta;
+                    x2 = r.width()/2 + delta;
+                    break;
+                case 5:
+                    delta *= r.width()/2;
+                    x1 = 0;
+                    x2 = r.width();
+                    y1 = r.height() - delta;
+                    y2 = delta;
+                    break;
+                case 6:
+                    delta *=  r.width()/2 + r.height()/2;
+                    x1 = 0;
+                    x2 = r.width();
+                    y1 = r.height()/2 - delta;
+                    y2 = r.height()/2 + delta;
+                    break;
+                case 7:
+                    delta *=  r.height()/2;
+                    x1 = r.width()/2 - delta;
+                    x2 = r.width()/2 + delta;
+                    break;
+                default:
+                    delta *=  r.height()/2;
+                    x1 += delta;
+                    x2 -= delta;
+                    break;
+                }
+            }
+
+            if (gradspread == "repeat")
+                lgrad.setSpread(QGradient::RepeatSpread);
+            else if (gradspread == "reflect")
+                lgrad.setSpread(QGradient::ReflectSpread);
+
+            lgrad.setStart(x1,y1);
+            lgrad.setFinalStop(x2,y2);
             pPainter->fillRect(r,lgrad);
         }
 
