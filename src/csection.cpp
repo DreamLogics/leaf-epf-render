@@ -388,7 +388,7 @@ void CSection::render(QPainter *p,QRectF region)
     //qDebug() << id() << "section render" << relreg;
 
     //TODO load from css
-    p->fillRect(absreg,QColor("white"));
+    //p->fillRect(absreg,QColor("white"));
 
     for (int i=0;i<layerCount();i++)
     {
@@ -489,7 +489,7 @@ CBaseObject* CSection::objectOnPos(int x, int y)
 }
 
 void CSection::mouseDoubleClickEvent ( int x, int y )
-{
+{   
     x += scrollX();
     y += scrollY();
 
@@ -771,4 +771,9 @@ void CSection::releaseControl(CBaseObject *obj)
 {
     if (obj == m_pControlObj)
         m_pControlObj = 0;
+}
+
+void CSection::onEPFEvent(EPFEvent *ev)
+{
+
 }

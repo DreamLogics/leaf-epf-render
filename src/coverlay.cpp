@@ -43,28 +43,17 @@ void COverlay::setVisibility(bool b)
     m_bVisible = b;
 }
 
-void COverlay::layout(int height, int width)
+void COverlay::onEPFEvent(EPFEvent *ev)
 {
-    viewportItem()->setSize(height,width);
-    CSS::Stylesheet* css = document()->stylesheet();
-
-    int i,n;
-    CLayer* l;
-    CBaseObject* obj;
-    for (i=0;i<layerCount();i++) //layout all objects which are relative to the document and set their position to fixed
+    if (ev->event() == "makeActive")
     {
-        l = layer(i);
-        obj=0;
-        for (n=0;n<l->objectCount();n++)
-        {
-            obj = l->object(n);
-            //pos = css->property(obj,"position")->toString();
-            if (dynamic_cast<CLayer*>(obj->parent()))
-            {
-                css->property(obj,"position")->setValue("fixed");
-                obj->layout(QRectF(0,0,width,height));
-            }
-        }
+        document()->setActiveOverlay(id());
     }
-
+    else if (ev->event() == "setVisible")
+    {
+        if (ev->parameter(0) == "true" || ev->parameter(0) == "1")
+            setVisibility(true);
+        else
+            setVisibility(false);
+    }
 }

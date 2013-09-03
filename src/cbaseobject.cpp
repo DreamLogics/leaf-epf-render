@@ -159,6 +159,8 @@ void CBaseObject::layout(QRectF relrect)
         newrect.moveTop(relrect.top() + css->property(this,"top")->toInt());
         newrect.moveLeft(relrect.left() + css->property(this,"left")->toInt());
 
+        //qDebug() << "CBaseObject::layout" << newrect << "#"+section()->id()+"::"+id() << css->property(this,"top")->toInt();
+
         //m_rRect.setHeight(css->property(this,"height")->toInt());
         //m_rRect.setWidth(css->property(this,"width")->toInt());
 
@@ -225,6 +227,8 @@ void CBaseObject::layout(QRectF relrect)
 
     m_FPMutex.unlock();
 
+    //qDebug() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;
+
     QObjectList clist = children();
     CBaseObject* cobj;
     QRectF relr = m_rRect;
@@ -236,6 +240,7 @@ void CBaseObject::layout(QRectF relrect)
         if (cobj)
         {
             pos = css->property(cobj,"position")->toString();
+            //qDebug() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
             if (pos == "absolute")
                 cobj->layout(m_rRect);

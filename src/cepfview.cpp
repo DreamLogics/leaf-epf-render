@@ -24,6 +24,7 @@
 #include "cdocument.h"
 //#include "csectionview.h"
 #include "csection.h"
+#include "coverlay.h"
 #include "clayer.h"
 #include "cbaseobject.h"
 #include <QGraphicsScene>
@@ -45,6 +46,7 @@ CEPFView::CEPFView()
     m_iPreviousSection = -1;
     m_dTransition = 0.0;
     m_pResizeTimer = new QTimer();
+    m_pActiveOverlay = 0;
 
     m_pResizeTimer->setInterval(1000);
 
@@ -120,6 +122,7 @@ void CEPFView::setDocument(CDocument *doc)
     connect(doc,SIGNAL(_updateRenderView()),this,SLOT(update()));
     connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
     connect(this,SIGNAL(clearBuffers()),doc,SLOT(clearBuffers()));
+    connect(doc,SIGNAL(_setActiveOverlay(QString)),this,SLOT(setActiveOverlay(QString)));
 
     emit loadDocument(height(),width(),first);
 }
@@ -233,6 +236,46 @@ void CEPFView::tocSection()
     if (toci >= 0 < toci < m_pDocument->sectionCount())
         setSection(toci);
 }
+
+void CEPFView::setActiveOverlay(QString id)
+{
+    if (id == "")
+    {
+        if (m_pActiveOverlay)
+        {
+            disconnect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),0,0);
+            disconnect(this,SIGNAL(mouseMoveEventOverlay(int,int)),0,0);
+            disconnect(this,SIGNAL(mousePressEventOverlay(int,int)),0,0);
+            disconnect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),0,0);
+        }
+        m_pActiveOverlay = 0;
+    }
+
+
+    COverlay* o = m_pDocument->overlayByID(id);
+    if (o)
+    {
+        if (m_pActiveOverlay)
+        {
+            disconnect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),0,0);
+            disconnect(this,SIGNAL(mouseMoveEventOverlay(int,int)),0,0);
+            disconnect(this,SIGNAL(mousePressEventOverlay(int,int)),0,0);
+            disconnect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),0,0);
+        }
+        m_pActiveOverlay = o;
+
+        connect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),o,SLOT(mouseDoubleClickEvent(int,int)));
+        connect(this,SIGNAL(mouseMoveEventOverlay(int,int)),o,SLOT(mouseMoveEvent(int,int)));
+        connect(this,SIGNAL(mousePressEventOverlay(int,int)),o,SLOT(mousePressEvent(int,int)));
+        connect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),o,SLOT(mouseReleaseEvent(int,int)));
+    }
+}
+
+COverlay* CEPFView::activeOverlay()
+{
+    return m_pActiveOverlay;
+}
+
 /*
 void CEPFView::drawForeground(QPainter *p, const QRectF &rect)
 {
@@ -435,6 +478,15 @@ void CEPFView::paintEvent(QPaintEvent *ev)
             ny = sy;
         }*/
 
+        //overlays
+        p.resetTransform();
+        COverlay* overlay;
+        for (int oi=0;oi<m_pDocument->overlayCount();oi++)
+        {
+            overlay = m_pDocument->overlay(oi);
+            if (overlay->isVisible())
+                overlay->render(&p,QRectF(0,0,width(),height()));
+        }
 
 
         //s->render(&p,QRectF(nx,ny,width(),height()));
@@ -454,7 +506,10 @@ void CEPFView::mousePressEvent(QMouseEvent *ev)
     int x,y;
     x = ev->x();
     y = ev->y();
-    emit mousePressEvent(x,y);
+    if (m_pActiveOverlay)
+        emit mousePressEventOverlay(x,y);
+    else
+        emit mousePressEvent(x,y);
 }
 
 void CEPFView::mouseReleaseEvent(QMouseEvent *ev)
@@ -464,7 +519,10 @@ void CEPFView::mouseReleaseEvent(QMouseEvent *ev)
     int x,y;
     x = ev->x();
     y = ev->y();
-    emit mouseReleaseEvent(x,y);
+    if (m_pActiveOverlay)
+        emit mouseReleaseEventOverlay(x,y);
+    else
+        emit mouseReleaseEvent(x,y);
 }
 
 void CEPFView::mouseMoveEvent(QMouseEvent *ev)
@@ -474,7 +532,10 @@ void CEPFView::mouseMoveEvent(QMouseEvent *ev)
     int x,y;
     x = ev->x();
     y = ev->y();
-    emit mouseMoveEvent(x,y);
+    if (m_pActiveOverlay)
+        emit mouseMoveEventOverlay(x,y);
+    else
+        emit mouseMoveEvent(x,y);
 }
 
 void CEPFView::mouseDoubleClickEvent(QMouseEvent *ev)
@@ -484,7 +545,10 @@ void CEPFView::mouseDoubleClickEvent(QMouseEvent *ev)
     int x,y;
     x = ev->x();
     y = ev->y();
-    emit mouseDoubleClickEvent(x,y);
+    if (m_pActiveOverlay)
+        emit mouseDoubleClickEventOverlay(x,y);
+    else
+        emit mouseDoubleClickEvent(x,y);
 }
 
 void CEPFView::transitionAnim()

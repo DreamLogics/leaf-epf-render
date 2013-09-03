@@ -33,13 +33,13 @@ public:
     COverlay(QString id,CDocument* doc,bool visible);
     virtual ~COverlay();
 
-    virtual void layout(int height, int width);
-
 
 public slots:
 
     virtual bool isVisible();
     virtual void setVisibility(bool b);
+
+    virtual void onEPFEvent(EPFEvent *ev);
 
 private:
 

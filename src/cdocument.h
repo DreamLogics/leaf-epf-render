@@ -69,8 +69,8 @@ public:
     CSS::Stylesheet* stylesheet(bool hold_control=false);
     void releaseStylesheet();
 
-    void setActiveOverlay(COverlay* overlay);
-    COverlay* activeOverlay();
+    //void setActiveOverlay(COverlay* overlay);
+    //COverlay* activeOverlay();
 
     QString property(QString key);
     void addProperty(QString key, QString value);
@@ -116,6 +116,7 @@ signals:
     void _updateRenderView();
 
     void setSection(int index);
+    void _setActiveOverlay(QString id);
 
 public slots:
 
@@ -137,6 +138,7 @@ public slots:
     void saveBuffers();
     void clearBuffers();
 
+
 private:
     QList<CSection*> m_Sections;
     QList<COverlay*> m_Overlays;
@@ -148,7 +150,7 @@ private:
     QString m_sLanguage;
     QMap<QString,CAnimation*> m_Animations;
     CEPFView* m_pRenderView;
-    COverlay* m_pActiveOverlay;
+    //COverlay* m_pActiveOverlay;
     CSS::Stylesheet* m_pStylesheet;
 
     bool m_bShouldStopLayout;

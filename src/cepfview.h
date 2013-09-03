@@ -35,6 +35,7 @@ class CDocument;
 //class QGraphicsScene;
 //class CSectionView;
 class QTimer;
+class COverlay;
 
 class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QGLWidget
 {
@@ -47,6 +48,8 @@ public:
     int currentSection();
 
     void clearDocBuffers();
+
+    COverlay* activeOverlay();
 
 public slots:
 
@@ -63,6 +66,8 @@ public slots:
 
     void resizeDone();
 
+    void setActiveOverlay(QString id);
+
 signals:
 
     void loadDocument(int height, int width, int currentsection);
@@ -78,6 +83,12 @@ signals:
     void mousePressEvent( int x, int y );
     void mouseReleaseEvent( int x, int y );
     void mouseMoveEvent( int x, int y );
+
+    void mouseDoubleClickEventOverlay ( int x, int y );
+    void mousePressEventOverlay( int x, int y );
+    void mouseReleaseEventOverlay( int x, int y );
+    void mouseMoveEventOverlay( int x, int y );
+
 
     void clearBuffers();
 
@@ -120,6 +131,8 @@ private:
     QTimer* m_pResizeTimer;
 
     bool m_bInResize;
+
+    COverlay* m_pActiveOverlay;
 
 
     //QGraphicsScene* m_pDocScene;

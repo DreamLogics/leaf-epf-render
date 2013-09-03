@@ -39,7 +39,7 @@ CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(plat
 {
     m_pCurrentLayout = 0;
     m_pRenderView = 0;
-    m_pActiveOverlay = 0;
+    //m_pActiveOverlay = 0;
     m_pStylesheet = 0;
     m_bShouldStopLayout = false;
 }
@@ -254,6 +254,15 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
         s = section(i);
         s->layout(height,width);
     }
+
+    COverlay* o;
+    for (i=0;i<overlayCount();i++)
+    {
+        if (shouldStopLayout())
+            return;
+        o = overlay(i);
+        o->layout(height,width);
+    }
 }
 
 void CDocument::addLayout(CLayout *layout)
@@ -436,7 +445,7 @@ CEPFView* CDocument::renderview()
 {
     return m_pRenderView;
 }
-
+/*
 void CDocument::setActiveOverlay(COverlay *overlay)
 {
     m_pActiveOverlay = overlay;
@@ -446,7 +455,7 @@ COverlay* CDocument::activeOverlay()
 {
     return m_pActiveOverlay;
 }
-
+*/
 QObjectList CDocument::sections()
 {
     QObjectList list;
@@ -489,7 +498,7 @@ QObject* CDocument::getSectionByID(QString id)
 
 void CDocument::setActiveOverlay(QString overlay_id)
 {
-    setActiveOverlay(overlayByID(overlay_id));
+    emit _setActiveOverlay(overlay_id);
 }
 
 void CDocument::load(int height, int width, int sectionid)

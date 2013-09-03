@@ -253,6 +253,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
         CSection* s;
         COverlay* o;
+        //COverlay* ao=0;
         CLayer* l;
         CBaseObject* obj;
 
@@ -268,6 +269,9 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             sectionmap.insert(overlay.attribute("id").value(),o);
 
             o->setVisibility(overlay.attribute("visible").as_bool());
+
+            //if (overlay.attribute("active").as_bool())
+            //    ao = o;
 
             for (layer = overlay.child("layer"); layer; layer = layer.next_sibling("layer"))
             {
@@ -308,6 +312,9 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
             document->addOverlay(o);
         }
+
+        //if (ao)
+        //    document->setActiveOverlay(ao);
 
 
 
@@ -407,6 +414,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     src_obj = m_objectmap[src];
                 else if (anims.contains(src))
                     src_obj = dynamic_cast<EPFComponent*>(document->animation(src));
+                else if (document->sectionByID(src))
+                    src_obj = dynamic_cast<EPFComponent*>(document->sectionByID(src));
                 else if (src == "document")
                     src_obj = document;
 
@@ -416,6 +425,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
                     dst_obj = m_objectmap[tgt];
                 else if (anims.contains(tgt))
                     dst_obj = dynamic_cast<EPFComponent*>(document->animation(tgt));
+                else if (document->sectionByID(src))
+                    dst_obj = dynamic_cast<EPFComponent*>(document->sectionByID(tgt));
                 else if (tgt == "document")
                     dst_obj = document;
 

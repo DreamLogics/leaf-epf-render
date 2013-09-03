@@ -122,7 +122,10 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
 
     prop = obj->cssOverrideProp(key);
     if (prop)
+    {
+        //qDebug() << "CSS: got override for prop:" << key << "object" <<obj->id();
         return prop;
+    }
 
     //class selectors
 
@@ -159,6 +162,7 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     if (prop)
     {
         //indirect selector, make read only
+        //qDebug() << "CSS: got class style for prop:" << key << "object" <<obj->id();
         prop->m_bReadOnly = true;
         return prop;
     }
@@ -347,10 +351,19 @@ void Stylesheet::parse(QString css)
     QRegExp outerspaces("(^ +| +$)");
 
     QRegExp propgroupfinder("([^\\{]+)\\{([^\\}]+)\\}");
-    QRegExp varfinder("\\$[a-zA-Z_-0-9]+ *= *[^;]+;");
+    QRegExp varfinder("\\$([a-zA-Z_-0-9]+) *= *([^;])+;");
 
     int offset = 0;
 
+    while (css.indexOf(varfinder,offset) != -1)
+    {
+        ss = varfinder.cap(2).replace(outerspaces,"");
+        ss.replace("\"","");
+        setVariable(varfinder.cap(1),ss);
+        offset += varfinder.cap(0).size();
+    }
+
+    offset = 0;
 
     while (css.indexOf(propgroupfinder,offset) != -1)
     {
@@ -576,6 +589,7 @@ void Stylesheet::parse(QString css)
     for (int i=0;i<m_pDocument->overlayCount();i++)
     {
         o=m_pDocument->overlay(i);
+        //qDebug() << "propagating section" << cs->id();
 
         s = selector("overlay");
 
@@ -591,7 +605,7 @@ void Stylesheet::parse(QString css)
 
         //propagate from base overlay props for overlay specific props
         s = selector("#"+o->id());
-        base = selector("overlay");
+        base = selector("section");
         baseprops = base->properties();
 
         for (int n=0;n<baseprops.size();n++)
@@ -604,6 +618,7 @@ void Stylesheet::parse(QString css)
         for (int n=0;n<o->layerCount();n++)
         {
             l=o->layer(n);
+            //qDebug() << "propagating layer" << l->id();
 
             s = selector("#"+o->id()+" layer");
 
@@ -631,14 +646,18 @@ void Stylesheet::parse(QString css)
             for (int j=0;j<l->objectCount();j++)
             {
                 obj=l->object(j);
+                //qDebug() << "propagating object" << obj->id();
 
                 // propagate the section specific object base
                 s = selector("#"+o->id()+" object");
                 base = selector("object");
                 baseprops = base->properties();
 
+                //qDebug() << "propagating obj baseprops size" << baseprops.size();
+
                 for (int n=0;n<baseprops.size();n++)
                 {
+                    //qDebug() << "#"+o->id()+" object" << baseprops[n];
                     if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
                 }
@@ -646,13 +665,13 @@ void Stylesheet::parse(QString css)
                 s = selector("#"+o->id()+"::"+obj->id());
                 oriprops = s->properties();
 
-                // also propagate from overlay > object
-                base = selector("overlay object");
+                // also propagate from section object
+                base = selector("section object");
                 baseprops = base->properties();
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]) || baseprops[n] == "position")
+                    if (s->property(baseprops[n])->isNull())
                         s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
                 }
 
@@ -662,7 +681,7 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    if ((s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n])) && baseprops[n] != "position")
+                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
                 }
 
@@ -672,7 +691,8 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    if ((s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n])) && baseprops[n] != "position")
+                    //qDebug() << "#"+o->id()+"::"+obj->id() << baseprops[n];
+                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
                 }
 
@@ -689,7 +709,7 @@ void Stylesheet::parse(QString css)
         cs=m_pDocument->section(i);
         //qDebug() << "propagating section" << cs->id();
 
-        s = selector("overlay");
+        s = selector("section");
 
         //propagate from base section props to overlay
         base = selector("section");

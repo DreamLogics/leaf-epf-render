@@ -30,6 +30,7 @@
 #include <QImage>
 #include <QGraphicsObject>
 #include <QMutex>
+#include "epfevent.h"
 
 class CDocument;
 class CLayer;
@@ -52,7 +53,7 @@ private:
     QRectF m_qrRect;
 };
 
-class CSection : public QObject
+class CSection : public QObject, public EPFComponent
 {
     Q_OBJECT
 public:
@@ -112,6 +113,8 @@ public:
 
     void takeControl(CBaseObject* obj);
     void releaseControl(CBaseObject* obj);
+
+    virtual void onEPFEvent(EPFEvent *ev);
 
 public slots:
 
