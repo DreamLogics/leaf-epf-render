@@ -45,6 +45,7 @@
 #include "object_types/caudioobject.h"
 #include "object_types/cimageobject.h"
 #include "object_types/cscriptobject.h"
+#include "object_types/clabelobject.h"
 
 CEPFDocumentReader::CEPFDocumentReader()
 {
@@ -54,6 +55,7 @@ CEPFDocumentReader::CEPFDocumentReader()
     registerObjectType("video",new CVideoObjectFactory());
     registerObjectType("audio",new CAudioObjectFactory());
     registerObjectType("scripted",new CScriptObjectFactory());
+    registerObjectType("label",new CLabelObjectFactory());
 }
 
 CEPFDocumentReader::~CEPFDocumentReader()
@@ -244,7 +246,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         }
 
 
-        QMap<QString,CSection*> sectionmap;
+
 
         pugi::xml_node sections = containerxml.child("EPF").child("sections");
         pugi::xml_node overlays = containerxml.child("EPF").child("overlays");
@@ -266,7 +268,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         {
             //section maken
             o = new COverlay(overlay.attribute("id").value(),document,false);
-            sectionmap.insert(overlay.attribute("id").value(),o);
+            m_objectmap.insert(overlay.attribute("id").value(),o);
 
             o->setVisibility(overlay.attribute("visible").as_bool());
 
@@ -324,7 +326,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         {
             //section maken
             s = new CSection(section.attribute("id").value(),document,section.attribute("hidden").as_bool(),section.attribute("x").as_int(),section.attribute("y").as_int());
-            sectionmap.insert(section.attribute("id").value(),o);
+            m_objectmap.insert(section.attribute("id").value(),o);
 
             qDebug() << "section" << s->id();
 
@@ -410,23 +412,15 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
 
                 if (m_objectmap.contains(src))
                     src_obj = m_objectmap[src];
-                else if (sectionmap.contains(src))
-                    src_obj = m_objectmap[src];
                 else if (anims.contains(src))
                     src_obj = dynamic_cast<EPFComponent*>(document->animation(src));
-                else if (document->sectionByID(src))
-                    src_obj = dynamic_cast<EPFComponent*>(document->sectionByID(src));
                 else if (src == "document")
                     src_obj = document;
 
                 if (m_objectmap.contains(tgt))
                     dst_obj = m_objectmap[tgt];
-                else if (sectionmap.contains(tgt))
-                    dst_obj = m_objectmap[tgt];
                 else if (anims.contains(tgt))
                     dst_obj = dynamic_cast<EPFComponent*>(document->animation(tgt));
-                else if (document->sectionByID(src))
-                    dst_obj = dynamic_cast<EPFComponent*>(document->sectionByID(tgt));
                 else if (tgt == "document")
                     dst_obj = document;
 

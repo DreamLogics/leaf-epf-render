@@ -57,7 +57,7 @@ private:
     QStringList m_Platforms;
     QStringList m_Modules;
     QString m_sLanguage;
-    QMap<QString,CBaseObject*> m_objectmap;
+    QMap<QString,EPFComponent*> m_objectmap;
     //QThread* m_pCreateInThread;
 };
 

@@ -42,10 +42,14 @@ public:
 
     virtual void preload();
     virtual void paint(QPainter *painter);
+    //virtual void paintBuffered(QPainter* p);
+    //virtual void buffer();
     virtual void layout(QRectF relativeTo);
     QString overflow();
 
     virtual void clearBuffers();
+
+    virtual void onEPFEvent(EPFEvent *ev);
 
 private:
 
@@ -59,8 +63,11 @@ public slots:
 private:
 
     QTextDocument* m_pTextDoc;
+    QString m_sOverrideHTML;
     QString m_sOverflow;
     int m_iRenderOffset;
+    bool m_bTextChanged;
+    QByteArray m_baSVG;
     
 };
 

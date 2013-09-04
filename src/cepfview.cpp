@@ -122,7 +122,6 @@ void CEPFView::setDocument(CDocument *doc)
     connect(doc,SIGNAL(_updateRenderView()),this,SLOT(update()));
     connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
     connect(this,SIGNAL(clearBuffers()),doc,SLOT(clearBuffers()));
-    connect(doc,SIGNAL(_setActiveOverlay(QString)),this,SLOT(setActiveOverlay(QString)));
 
     emit loadDocument(height(),width(),first);
 }
@@ -237,43 +236,52 @@ void CEPFView::tocSection()
         setSection(toci);
 }
 
-void CEPFView::setActiveOverlay(QString id)
-{
-    if (id == "")
-    {
-        if (m_pActiveOverlay)
-        {
-            disconnect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),0,0);
-            disconnect(this,SIGNAL(mouseMoveEventOverlay(int,int)),0,0);
-            disconnect(this,SIGNAL(mousePressEventOverlay(int,int)),0,0);
-            disconnect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),0,0);
-        }
-        m_pActiveOverlay = 0;
-    }
-
-
-    COverlay* o = m_pDocument->overlayByID(id);
-    if (o)
-    {
-        if (m_pActiveOverlay)
-        {
-            disconnect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),0,0);
-            disconnect(this,SIGNAL(mouseMoveEventOverlay(int,int)),0,0);
-            disconnect(this,SIGNAL(mousePressEventOverlay(int,int)),0,0);
-            disconnect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),0,0);
-        }
-        m_pActiveOverlay = o;
-
-        connect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),o,SLOT(mouseDoubleClickEvent(int,int)));
-        connect(this,SIGNAL(mouseMoveEventOverlay(int,int)),o,SLOT(mouseMoveEvent(int,int)));
-        connect(this,SIGNAL(mousePressEventOverlay(int,int)),o,SLOT(mousePressEvent(int,int)));
-        connect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),o,SLOT(mouseReleaseEvent(int,int)));
-    }
-}
-
 COverlay* CEPFView::activeOverlay()
 {
-    return m_pActiveOverlay;
+    COverlay* overlay;
+    COverlay* overlayActive=0;
+
+    for (int i=0;i<m_pDocument->overlayCount();i++)
+    {
+        overlay = m_pDocument->overlay(i);
+        if (overlay->active())
+            overlayActive = overlay;
+    }
+
+    if (overlayActive)
+    {
+        if (m_pActiveOverlay != overlayActive)
+        {
+            if (m_pActiveOverlay)
+            {
+                disconnect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),0,0);
+                disconnect(this,SIGNAL(mouseMoveEventOverlay(int,int)),0,0);
+                disconnect(this,SIGNAL(mousePressEventOverlay(int,int)),0,0);
+                disconnect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),0,0);
+            }
+
+            connect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),overlayActive,SLOT(mouseDoubleClickEvent(int,int)));
+            connect(this,SIGNAL(mouseMoveEventOverlay(int,int)),overlayActive,SLOT(mouseMoveEvent(int,int)));
+            connect(this,SIGNAL(mousePressEventOverlay(int,int)),overlayActive,SLOT(mousePressEvent(int,int)));
+            connect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),overlayActive,SLOT(mouseReleaseEvent(int,int)));
+        }
+
+        m_pActiveOverlay = overlayActive;
+
+        return overlayActive;
+    }
+
+    if (m_pActiveOverlay)
+    {
+        disconnect(this,SIGNAL(mouseDoubleClickEventOverlay(int,int)),0,0);
+        disconnect(this,SIGNAL(mouseMoveEventOverlay(int,int)),0,0);
+        disconnect(this,SIGNAL(mousePressEventOverlay(int,int)),0,0);
+        disconnect(this,SIGNAL(mouseReleaseEventOverlay(int,int)),0,0);
+    }
+
+    m_pActiveOverlay = 0;
+
+    return 0;
 }
 
 /*
@@ -506,7 +514,7 @@ void CEPFView::mousePressEvent(QMouseEvent *ev)
     int x,y;
     x = ev->x();
     y = ev->y();
-    if (m_pActiveOverlay)
+    if (activeOverlay())
         emit mousePressEventOverlay(x,y);
     else
         emit mousePressEvent(x,y);
@@ -519,7 +527,7 @@ void CEPFView::mouseReleaseEvent(QMouseEvent *ev)
     int x,y;
     x = ev->x();
     y = ev->y();
-    if (m_pActiveOverlay)
+    if (activeOverlay())
         emit mouseReleaseEventOverlay(x,y);
     else
         emit mouseReleaseEvent(x,y);
@@ -532,7 +540,7 @@ void CEPFView::mouseMoveEvent(QMouseEvent *ev)
     int x,y;
     x = ev->x();
     y = ev->y();
-    if (m_pActiveOverlay)
+    if (activeOverlay())
         emit mouseMoveEventOverlay(x,y);
     else
         emit mouseMoveEvent(x,y);
@@ -545,7 +553,7 @@ void CEPFView::mouseDoubleClickEvent(QMouseEvent *ev)
     int x,y;
     x = ev->x();
     y = ev->y();
-    if (m_pActiveOverlay)
+    if (activeOverlay())
         emit mouseDoubleClickEventOverlay(x,y);
     else
         emit mouseDoubleClickEvent(x,y);

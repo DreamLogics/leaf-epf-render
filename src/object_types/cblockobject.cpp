@@ -47,6 +47,7 @@ void CBlockObject::paint(QPainter *painter)
     CSS::paintBackgroundColor(painter,this);
     CSS::paintBackgroundGradient(painter,this);
     CSS::paintBackgroundImage(painter,this);
+    CSS::paintBorder(painter,this);
     CSS::paintColorOverlay(painter,this);
 
     /*painter->setFont(QFont("sans-serif",10));

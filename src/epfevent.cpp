@@ -26,11 +26,11 @@ void EPFEvent::setParameters(QStringList parameters)
 void EPFComponent::addConnection(EPFComponent *listener, QString event, QString function)
 {
     QMap<QString, QList<EPFConnection*> >::iterator it;
-    it = m_Connections.find(event);
     QList<EPFConnection*> list;
     EPFConnection* connection = new EPFConnection(event,listener,function);;
 
     //qDebug() << "add connection" << connection->event() << function;
+    it = m_Connections.find(connection->event());
 
     if (it == m_Connections.end())
     {
@@ -68,6 +68,7 @@ void EPFComponent::sendEvent(QString event, QStringList parameters)
     for (int i=0;i<list.size();i++)
     {
         connection = list[i];
+        //qDebug() << "connection" << connection->event() << connection->function();
         param = connection->param(parameters);
         ev = new EPFEvent(connection->function());
         ev->setParameters(param);
@@ -160,7 +161,11 @@ QStringList EPFConnection::param(QStringList event_params)
             if (m_EventParam[i] != m_FuncParam[i])
                 params[i] = m_FuncParam[i];
         }
+        else
+            params[i] = m_FuncParam[i];
     }
+
+    //qDebug() << params << m_EventParam << m_FuncParam;
 
     return params;
 }

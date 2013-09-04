@@ -39,7 +39,7 @@ CLabelObject::CLabelObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 
 void CLabelObject::preload()
 {
-    m_sText = property("text");
+
 }
 
 void CLabelObject::paint(QPainter *painter)
@@ -52,6 +52,72 @@ void CLabelObject::paint(QPainter *painter)
     CSS::paintBackgroundColor(painter,this);
     CSS::paintBackgroundImage(painter,this);
     CSS::paintColorOverlay(painter,this);
+
+    QString text;
+    QFont font;
+    CSS::Property* prop;
+
+    if (m_sText.isNull())
+    {
+        text = css->property(this,"label")->toString();
+        if (text.startsWith("\""))
+            text = text.mid(1);
+        if (text.endsWith("\""))
+            text = text.left(text.size()-1);
+    }
+    else
+        text = m_sText;
+
+    prop = css->property(this,"font-family");
+    if (!prop->isNull())
+        font.setFamily(prop->toString());
+
+    prop = css->property(this,"font-size");
+    if (!prop->isNull())
+    {
+        if (prop->toString().endsWith("px"))
+            font.setPixelSize(prop->toInt());
+        else
+            font.setPointSize(prop->toInt());
+    }
+
+    prop = css->property(this,"font-weight");
+    if (!prop->isNull())
+    {
+        if (prop->toString() == "bold")
+            font.setBold(true);
+    }
+
+    QColor c(255,255,255);
+
+    prop = css->property(this,"color");
+    if (!prop->isNull())
+        c.setNamedColor(prop->toString());
+
+    int flags = Qt::TextWordWrap;
+
+    prop=css->property(this,"text-align");
+    if (prop->toString() == "right")
+        flags |= Qt::AlignRight;
+    else if (prop->toString() == "center")
+        flags |= Qt::AlignHCenter;
+    else
+        flags |= Qt::AlignLeft;
+
+    prop=css->property(this,"v-align");
+    if (prop->toString() == "bottom")
+        flags |= Qt::AlignBottom;
+    else if (prop->toString() == "center")
+        flags |= Qt::AlignVCenter;
+    else
+        flags |= Qt::AlignTop;
+
+
+    painter->setFont(font);
+    painter->setPen(c);
+
+    painter->drawText(0,0,r.width(),r.height(),flags,text);
+
 
     /*painter->setFont(QFont("sans-serif",10));
     painter->setPen(QColor("red"));

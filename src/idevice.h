@@ -32,6 +32,9 @@ class IDevice
 public:
     ~IDevice() {}
 
+    virtual int addApplicationFont(QByteArray*) = 0;
+    virtual void removeApplicationFont(int) = 0;
+
     virtual int addAudioSource(QByteArray*) = 0;
     virtual void playAudio(int source) = 0;
     virtual void stopAudio(int source) = 0;

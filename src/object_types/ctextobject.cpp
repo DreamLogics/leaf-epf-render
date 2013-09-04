@@ -35,6 +35,9 @@
 #include <QTextDocumentFragment>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QSvgGenerator>
+#include <QSvgRenderer>
+#include <QDataStream>
 
 CBaseObject* CTextObjectFactory::create(QString id, CLayer *layer)
 {
@@ -46,6 +49,7 @@ CTextObject::CTextObject(QString id, CLayer* layer) :
 {
     m_pTextDoc = 0;
     m_iRenderOffset = 0;
+    m_bTextChanged = true;
 }
 
 void CTextObject::preload()
@@ -117,62 +121,73 @@ void CTextObject::layout(QRectF relrect)
         return;
     }
 
-    if (oldrect.size() == boundingRect().size())
+    if (oldrect.size() == boundingRect().size() && !m_bTextChanged)
         return;
 
+    m_bTextChanged = false;
     //QFont font("Sans",14);
     //m_pTextDoc->setDefaultFont(font);
 
     QString html;
 
-    //html maken
-    QString src = document()->stylesheet()->property(this,"text-source")->toString();//property("src");
-    src = src.replace(QRegExp("[\"']+"),"");
-
-    if (src != "") //als we geen src hebben nemen we de overflow
+    if (!m_sOverrideHTML.isNull())
     {
-        QByteArray htmldata = document()->resource(src);
-        QString body = QString::fromUtf8(htmldata.constData(),htmldata.size());;
-        QRegExp bodyfinder("< *(body|BODY)[^>]*>");
-        QRegExp bodyendfinder("< */ *(body|BODY)[^>]*>");
-
-        int bodystart = body.indexOf(bodyfinder);
-        if (bodystart != -1)
-            body = body.mid(bodystart + bodyfinder.cap(0).size());
-
-        int bodyend = body.indexOf(bodyendfinder);
-        if (bodyend != -1)
-            body = body.left(bodyend);
-
-
         html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
         html += "</head><body id=\""+id()+"\">";
-        html += body;
+        html += m_sOverrideHTML;
         html += "</body></html>";
-
-        //qDebug() << html;
     }
     else
     {
-        //overflow van de parent nemen
-        QString parent = property("parent");
-        if (parent != "")
+        //html maken
+        QString src = document()->stylesheet()->property(this,"text-source")->toString();//property("src");
+        src = src.replace(QRegExp("[\"']+"),"");
+
+        if (src != "") //als we geen src hebben nemen we de overflow
         {
-            CTextObject* tpar = dynamic_cast<CTextObject*>(section()->objectByID(parent));
-            if (tpar)
+            QByteArray htmldata = document()->resource(src);
+            QString body = QString::fromUtf8(htmldata.constData(),htmldata.size());;
+            QRegExp bodyfinder("< *(body|BODY)[^>]*>");
+            QRegExp bodyendfinder("< */ *(body|BODY)[^>]*>");
+
+            int bodystart = body.indexOf(bodyfinder);
+            if (bodystart != -1)
+                body = body.mid(bodystart + bodyfinder.cap(0).size());
+
+            int bodyend = body.indexOf(bodyendfinder);
+            if (bodyend != -1)
+                body = body.left(bodyend);
+
+
+            html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
+            html += "</head><body id=\""+id()+"\">";
+            html += body;
+            html += "</body></html>";
+
+            //qDebug() << html;
+        }
+        else
+        {
+            //overflow van de parent nemen
+            QString parent = property("parent");
+            if (parent != "")
             {
-                html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
-                html += "</head><body id=\""+id()+"\">";
-                html += tpar->overflow();
-                html += "</body></html>";
-                //qDebug() << html;
+                CTextObject* tpar = dynamic_cast<CTextObject*>(section()->objectByID(parent));
+                if (tpar)
+                {
+                    html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
+                    html += "</head><body id=\""+id()+"\">";
+                    html += tpar->overflow();
+                    html += "</body></html>";
+                    //qDebug() << html;
+                }
+                else
+                    return;
             }
             else
                 return;
-        }
-        else
-            return;
 
+        }
     }
 
     QRectF r = boundingRect();
@@ -244,15 +259,19 @@ void CTextObject::layout(QRectF relrect)
         else
         {
             //check v-align style
-            QString valign = document()->stylesheet()->property(this,"v-align")->toString();
-            if (valign != "top")
+            CSS::Property* vap = document()->stylesheet()->property(this,"v-align");
+            if (!vap->isNull())
             {
-                m_pTextDoc->setTextWidth(width);
-                int dh = height - m_pTextDoc->size().height();
-                if (valign == "center")
-                    m_iRenderOffset = dh/2;
-                else
-                    m_iRenderOffset = dh;
+                QString valign = vap->toString();
+                if (valign != "top")
+                {
+                    m_pTextDoc->setTextWidth(width);
+                    int dh = height - m_pTextDoc->size().height();
+                    if (valign == "center")
+                        m_iRenderOffset = dh/2;
+                    else
+                        m_iRenderOffset = dh;
+                }
             }
 
             m_sOverflow = "";
@@ -430,3 +449,34 @@ void CTextObject::clearBuffers()
     delete m_pTextDoc;
     m_pTextDoc = new QTextDocument();
 }
+
+void CTextObject::onEPFEvent(EPFEvent *ev)
+{
+    CBaseObject::onEPFEvent(ev);
+    if (ev->event() == "setText")
+    {
+        //qDebug() << "set text shizzle" << ev->parameter(0);
+        m_sOverrideHTML = "<p>" + ev->parameter(0) + "</p>";
+        m_bTextChanged = true;
+        section()->layout();
+        //document()->updateRenderView();
+    }
+}
+/*
+void CTextObject::buffer()
+{
+    QDataStream ds(&m_baSVG,QIODevice::WriteOnly);
+    QSvgGenerator svg;
+    svg.setOutputDevice(ds.device());
+    QPainter p;
+    p.begin(&svg);
+    paint(&p);
+    p.end();
+}
+
+void CTextObject::paintBuffered(QPainter *p)
+{
+    QSvgRenderer svg(m_baSVG);
+    svg.render(p);
+}
+*/

@@ -116,7 +116,7 @@ signals:
     void _updateRenderView();
 
     void setSection(int index);
-    void _setActiveOverlay(QString id);
+    //void _setActiveOverlay(QString id);
 
 public slots:
 
@@ -130,7 +130,7 @@ public slots:
 
     void playAnimation(QString animation, bool loop);
 
-    void setActiveOverlay(QString overlay_id);
+    //void setActiveOverlay(QString overlay_id);
 
     void load(int height, int width, int sectionid);
     void layout(int height, int width, int section, bool bCurrentSectionOnly);
@@ -151,6 +151,8 @@ private:
     QMap<QString,CAnimation*> m_Animations;
     CEPFView* m_pRenderView;
     //COverlay* m_pActiveOverlay;
+    //QString m_sActiveOverlay;
+    //QList<COverlay*> m_OverlayStack;
     CSS::Stylesheet* m_pStylesheet;
 
     bool m_bShouldStopLayout;

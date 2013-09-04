@@ -37,13 +37,16 @@ public:
 public slots:
 
     virtual bool isVisible();
-    virtual void setVisibility(bool b);
+    virtual void setVisibility(bool bVisible);
+    void setActive(bool bActive);
+    bool active();
 
     virtual void onEPFEvent(EPFEvent *ev);
 
 private:
 
     bool m_bVisible;
+    bool m_bActive;
 
 };
 

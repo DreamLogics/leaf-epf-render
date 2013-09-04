@@ -66,8 +66,6 @@ public slots:
 
     void resizeDone();
 
-    void setActiveOverlay(QString id);
-
 signals:
 
     void loadDocument(int height, int width, int currentsection);

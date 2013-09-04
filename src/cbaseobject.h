@@ -71,7 +71,7 @@ public:
     //void setPositionOffset(int dx, int dy);
     //void sheduleRepaint();
     virtual void paintBuffered(QPainter* p);
-    void buffer();
+    virtual void buffer();
 
     virtual void layout(QRectF relativeTo);
     /*virtual CBaseObject* relative();
@@ -150,6 +150,7 @@ public slots:
 
     virtual QStringList styleClasses() const;
     virtual void addStyleClass(QString classname);
+    virtual void toggleStyleClass(QString classname);
     virtual void removeStyleClass(QString classname);
 
     virtual void setBoundingRect(const QRectF&);
@@ -211,8 +212,6 @@ private:
     QMutex m_RenderMutex;
     QMutex m_FPMutex;
     QMutex m_RMMutex;
-
-
 
 
     bool m_bFixedParent;

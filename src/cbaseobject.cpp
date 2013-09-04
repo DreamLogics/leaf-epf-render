@@ -42,7 +42,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_bEnabled = false;
     m_iRotation = 0;
     m_bFixedParent = false;
-    //m_bNeedsRedraw = true;
+    m_bNeedsRedraw = true;
     //m_pBuffer = 0;
     m_bChanged = false;
 
@@ -215,7 +215,12 @@ void CBaseObject::layout(QRectF relrect)
             //m_bNeedsRedraw = true;
             buffer();
         }
+        else if (m_bNeedsRedraw)
+            buffer();
     }
+    else if (m_bNeedsRedraw)
+        buffer();
+
     m_FPMutex.lock();
 
     CBaseObject* obj = dynamic_cast<CBaseObject*>(parent());
@@ -468,16 +473,27 @@ void CBaseObject::addStyleClass(QString classname)
 {
     if (m_StyleClasses.contains(classname))
         return;
-    //FIXME!
-    if (document()->renderview())
-        section()->layout(document()->renderview()->height(),document()->renderview()->width());
+
     m_StyleClasses.append(classname);
+    m_bNeedsRedraw = true;
+    section()->layout();
+}
+void CBaseObject::toggleStyleClass(QString classname)
+{
+    if (m_StyleClasses.contains(classname))
+    {
+        removeStyleClass(classname);
+        return;
+    }
+    m_StyleClasses.append(classname);
+    m_bNeedsRedraw = true;
+    section()->layout();
 }
 void CBaseObject::removeStyleClass(QString classname)
 {
     m_StyleClasses.removeAll(classname);
-    if (document()->renderview())
-        section()->layout(document()->renderview()->height(),document()->renderview()->width());
+    m_bNeedsRedraw = true;
+    section()->layout();
 }
 
 CSection* CBaseObject::section()
@@ -501,7 +517,7 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
 {
     if (ev->event() == "addStyleClass")
     {
-        qDebug() << "addstyleclass" << ev->parameter(0);
+        //qDebug() << "addstyleclass" << ev->parameter(0);
         if (ev->parameter(0) != "")
             addStyleClass(ev->parameter(0));
     }
@@ -509,6 +525,12 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
     {
         if (ev->parameter(0) != "")
             removeStyleClass(ev->parameter(0));
+    }
+    else if (ev->event() == "toggleStyleClass")
+    {
+        //qDebug() << "toggleStyleClass" << ev->parameter(0);
+        if (ev->parameter(0) != "")
+            toggleStyleClass(ev->parameter(0));
     }
 }
 /*
@@ -602,6 +624,7 @@ void CBaseObject::paintBuffered(QPainter *p)
 void CBaseObject::buffer()
 {
     m_RenderMutex.lock();
+    m_bNeedsRedraw = false;
     /*if (m_pBuffer)
         delete m_pBuffer;*/
 

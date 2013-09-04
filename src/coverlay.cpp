@@ -22,6 +22,7 @@
 
 #include "coverlay.h"
 #include "css/css_style.h"
+#include <QDebug>
 
 COverlay::COverlay(QString id,CDocument* doc,bool visible) : CSection(id,doc,true), m_bVisible(visible)
 {
@@ -41,13 +42,18 @@ bool COverlay::isVisible()
 void COverlay::setVisibility(bool b)
 {
     m_bVisible = b;
+    document()->updateRenderView();
 }
 
 void COverlay::onEPFEvent(EPFEvent *ev)
 {
-    if (ev->event() == "makeActive")
+    qDebug() << "overlay event" << ev->event() << ev->parameter(0);
+    if (ev->event() == "setActive")
     {
-        document()->setActiveOverlay(id());
+        if (ev->parameter(0) == "true" || ev->parameter(0) == "1")
+            setActive(true);
+        else
+            setActive(false);
     }
     else if (ev->event() == "setVisible")
     {
@@ -56,4 +62,14 @@ void COverlay::onEPFEvent(EPFEvent *ev)
         else
             setVisibility(false);
     }
+}
+
+void COverlay::setActive(bool bActive)
+{
+    m_bActive = bActive;
+}
+
+bool COverlay::active()
+{
+    return m_bActive;
 }

@@ -55,7 +55,7 @@ CDocument::~CDocument()
     for (int i=0;i<m_Layouts.size();i++)
         delete m_Layouts[i];
 
-    QFontDatabase::removeAllApplicationFonts();
+    //QFontDatabase::removeAllApplicationFonts();
 
 }
 
@@ -449,6 +449,7 @@ CEPFView* CDocument::renderview()
 void CDocument::setActiveOverlay(COverlay *overlay)
 {
     m_pActiveOverlay = overlay;
+    emit _setActiveOverlay(overlay->id());
 }
 
 COverlay* CDocument::activeOverlay()
@@ -495,15 +496,16 @@ QObject* CDocument::getSectionByID(QString id)
 {
     return (QObject*)(sectionByID(id));
 }
-
+/*
 void CDocument::setActiveOverlay(QString overlay_id)
 {
     emit _setActiveOverlay(overlay_id);
 }
-
+*/
 void CDocument::load(int height, int width, int sectionid)
 {
     CSection* s;
+    COverlay* o;
     CLayer* layer;
     CBaseObject* obj;
     int i;
@@ -518,6 +520,23 @@ void CDocument::load(int height, int width, int sectionid)
         for (int n=0;n<s->layerCount();n++)
         {
             layer = s->layer(n);
+            for (int l=0;l<layer->objectCount();l++)
+            {
+                obj = layer->object(l);
+                qDebug() << "preload" << obj->id();
+                obj->preload();
+            }
+        }
+    }
+
+    for (i=0;i<overlayCount();i++)
+    {
+        o = overlay(i);
+
+        //preload
+        for (int n=0;n<o->layerCount();n++)
+        {
+            layer = o->layer(n);
             for (int l=0;l<layer->objectCount();l++)
             {
                 obj = layer->object(l);
