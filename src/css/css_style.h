@@ -62,7 +62,16 @@ enum ScaleMode
     smScaleHeight
 };
 
+enum ColorFormat
+{
+    cfHex = 0,
+    cfRgb,
+    cfRgba
+};
+
 RenderMode renderModeFromString(QString str);
+QColor stringToColor(QString color);
+QString colorToString(QColor color, ColorFormat format=cfHex);
 
 class Stylesheet;
 
@@ -74,6 +83,7 @@ public:
     QString toString();
     int toInt();
     double toDouble();
+    QColor toColor();
 
     QString value() const; //unscaled
 
@@ -85,6 +95,7 @@ public:
     void setValue(QString val, ScaleMode scale=smNone);
     void setValue(int val, ScaleMode scale=smNone);
     void setValue(double val, ScaleMode scale=smNone);
+    void setValue(QColor val, ColorFormat format=cfHex);
 
     //bool scales();
     ScaleMode scaleMode();

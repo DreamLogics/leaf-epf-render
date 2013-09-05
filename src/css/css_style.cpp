@@ -307,6 +307,11 @@ double Property::toDouble()
     return nr.cap(1).toDouble();
 }
 
+QColor Property::toColor()
+{
+    return stringToColor(m_sValue);
+}
+
 void Property::setValue(double val, ScaleMode scale)
 {
     if (m_bReadOnly)
@@ -328,6 +333,13 @@ void Property::setValue(QString val, ScaleMode scale)
     m_bNull = false;
     m_eScale = scale;
     m_sValue = val;
+}
+
+void Property::setValue(QColor val, ColorFormat format)
+{
+    m_bNull = false;
+    m_eScale = smNone;
+    m_sValue = colorToString(val,format);
 }
 
 void Stylesheet::parse(QString css)
@@ -884,5 +896,48 @@ namespace CSS
             return rmScreen;
         else
             return rmNormal;
+    }
+
+    QColor stringToColor(QString color)
+    {
+        QRegExp rgbreg("rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)");
+        QRegExp rgbareg("rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)");
+        QRegExp hexreg("#[0-9a-fA-F]{3,6}");
+
+        QColor c(0,0,0);
+
+        if (hexreg.indexIn(color) != -1)
+        {
+            c.setNamedColor(color);
+        }
+        else if (rgbreg.indexIn(color) != -1)
+        {
+            c.setRgb(rgbreg.cap(1).toInt(),rgbreg.cap(2).toInt(),rgbreg.cap(3).toInt());
+        }
+        else if (rgbareg.indexIn(color) != -1)
+        {
+            c.setRgb(rgbareg.cap(1).toInt(),rgbareg.cap(2).toInt(),rgbareg.cap(3).toInt(),rgbareg.cap(4).toInt());
+        }
+
+        return c;
+    }
+
+    QString colorToString(QColor color, ColorFormat format)
+    {
+        QString s;
+        switch (format)
+        {
+        case cfRgb:
+            s = "rgb("+QString::number(color.red())+","+QString::number(color.green())+","+QString::number(color.blue())+")";
+            break;
+        case cfRgba:
+            s = "rgba("+QString::number(color.red())+","+QString::number(color.green())+","+QString::number(color.blue())+","+QString::number(color.alpha())+")";
+            break;
+        default:
+            s = color.name();
+            break;
+        }
+
+        return s;
     }
 }

@@ -100,14 +100,9 @@ void CTextObject::paint(QPainter *painter)
 
     painter->drawRect(boundingRect());*/
 
-    if (!css->property(this,"color-overlay")->isNull())
-    {
-        QRegExp cov("(#[0-9a-fA-F]{3,6}) +([a-zA-Z]+) +([0-9\\.]+)");
-        if (cov.indexIn(css->property(this,"color-overlay")->toString()) != -1)
-        {
-            CSS::paintColorOverlay(painter,r,cov.cap(1),CSS::renderModeFromString(cov.cap(2)),cov.cap(3).toDouble());
-        }
-    }
+
+    CSS::paintColorOverlay(painter,this);
+
 }
 
 void CTextObject::layout(QRectF relrect)

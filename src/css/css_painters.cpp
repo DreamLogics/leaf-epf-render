@@ -18,14 +18,14 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordert
 {
     QString borderstyle;
     QRectF r;
-    QRegExp borderreg("([0-9]+)[^ ]* +([a-z]+) +(#[0-9a-fA-F]{3,6})");
+    QRegExp borderreg("([0-9]+)[^ ]* +([a-z]+) +(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\))");
 
     if (!bordertop->isNull() && borderreg.indexIn(bordertop->toString()) != -1)
     {
         borderstyle = borderreg.cap(2);
         r.setHeight(borderreg.cap(1).toInt());
         r.setWidth(qrBorderRect.width());
-        pPainter->fillRect(r,QColor(borderreg.cap(3)));
+        pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
     if (!borderbottom->isNull() && borderreg.indexIn(borderbottom->toString()) != -1)
@@ -34,7 +34,7 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordert
         r.setHeight(borderreg.cap(1).toInt());
         r.setWidth(qrBorderRect.width());
         r.moveBottom(qrBorderRect.height());
-        pPainter->fillRect(r,QColor(borderreg.cap(3)));
+        pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
     if (!borderleft->isNull() && borderreg.indexIn(borderleft->toString()) != -1)
@@ -42,7 +42,7 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordert
         borderstyle = borderreg.cap(2);
         r.setWidth(borderreg.cap(1).toInt());
         r.setHeight(qrBorderRect.height());
-        pPainter->fillRect(r,QColor(borderreg.cap(3)));
+        pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
     if (!borderright->isNull() && borderreg.indexIn(borderright->toString()) != -1)
@@ -51,13 +51,13 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordert
         r.setWidth(borderreg.cap(1).toInt());
         r.setHeight(qrBorderRect.height());
         r.moveRight(qrBorderRect.width());
-        pPainter->fillRect(r,QColor(borderreg.cap(3)));
+        pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 }
 
-void paintBackgroundColor(QPainter* pPainter, QRectF qrBgRect, QString strColor)
+void paintBackgroundColor(QPainter* pPainter, QRectF qrBgRect, QColor strColor)
 {
-    pPainter->fillRect(qrBgRect,QColor(strColor));
+    pPainter->fillRect(qrBgRect,strColor);
 }
 
 void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, QString strSrc, CDocument* pDocument)
@@ -112,7 +112,7 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
     pPainter->drawImage(qrBgRect,img,qrSize);
 }
 
-void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
+void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QColor strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
 {
     QPainter::CompositionMode compmode = pPainter->compositionMode();
     switch (iRenderMode)
@@ -162,7 +162,7 @@ void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderM
     pPainter->setCompositionMode(compmode);
 }
 
-void paintInnerGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
+void paintInnerGlow(QPainter* pPainter, QRectF qrRect, QColor strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
 {
     QPainter::CompositionMode compmode = pPainter->compositionMode();
     switch (iRenderMode)
@@ -213,7 +213,7 @@ void paintInnerGlow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderM
     pPainter->setCompositionMode(compmode);
 }
 
-void paintDropShadow(QPainter* pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity, int iLightDir, int iDistance, int iSpread, int iSize)
+void paintDropShadow(QPainter* pPainter, QRectF qrRect, QColor strColor, RenderMode iRenderMode, double dOpacity, int iLightDir, int iDistance, int iSpread, int iSize)
 {
     QPainter::CompositionMode compmode = pPainter->compositionMode();
     switch (iRenderMode)
@@ -271,11 +271,9 @@ void paintDropShadow(QPainter* pPainter, QRectF qrRect, QString strColor, Render
     pPainter->setCompositionMode(compmode);
 }
 
-void paintColorOverlay(QPainter *pPainter, QRectF qrRect, QString strColor, RenderMode iRenderMode, double dOpacity)
+void paintColorOverlay(QPainter *pPainter, QRectF qrRect, QColor mixcolor, RenderMode iRenderMode)
 {
-    double opac = pPainter->opacity();
-    pPainter->setOpacity(dOpacity);
-    QColor mixcolor(strColor);
+
     QPainter::CompositionMode mode = pPainter->compositionMode();
 
     switch (iRenderMode) {
@@ -302,7 +300,6 @@ void paintColorOverlay(QPainter *pPainter, QRectF qrRect, QString strColor, Rend
     pPainter->fillRect(qrRect,mixcolor);
 
     pPainter->setCompositionMode(mode);
-    pPainter->setOpacity(opac);
 }
 
 void paintBorder(QPainter* pPainter, CBaseObject* pObj)
@@ -324,7 +321,7 @@ void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj)
 
     if (!css->property(pObj,"background-color")->isNull())
     {
-        CSS::paintBackgroundColor(pPainter,r,css->property(pObj,"background-color")->toString());
+        CSS::paintBackgroundColor(pPainter,r,css->property(pObj,"background-color")->toColor());
     }
 }
 
@@ -365,7 +362,7 @@ void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property* bggrad
 
     if (!bggrad->isNull())
     {
-        QRegExp gradpointreg("\\( *([0-9\\.]+) *, *(#[0-9a-fA-F]{3,6}) *, *([0-9\\.]+) *\\)");
+        QRegExp gradpointreg("\\( *([0-9\\.]+) *, *(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)) *\\)");
         QString gradtype = gradtypeprop->toString();
         QString gradspread = gradspreadprop->toString();
         int offset=0;
@@ -388,8 +385,7 @@ void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property* bggrad
             QRadialGradient rgrad;
             while (gradpointreg.indexIn(propval,offset) != -1)
             {
-                QColor c(gradpointreg.cap(2));
-                c.setAlphaF(gradpointreg.cap(3).toDouble());
+                QColor c = stringToColor(gradpointreg.cap(2));
                 rgrad.setColorAt(gradpointreg.cap(1).toDouble(),c);
                 offset += gradpointreg.cap(0).size();
             }
@@ -438,8 +434,7 @@ void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property* bggrad
             QLinearGradient lgrad;
             while (gradpointreg.indexIn(propval,offset) != -1)
             {
-                QColor c(gradpointreg.cap(2));
-                c.setAlphaF(gradpointreg.cap(3).toDouble());
+                QColor c = stringToColor(gradpointreg.cap(2));
                 lgrad.setColorAt(gradpointreg.cap(1).toDouble(),c);
                 offset += gradpointreg.cap(0).size();
             }
@@ -543,10 +538,11 @@ void paintColorOverlay(QPainter* pPainter, CBaseObject* pObj)
 
     if (!css->property(pObj,"color-overlay")->isNull())
     {
-        QRegExp cov("(#[0-9a-fA-F]{3,6}) +([a-zA-Z]+) +([0-9\\.]+)");
+        QRegExp cov("(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)) +([a-zA-Z]+)");
         if (cov.indexIn(css->property(pObj,"color-overlay")->toString()) != -1)
         {
-            CSS::paintColorOverlay(pPainter,r,cov.cap(1),CSS::renderModeFromString(cov.cap(2)),cov.cap(3).toDouble());
+            //qDebug() << "color overlay" << cov.cap(1) << cov.cap(cov.captureCount());
+            CSS::paintColorOverlay(pPainter,r,stringToColor(cov.cap(1)),CSS::renderModeFromString(cov.cap(cov.captureCount())));
         }
     }
 }
