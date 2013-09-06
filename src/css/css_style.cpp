@@ -250,11 +250,11 @@ QString Property::toString()
     if (m_eScale != smNone)
     {
         QRegExp n("[0-9]+\\.*[0-9]*");
-        int o = n.indexIn(m_sValue);
+        int o = n.indexIn(value());
         double v = n.cap(0).toDouble();
 
         if (o == -1)
-            return m_sValue;
+            return value();
 
         if (m_eScale == smScale)
         {
@@ -270,18 +270,28 @@ QString Property::toString()
 
         if (n.cap(0).indexOf(".") == -1)
         {
-            return m_sValue.mid(0,o) + QString::number(qCeil(v)) + m_sValue.mid(o+n.cap(0).size());
+            return value().mid(0,o) + QString::number(qCeil(v)) + value().mid(o+n.cap(0).size());
         }
 
-        return m_sValue.mid(0,o) + QString::number(v) + m_sValue.mid(o+n.cap(0).size());
+        return value().mid(0,o) + QString::number(v) + value().mid(o+n.cap(0).size());
 
     }
-    return m_sValue;
+    return value();
 }
 
 QString Property::value() const
 {
-    return m_sValue;
+    QRegExp varreg("\\$([a-zA-Z_-0-9]+)");
+    int offset=0;
+    QString val = m_sValue;
+
+    while (varreg.indexIn(m_sValue,offset) != -1)
+    {
+        val = val.replace(varreg.cap(0),m_pCSS->variable(varreg.cap(1)));
+        offset += varreg.cap(0).size();
+    }
+
+    return val;
 }
 
 int Property::toInt()
@@ -309,7 +319,7 @@ double Property::toDouble()
 
 QColor Property::toColor()
 {
-    return stringToColor(m_sValue);
+    return stringToColor(value());
 }
 
 void Property::setValue(double val, ScaleMode scale)
@@ -344,8 +354,6 @@ void Property::setValue(QColor val, ColorFormat format)
 
 void Stylesheet::parse(QString css)
 {
-
-
     QRegExp newlines("[\n\r]+");
     QRegExp tabs("[\t]+");
     css.replace(newlines,"");
@@ -363,7 +371,7 @@ void Stylesheet::parse(QString css)
     QRegExp outerspaces("(^ +| +$)");
 
     QRegExp propgroupfinder("([^\\{]+)\\{([^\\}]+)\\}");
-    QRegExp varfinder("\\$([a-zA-Z_-0-9]+) *= *([^;])+;");
+    QRegExp varfinder("\\$([a-zA-Z_-0-9]+) *= *([^;]+);");
 
     int offset = 0;
 
@@ -373,6 +381,7 @@ void Stylesheet::parse(QString css)
         ss.replace("\"","");
         setVariable(varfinder.cap(1),ss);
         offset += varfinder.cap(0).size();
+        qDebug() << "css var added" << varfinder.cap(1) << ss;
     }
 
     offset = 0;

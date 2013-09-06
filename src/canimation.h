@@ -39,13 +39,16 @@ public:
     CAnimation(int frames, int fps, QString src, CDocument* doc);
     virtual ~CAnimation();
 
-    virtual void play(bool loop);
-    virtual void stop();
-    virtual void reset();
-
     virtual void onEPFEvent(EPFEvent *ev);
 
+    int currentFrame();
+
 public slots:
+
+    void play(bool loop);
+    void stop();
+    void reset();
+    void setToFrame(int frame);
 
     void playNextFrame();
 

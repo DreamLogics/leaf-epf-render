@@ -26,7 +26,7 @@
 #include "cdocument.h"
 #include "cepfview.h"
 #include <QDebug>
-//#include "css/css_style.h"
+#include "css/css_style.h"
 
 CAnimFrame::CAnimFrame(CSection* section) : m_pSection(section)//CSectionRender *sr) : m_pSR(sr)
 {
@@ -56,7 +56,10 @@ void CAnimFrame::apply()
         css = "";
         for (int n=0;n<proplist.size();n++)
         {
-            css += proplist[n] + ":" + props[proplist[n]] + ";";
+            if (proplist[n].startsWith("$"))
+                m_pSection->document()->stylesheet()->setVariable(proplist[n].mid(1),props[proplist[n]]);
+            else
+                css += proplist[n] + ":" + props[proplist[n]] + ";";
         }
         obj->setCSSOverride(css);
         //qDebug() << obj->id() << css;
@@ -68,9 +71,9 @@ void CAnimFrame::apply()
     //m_pSR->updateView();
     //m_pSection->renderer()->updateView();
     //m_pSection->document()->renderview()->update();
-    m_pSection->layout(m_pSection->document()->renderview()->height(),m_pSection->document()->renderview()->width());
+    m_pSection->layout();
     //m_pSection->document()->renderview()->update();
-    m_pSection->document()->updateRenderView();
+    //m_pSection->document()->updateRenderView();
 }
 
 bool CAnimFrame::hasObjectProps(CBaseObject *obj)

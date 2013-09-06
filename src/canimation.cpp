@@ -51,6 +51,10 @@ CAnimation::CAnimation(int frames, int fps, QString src, CDocument* doc)
     int frame;
     int offset=0;
 
+    /*QRegExp varreg("\\$([a-zA-Z_-0-9]+)");
+    int varoffset=0;
+    QString nval;*/
+
     CSection* sec=0;
     CBaseObject* obj;
     CLayout* layout;
@@ -116,6 +120,17 @@ CAnimation::CAnimation(int frames, int fps, QString src, CDocument* doc)
             {
                 key = prop[0].replace(QRegExp("(^ +| +$)"),"");
                 val = prop[1].replace(QRegExp("(^ +| +$)"),"");
+
+                /*nval = val;
+
+                varoffset = 0;
+
+                while (varreg.indexIn(val,offset) != -1)
+                {
+                    nval = nval.replace(varreg.cap(0),doc->stylesheet()->variable(varreg.cap(1)));
+                    varoffset += varreg.cap(0).size();
+                }*/
+
                 propmap.insert(key,val);
             }
         }
@@ -160,29 +175,18 @@ CAnimation::~CAnimation()
 
 QString CAnimation::mixColor(QString color1, QString color2, double pos)
 {
-    QColor c1(color1);
-    QColor c2(color2);
-    QString nc,rs,gs,bs;
+    QColor c1 = CSS::stringToColor(color1);
+    QColor c2 = CSS::stringToColor(color2);
+    QString nc;
 
-    int r,g,b;
+    int r,g,b,a;
 
     r = c1.red() - ((c1.red() - c2.red())*pos);
     g = c1.green() - ((c1.green() - c2.green())*pos);
     b = c1.blue() - ((c1.blue() - c2.blue())*pos);
+    a = c1.alpha() - ((c1.alpha() - c2.alpha())*pos);
 
-    rs = QString::number(r,16);
-    if (rs.size() == 1)
-        rs = "0"+rs;
-
-    gs = QString::number(g,16);
-    if (gs.size() == 1)
-        gs = "0"+gs;
-
-    bs = QString::number(b,16);
-    if (bs.size() == 1)
-        bs = "0"+bs;
-
-    nc = "#" + rs + gs + bs;
+    nc = "rgba(" + QString::number(r) + "," + QString::number(g) + "," + QString::number(b) + "," + QString::number(a) + ")";
 
     //qDebug() << color1 << color2 << pos << nc;
 
@@ -323,6 +327,10 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
     QString newpropval,propval1,propval2;
     double position;
 
+    QRegExp intreg("^[0-9]+[a-zA-Z ]*$");
+    QRegExp dblreg("^[0-9\\.]+$");
+    QRegExp clrreg("^(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\))$");
+
     //endframe vinden
     endframe = 0;
     for (i = 0;i<frameind.size();i++)
@@ -420,7 +428,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
 
             //qDebug() << "Mix prop: "<<props[pi] << propval1 << startpropmap[props[pi]];
 
-            if (CSS::color_props.contains(props[pi]))
+            /*if (CSS::color_props.contains(props[pi]))
             {
                 //newpropval = mixColor(propval1,startpropmap[props[pi]],(double)(frame-startframe)/(double)(endframe-startframe-1));
                 newpropval = mixColor(propval1,propval2,position);
@@ -437,21 +445,44 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
                 newpropval = mixDouble(propval1,propval2,position);
                 propmapnew.insert(props[pi],newpropval);
             }
-            else if (props[pi] == "color-overlay")
+            else */if (props[pi] == "color-overlay")
             {
                 QStringList costart = propval1.split(QRegExp(" +"));
                 QStringList coend = propval2.split(QRegExp(" +"));
 
-                if (costart.size() == 3 && coend.size() == 3)
+                if (costart.size() == 2 && coend.size() == 2)
                 {
                     //ignore the rendermode of the animation
-                    newpropval = mixColor(costart[0],coend[0],position) + " " + costart[1] + " " + mixDouble(costart[2],coend[2],position);
+                    newpropval = mixColor(costart[0],coend[0],position) + " " + costart[1];
                     propmapnew.insert(props[pi],newpropval);
                 }
                 else
                 {
                     qDebug() << "color-overlay" << propval1 << propval2;
                 }
+            }
+            /*else if (props[pi].startsWith("$"))
+            {
+                //variable
+                if (intreg.indexIn(propval1) != -1 && intreg.indexIn(propval1) != -1)
+                {
+
+                }
+            }*/
+            else if (intreg.indexIn(propval1) != -1 && intreg.indexIn(propval2) != -1)
+            {
+                newpropval = mixInt(propval1,propval2,position);
+                propmapnew.insert(props[pi],newpropval);
+            }
+            else if (dblreg.indexIn(propval1) != -1 && dblreg.indexIn(propval2) != -1)
+            {
+                newpropval = mixDouble(propval1,propval2,position);
+                propmapnew.insert(props[pi],newpropval);
+            }
+            else if (clrreg.indexIn(propval1) != -1 && clrreg.indexIn(propval2) != -1)
+            {
+                newpropval = mixColor(propval1,propval2,position);
+                propmapnew.insert(props[pi],newpropval);
             }
             else
             {
@@ -479,4 +510,16 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
 void CAnimation::onEPFEvent(EPFEvent *ev)
 {
 
+}
+
+int CAnimation::currentFrame()
+{
+    return m_iCurFrame;
+}
+
+void CAnimation::setToFrame(int frame)
+{
+    m_iCurFrame = frame;
+    CAnimFrame* f = getFrame(m_pDoc->currentLayout()->id(),frame);
+    f->apply();
 }
