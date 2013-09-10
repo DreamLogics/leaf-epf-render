@@ -74,40 +74,68 @@ QColor stringToColor(QString color);
 QString colorToString(QColor color, ColorFormat format=cfHex);
 
 class Stylesheet;
+class Animation;
 
-class Property
+class PropertyPrivate
 {
 public:
-    Property(QString value, Stylesheet* css, /*bool scales*/ScaleMode scale, bool isHeightProp, bool null=false);
-
-    QString toString();
-    int toInt();
-    double toDouble();
-    QColor toColor();
-
-    QString value() const; //unscaled
-
-    bool isNull();
-
-    /*void setValue(QString val, bool scale=false);
-    void setValue(int val, bool scale=false);
-    void setValue(double val, bool scale=false);*/
-    void setValue(QString val, ScaleMode scale=smNone);
-    void setValue(int val, ScaleMode scale=smNone);
-    void setValue(double val, ScaleMode scale=smNone);
-    void setValue(QColor val, ColorFormat format=cfHex);
-
-    //bool scales();
-    ScaleMode scaleMode();
+    PropertyPrivate(Property*);
 
 private:
+    void registerUse(Property* p);
+    void unregisterUse(Property *p);
+    bool isUnreferenced();
+
+
     QString m_sValue;
-    //bool m_bScale;
     ScaleMode m_eScale;
     bool m_bNull;
     bool m_bHeightProp;
     Stylesheet* m_pCSS;
     bool m_bReadOnly;
+
+    QList<Property*> m_references;
+
+    friend class Property;
+    friend class Stylesheet;
+};
+
+class Property
+{
+public:
+    Property(QString name, QString value, Stylesheet* css, /*bool scales*/ScaleMode scale, bool isHeightProp, bool null=false);
+    Property(const Property&);
+    Property(QString name, Stylesheet* css);
+    Property();
+    ~Property();
+
+    QString name() const;
+
+    QString toString() const;
+    int toInt() const;
+    double toDouble() const;
+    QColor toColor() const;
+
+    QString value() const; //unscaled
+
+    bool isNull() const;
+
+    /*void setValue(QString val, bool scale=false);
+    void setValue(int val, bool scale=false);
+    void setValue(double val, bool scale=false);*/
+    void setValue(QString val, ScaleMode scale=smNone) const;
+    void setValue(int val, ScaleMode scale=smNone) const;
+    void setValue(double val, ScaleMode scale=smNone) const;
+    void setValue(QColor val, ColorFormat format=cfHex) const;
+
+    //bool scales();
+    ScaleMode scaleMode() const;
+
+    virtual bool operator==(const Property&);
+
+private:
+    QString m_sName;
+    PropertyPrivate* m_pPrivate;
 
     friend class Stylesheet;
 };
@@ -118,12 +146,12 @@ public:
     Selector(Stylesheet*);
     ~Selector();
 
-    Property* property(QString key);
-    void setProperty(QString key, Property* prop);
+    Property property(QString key);
+    void setProperty(QString key, const Property &prop);
     QStringList properties();
 
 private:
-    QMap<QString,Property*> m_props;
+    QMap<QString,Property> m_props;
     Stylesheet* m_pCSS;
 
 };
@@ -135,13 +163,15 @@ public:
     Stylesheet(CLayout* layout, int target_height, int target_width, CDocument* doc);
     ~Stylesheet();
 
-    Property* property(QString selector, QString key);
-    Property* property(CBaseObject* obj, QString key);
-    Property* property(CLayer* l, QString key);
-    Property* property(CSection* s, QString key);
+    Property property(QString selector, QString key);
+    Property property(CBaseObject* obj, QString key);
+    Property property(CLayer* l, QString key);
+    Property property(CSection* s, QString key);
 
     Selector* selector(QString selector);
     Selector* selector(CBaseObject* obj);
+
+    Animation* animation(QString animation);
 
     void setScale(double height_factor, double width_factor);
     double heightScaleFactor() const;
@@ -162,6 +192,7 @@ private:
     double m_dWSF;
     CDocument* m_pDocument;
     QMap<QString,QString> m_variables;
+    QMap<QString,Animation*> m_animations;
 };
 
 }

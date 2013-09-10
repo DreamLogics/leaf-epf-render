@@ -14,13 +14,13 @@ namespace CSS
 {
 
 
-void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordertop, CSS::Property* borderbottom, CSS::Property* borderleft, CSS::Property* borderright)
+void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property bordertop, CSS::Property borderbottom, CSS::Property borderleft, CSS::Property borderright)
 {
     QString borderstyle;
     QRectF r;
     QRegExp borderreg("([0-9]+)[^ ]* +([a-z]+) +(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\))");
 
-    if (!bordertop->isNull() && borderreg.indexIn(bordertop->toString()) != -1)
+    if (!bordertop.isNull() && borderreg.indexIn(bordertop.toString()) != -1)
     {
         borderstyle = borderreg.cap(2);
         r.setHeight(borderreg.cap(1).toInt());
@@ -28,7 +28,7 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordert
         pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
-    if (!borderbottom->isNull() && borderreg.indexIn(borderbottom->toString()) != -1)
+    if (!borderbottom.isNull() && borderreg.indexIn(borderbottom.toString()) != -1)
     {
         borderstyle = borderreg.cap(2);
         r.setHeight(borderreg.cap(1).toInt());
@@ -37,7 +37,7 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordert
         pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
-    if (!borderleft->isNull() && borderreg.indexIn(borderleft->toString()) != -1)
+    if (!borderleft.isNull() && borderreg.indexIn(borderleft.toString()) != -1)
     {
         borderstyle = borderreg.cap(2);
         r.setWidth(borderreg.cap(1).toInt());
@@ -45,7 +45,7 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property* bordert
         pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
-    if (!borderright->isNull() && borderreg.indexIn(borderright->toString()) != -1)
+    if (!borderright.isNull() && borderreg.indexIn(borderright.toString()) != -1)
     {
         borderstyle = borderreg.cap(2);
         r.setWidth(borderreg.cap(1).toInt());
@@ -319,9 +319,9 @@ void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    if (!css->property(pObj,"background-color")->isNull())
+    if (!css->property(pObj,"background-color").isNull())
     {
-        CSS::paintBackgroundColor(pPainter,r,css->property(pObj,"background-color")->toColor());
+        CSS::paintBackgroundColor(pPainter,r,css->property(pObj,"background-color").toColor());
     }
 }
 
@@ -332,16 +332,16 @@ void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    if (!css->property(pObj,"background-image")->isNull())
+    if (!css->property(pObj,"background-image").isNull())
     {
         QString size;
 
-        if (!css->property(pObj,"background-size")->isNull())
-            size = css->property(pObj,"background-size")->toString();
-        else if (!css->property(pObj,"background-image-size")->isNull())
-            size = css->property(pObj,"background-image-size")->toString();
+        if (!css->property(pObj,"background-size").isNull())
+            size = css->property(pObj,"background-size").toString();
+        else if (!css->property(pObj,"background-image-size").isNull())
+            size = css->property(pObj,"background-image-size").toString();
 
-        CSS::paintBackgroundImage(pPainter,r,size,css->property(pObj,"background-image")->toString(),pObj->document());
+        CSS::paintBackgroundImage(pPainter,r,size,css->property(pObj,"background-image").toString(),pObj->document());
     }
 
 }
@@ -356,19 +356,19 @@ void paintBackgroundGradient(QPainter *pPainter, CBaseObject *pObj)
     paintBackgroundGradient(pPainter, r, css->property(pObj,"background-gradient"),css->property(pObj,"background-gradient-type"),css->property(pObj,"background-gradient-spread"),css->property(pObj,"background-gradient-angle"),css->property(pObj,"background-gradient-center"),css->property(pObj,"background-gradient-focal"));
 }
 
-void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property* bggrad, CSS::Property* gradtypeprop, CSS::Property* gradspreadprop, CSS::Property* anglegrad, CSS::Property* gradcenter, CSS::Property* gradfocal)
+void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property bggrad, CSS::Property gradtypeprop, CSS::Property gradspreadprop, CSS::Property anglegrad, CSS::Property gradcenter, CSS::Property gradfocal)
 {
     //CSS::Stylesheet* css = pObj->document()->stylesheet();
 
-    if (!bggrad->isNull())
+    if (!bggrad.isNull())
     {
         QRegExp gradpointreg("\\( *([0-9\\.]+) *, *(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)) *\\)");
-        QString gradtype = gradtypeprop->toString();
-        QString gradspread = gradspreadprop->toString();
+        QString gradtype = gradtypeprop.toString();
+        QString gradspread = gradspreadprop.toString();
         int offset=0;
-        QString propval = bggrad->toString();
+        QString propval = bggrad.toString();
 
-        int degree = anglegrad->toInt();
+        int degree = anglegrad.toInt();
         int radius = degree;
         if (degree < -360 || degree > 360)
             degree = 0;
@@ -394,7 +394,7 @@ void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property* bggrad
             double centerx,centery;
             double focalx,focaly;
 
-            if (xyreg.indexIn(gradcenter->toString()) != -1)
+            if (xyreg.indexIn(gradcenter.toString()) != -1)
             {
                 centerx = r.width() * xyreg.cap(1).toDouble();
                 centery = r.height() * xyreg.cap(2).toDouble();
@@ -404,7 +404,7 @@ void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property* bggrad
                 centerx = r.width() / 2;
                 centery = r.height() / 2;
             }
-            if (xyreg.indexIn(gradfocal->toString()) != -1)
+            if (xyreg.indexIn(gradfocal.toString()) != -1)
             {
                 focalx = r.width() * xyreg.cap(1).toDouble();
                 focaly = r.height() * xyreg.cap(2).toDouble();
@@ -443,7 +443,7 @@ void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property* bggrad
             y1 = 0;
             y2 = r.height();
 
-            if (!anglegrad->isNull())
+            if (!anglegrad.isNull())
             {
                 double delta = qTan(radian);
 
@@ -536,10 +536,10 @@ void paintColorOverlay(QPainter* pPainter, CBaseObject* pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    if (!css->property(pObj,"color-overlay")->isNull())
+    if (!css->property(pObj,"color-overlay").isNull())
     {
         QRegExp cov("(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)) +([a-zA-Z]+)");
-        if (cov.indexIn(css->property(pObj,"color-overlay")->toString()) != -1)
+        if (cov.indexIn(css->property(pObj,"color-overlay").toString()) != -1)
         {
             //qDebug() << "color overlay" << cov.cap(1) << cov.cap(cov.captureCount());
             CSS::paintColorOverlay(pPainter,r,stringToColor(cov.cap(1)),CSS::renderModeFromString(cov.cap(cov.captureCount())));

@@ -66,23 +66,23 @@ void CTextObject::paint(QPainter *painter)
 
     //painter->fillRect(r,QColor("white"));
 
-    if (!css->property(this,"background-color")->isNull())
+    if (!css->property(this,"background-color").isNull())
     {
-        CSS::paintBackgroundColor(painter,r,css->property(this,"background-color")->toString());
+        CSS::paintBackgroundColor(painter,r,css->property(this,"background-color").toString());
     }
     /*else
         CSS::paintBackgroundColor(painter,r,"#ffffff");*/
 
-    if (!css->property(this,"background-image")->isNull())
+    if (!css->property(this,"background-image").isNull())
     {
         QString size;
 
-        if (!css->property(this,"background-size")->isNull())
-            size = css->property(this,"background-size")->toString();
-        else if (!css->property(this,"background-image-size")->isNull())
-            size = css->property(this,"background-image-size")->toString();
+        if (!css->property(this,"background-size").isNull())
+            size = css->property(this,"background-size").toString();
+        else if (!css->property(this,"background-image-size").isNull())
+            size = css->property(this,"background-image-size").toString();
 
-        CSS::paintBackgroundImage(painter,r,size,css->property(this,"background-image")->toString(),document());
+        CSS::paintBackgroundImage(painter,r,size,css->property(this,"background-image").toString(),document());
     }
 
     if (!m_pTextDoc)
@@ -135,7 +135,7 @@ void CTextObject::layout(QRectF relrect)
     else
     {
         //html maken
-        QString src = document()->stylesheet()->property(this,"text-source")->toString();//property("src");
+        QString src = document()->stylesheet()->property(this,"text-source").toString();//property("src");
         src = src.replace(QRegExp("[\"']+"),"");
 
         if (src != "") //als we geen src hebben nemen we de overflow
@@ -254,10 +254,10 @@ void CTextObject::layout(QRectF relrect)
         else
         {
             //check v-align style
-            CSS::Property* vap = document()->stylesheet()->property(this,"v-align");
-            if (!vap->isNull())
+            CSS::Property vap = document()->stylesheet()->property(this,"v-align");
+            if (!vap.isNull())
             {
-                QString valign = vap->toString();
+                QString valign = vap.toString();
                 if (valign != "top")
                 {
                     m_pTextDoc->setTextWidth(width);
@@ -352,10 +352,10 @@ QString CTextObject::overflow()
 QString CTextObject::css()
 {
     CSS::Stylesheet* stylesheet = document()->stylesheet();
-    CSS::Property* csssrc = stylesheet->property(this,"css-source");
-    if (!csssrc->isNull())
+    CSS::Property csssrc = stylesheet->property(this,"css-source");
+    if (!csssrc.isNull())
     {
-        QByteArray data = document()->resource(csssrc->toString());
+        QByteArray data = document()->resource(csssrc.toString());
         if (data.size() > 0)
             return QString::fromUtf8(data.constData(),data.size());
     }
@@ -410,7 +410,7 @@ QString CTextObject::css()
 
                     for (int n=0;n<proplist.size();n++)
                     {
-                        propval = csel->property(proplist[n])->toString();
+                        propval = csel->property(proplist[n]).toString();
                         if (proplist[n] == "font-size" && propval.endsWith("px"))
                             propval = QString::number(pointFromPixel(propval.left(propval.size()-2).toInt()))+"pt";
                         newcss += proplist[n] + ": " + propval + ";";

@@ -34,7 +34,8 @@ SOURCES += cdocument.cpp \
     object_types/clabelobject.cpp \
     device.cpp \
     object_types/cvideoobject.cpp \
-    object_types/caudioobject.cpp
+    object_types/caudioobject.cpp \
+    css/css_animation.cpp
 
 HEADERS += leaf-epf-render_global.h \
     cdocument.h \
@@ -64,7 +65,8 @@ HEADERS += leaf-epf-render_global.h \
     epfevent.h \
     object_types/clabelobject.h \
     object_types/cvideoobject.h \
-    object_types/caudioobject.h
+    object_types/caudioobject.h \
+    css/css_animation.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

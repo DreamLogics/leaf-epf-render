@@ -386,7 +386,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
 
             for (int ii=0;ii<sl.size();ii++)
             {
-                startpropmap.insert(sl[ii],sp->property(obj,sl[ii])->value());
+                startpropmap.insert(sl[ii],sp->property(obj,sl[ii]).value());
                 //qDebug() << sl[ii] << sp.property(sl[ii]);
             }
             objpropmapstart.insert(obj,startpropmap);

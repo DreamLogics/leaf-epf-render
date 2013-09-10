@@ -237,7 +237,7 @@ void CSection::layout(int height, int width)
             if (document()->shouldStopLayout())
                 return;
             obj = l->object(n);
-            pos = css->property(obj,"position")->toString();
+            pos = css->property(obj,"position").toString();
             //qDebug() << "position" << pos;
             if ((pos == "static" || pos == "relative") && dynamic_cast<CLayer*/*CLayer*/>(obj->parent()))
             {
@@ -270,7 +270,7 @@ void CSection::layout(int height, int width)
             obj->updateRenderMode();
             if (obj->renderMode() == CSS::rmNone)
                 continue;
-            pos = css->property(obj,"position")->toString();
+            pos = css->property(obj,"position").toString();
             if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*/*CLayer*/>(obj->parent()))
             {
                 if (pos == "fixed")
@@ -306,7 +306,7 @@ void CSection::layout(int height, int width)
     m_rRect = QRectF(m_iX*width,m_iY*height,width,height);
     m_mRectMutex.unlock();
 
-    QString type = css->property(this,"section-transition")->toString();
+    QString type = css->property(this,"section-transition").toString();
 
     m_mTransitionFxMutex.lock();
     if (type == "slide")
@@ -421,7 +421,7 @@ void CSection::render(QPainter *p,QRectF region)
 
             p->setClipRegion(clipregion);*/
 
-            if ((css->property(obj,"position")->toString() == "fixed" && obj->boundingRect().intersects(absreg)) || obj->fixedParent())
+            if ((css->property(obj,"position").toString() == "fixed" && obj->boundingRect().intersects(absreg)) || obj->fixedParent())
             {
                 p->save();
                 p->translate(obj->boundingRect().x(),obj->boundingRect().y());
@@ -473,7 +473,7 @@ CBaseObject* CSection::objectOnPos(int x, int y)
             if (obj->enabled())
             {
                 isfixed = false;
-                posi = css->property(obj,"position")->toString();
+                posi = css->property(obj,"position").toString();
                 if (posi == "fixed")
                     isfixed = true;
                 else if (obj->fixedParent())

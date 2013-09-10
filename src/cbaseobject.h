@@ -91,7 +91,7 @@ public:
 
     void setCSSOverride(QString css);
     //virtual QString cssOverrides();
-    CSS::Property* cssOverrideProp(QString prop);
+    CSS::Property cssOverrideProp(QString prop);
 
     //virtual QString css();
 
@@ -207,7 +207,7 @@ private:
     QStringList m_StyleClasses;
     CLayer* m_pLayer;
 
-    QMap<QString,CSS::Property*> m_CSSOverrideProps;
+    QMap<QString,CSS::Property> m_CSSOverrideProps;
 
     QMutex m_RenderMutex;
     QMutex m_FPMutex;

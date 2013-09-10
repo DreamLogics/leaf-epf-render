@@ -55,11 +55,11 @@ void CLabelObject::paint(QPainter *painter)
 
     QString text;
     QFont font;
-    CSS::Property* prop;
+    CSS::Property prop;
 
     if (m_sText.isNull())
     {
-        text = css->property(this,"label")->toString();
+        text = css->property(this,"label").toString();
         if (text.startsWith("\""))
             text = text.mid(1);
         if (text.endsWith("\""))
@@ -69,45 +69,45 @@ void CLabelObject::paint(QPainter *painter)
         text = m_sText;
 
     prop = css->property(this,"font-family");
-    if (!prop->isNull())
-        font.setFamily(prop->toString());
+    if (!prop.isNull())
+        font.setFamily(prop.toString());
 
     prop = css->property(this,"font-size");
-    if (!prop->isNull())
+    if (!prop.isNull())
     {
-        if (prop->toString().endsWith("px"))
-            font.setPixelSize(prop->toInt());
+        if (prop.toString().endsWith("px"))
+            font.setPixelSize(prop.toInt());
         else
-            font.setPointSize(prop->toInt());
+            font.setPointSize(prop.toInt());
     }
 
     prop = css->property(this,"font-weight");
-    if (!prop->isNull())
+    if (!prop.isNull())
     {
-        if (prop->toString() == "bold")
+        if (prop.toString() == "bold")
             font.setBold(true);
     }
 
     QColor c(255,255,255);
 
     prop = css->property(this,"color");
-    if (!prop->isNull())
-        c.setNamedColor(prop->toString());
+    if (!prop.isNull())
+        c.setNamedColor(prop.toString());
 
     int flags = Qt::TextWordWrap;
 
     prop=css->property(this,"text-align");
-    if (prop->toString() == "right")
+    if (prop.toString() == "right")
         flags |= Qt::AlignRight;
-    else if (prop->toString() == "center")
+    else if (prop.toString() == "center")
         flags |= Qt::AlignHCenter;
     else
         flags |= Qt::AlignLeft;
 
     prop=css->property(this,"v-align");
-    if (prop->toString() == "bottom")
+    if (prop.toString() == "bottom")
         flags |= Qt::AlignBottom;
-    else if (prop->toString() == "center")
+    else if (prop.toString() == "center")
         flags |= Qt::AlignVCenter;
     else
         flags |= Qt::AlignTop;

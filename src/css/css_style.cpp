@@ -76,7 +76,7 @@ void Stylesheet::setScale(double height_factor, double width_factor)
     m_dWSF = width_factor;
 }
 
-Property* Stylesheet::property(QString selector, QString key)
+Property Stylesheet::property(QString selector, QString key)
 {
     if (!m_selectors.contains(selector))
     {
@@ -84,7 +84,7 @@ Property* Stylesheet::property(QString selector, QString key)
         bool hp = false;
         if (height_props.contains(key))
             hp = true;
-        Property* prop = new Property("",this,smNone,hp,true);
+        Property prop = Property(key,"",this,smNone,hp,true);
         Selector* s = new Selector(this);
         s->setProperty(key,prop);
         m_selectors.insert(selector,s);
@@ -109,9 +109,9 @@ QString Stylesheet::variable(QString key)
     return QString();
 }
 
-Property* Stylesheet::property(CBaseObject *obj, QString key)
+Property Stylesheet::property(CBaseObject *obj, QString key)
 {
-    Property* prop = 0;
+    Property prop;
     //QString selector;
     QStringList classes = obj->styleClasses();
     QMap<QString,Selector*>::Iterator it;
@@ -121,7 +121,7 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     //overrides
 
     prop = obj->cssOverrideProp(key);
-    if (prop)
+    if (!prop.isNull())
     {
         //qDebug() << "CSS: got override for prop:" << key << "object" <<obj->id();
         return prop;
@@ -156,14 +156,11 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
         }*/
     }
 
-    if (prop && prop->isNull())
-        prop = 0;
-
-    if (prop)
+    if (!prop.isNull())
     {
         //indirect selector, make read only
         //qDebug() << "CSS: got class style for prop:" << key << "object" <<obj->id();
-        prop->m_bReadOnly = true;
+        prop.m_pPrivate->m_bReadOnly = true;
         return prop;
     }
 
@@ -172,7 +169,7 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     if (it != m_selectors.end())
     {
         prop = property(it.key(),key);
-        prop->m_bReadOnly = false;
+        prop.m_pPrivate->m_bReadOnly = false;
         return prop;
     }
 
@@ -180,12 +177,12 @@ Property* Stylesheet::property(CBaseObject *obj, QString key)
     return property("#"+obj->section()->id()+"::"+obj->id(),key);
 }
 
-Property* Stylesheet::property(CLayer *l, QString key)
+Property Stylesheet::property(CLayer *l, QString key)
 {
     return property("#"+l->section()->id()+":"+l->id(),key);
 }
 
-Property* Stylesheet::property(CSection *s, QString key)
+Property Stylesheet::property(CSection *s, QString key)
 {
     return property("#"+s->id(),key);
 }
@@ -197,27 +194,24 @@ Selector::Selector(Stylesheet* s) : m_pCSS(s)
 
 Selector::~Selector()
 {
-    QMap<QString,Property*>::Iterator it;
-    for (it=m_props.begin();it != m_props.end();it++)
-        delete it.value();
+
 }
 
-Property* Selector::property(QString key)
+Property Selector::property(QString key)
 {
     if (m_props.contains(key))
         return m_props[key];
 
     //create prop
-    Property* prop = new Property("",m_pCSS,smNone,height_props.contains(key),true);
+    Property prop = Property(key,"",m_pCSS,smNone,height_props.contains(key),true);
     m_props.insert(key,prop);
     return prop;
 }
 
-void Selector::setProperty(QString key, Property *prop)
+void Selector::setProperty(QString key, const Property &prop)
 {
     if (m_props.contains(key))
     {
-        delete m_props[key];
         m_props[key] = prop;
         return;
     }
@@ -225,9 +219,61 @@ void Selector::setProperty(QString key, Property *prop)
     m_props.insert(key,prop);
 }
 
-Property::Property(QString value, Stylesheet* css, ScaleMode scale, bool isHeightProp, bool null) : m_bNull(null), m_eScale(scale), m_sValue(value), m_pCSS(css), m_bHeightProp(isHeightProp)
+Property::Property(QString name, QString value, Stylesheet* css, ScaleMode scale, bool isHeightProp, bool null) : m_sName(name)
 {
-    m_bReadOnly = false;
+    m_pPrivate = new PropertyPrivate(this);
+    m_pPrivate->m_sValue = value;
+    m_pPrivate->m_pCSS = css;
+    m_pPrivate->m_eScale = scale;
+    m_pPrivate->m_bHeightProp = isHeightProp;
+    m_pPrivate->m_bNull = null;
+    m_pPrivate->m_bReadOnly = false;
+}
+
+Property::Property(QString name, Stylesheet* css) : m_sName(name)
+{
+    m_pPrivate = new PropertyPrivate(this);
+    m_pPrivate->m_sValue = QString();
+    m_pPrivate->m_pCSS = css;
+    m_pPrivate->m_eScale = smNone;
+    m_pPrivate->m_bHeightProp = false;
+    m_pPrivate->m_bNull = true;
+    m_pPrivate->m_bReadOnly = false;
+}
+
+Property::Property() : m_sName(QString())
+{
+    m_pPrivate = new PropertyPrivate(this);
+    m_pPrivate->m_sValue = QString();
+    m_pPrivate->m_pCSS = 0;
+    m_pPrivate->m_eScale = smNone;
+    m_pPrivate->m_bHeightProp = false;
+    m_pPrivate->m_bNull = true;
+    m_pPrivate->m_bReadOnly = true;
+}
+
+Property::Property(const Property &p)
+{
+    m_sName = p.m_sName;
+    m_pPrivate = p.m_pPrivate;
+    m_pPrivate->registerUse(this);
+}
+
+bool Property::operator ==(const Property& other)
+{
+    return name() == other.name();
+}
+
+Property::~Property()
+{
+    m_pPrivate->unregisterUse(this);
+    if (m_pPrivate->isUnreferenced())
+        delete m_pPrivate;
+}
+
+QString Property::name() const
+{
+    return m_sName;
 }
 
 /*bool Property::scales()
@@ -235,19 +281,19 @@ Property::Property(QString value, Stylesheet* css, ScaleMode scale, bool isHeigh
     return m_bScale;
 }*/
 
-ScaleMode Property::scaleMode()
+ScaleMode Property::scaleMode() const
 {
-    return m_eScale;
+    return m_pPrivate->m_eScale;
 }
 
-bool Property::isNull()
+bool Property::isNull() const
 {
-    return m_bNull;
+    return m_pPrivate->m_bNull;
 }
 
-QString Property::toString()
+QString Property::toString() const
 {
-    if (m_eScale != smNone)
+    if (m_pPrivate->m_eScale != smNone)
     {
         QRegExp n("[0-9]+\\.*[0-9]*");
         int o = n.indexIn(value());
@@ -256,17 +302,17 @@ QString Property::toString()
         if (o == -1)
             return value();
 
-        if (m_eScale == smScale)
+        if (m_pPrivate->m_eScale == smScale)
         {
-            if (m_bHeightProp)
-                v *= m_pCSS->heightScaleFactor();
+            if (m_pPrivate->m_bHeightProp)
+                v *= m_pPrivate->m_pCSS->heightScaleFactor();
             else
-                v *= m_pCSS->widthScaleFactor();
+                v *= m_pPrivate->m_pCSS->widthScaleFactor();
         }
-        else if (m_eScale == smScaleWidth)
-            v *= m_pCSS->widthScaleFactor();
-        else if (m_eScale == smScaleHeight)
-            v *= m_pCSS->heightScaleFactor();
+        else if (m_pPrivate->m_eScale == smScaleWidth)
+            v *= m_pPrivate->m_pCSS->widthScaleFactor();
+        else if (m_pPrivate->m_eScale == smScaleHeight)
+            v *= m_pPrivate->m_pCSS->heightScaleFactor();
 
         if (n.cap(0).indexOf(".") == -1)
         {
@@ -281,20 +327,22 @@ QString Property::toString()
 
 QString Property::value() const
 {
+    if (m_pPrivate->m_bNull)
+        return QString();
     QRegExp varreg("\\$([a-zA-Z_-0-9]+)");
     int offset=0;
-    QString val = m_sValue;
+    QString val = m_pPrivate->m_sValue;
 
-    while (varreg.indexIn(m_sValue,offset) != -1)
+    while (varreg.indexIn(m_pPrivate->m_sValue,offset) != -1)
     {
-        val = val.replace(varreg.cap(0),m_pCSS->variable(varreg.cap(1)));
+        val = val.replace(varreg.cap(0),m_pPrivate->m_pCSS->variable(varreg.cap(1)));
         offset += varreg.cap(0).size();
     }
 
     return val;
 }
 
-int Property::toInt()
+int Property::toInt() const
 {
     QString val = toString();
     QRegExp nr("([0-9]+)");
@@ -308,7 +356,7 @@ int Property::toInt()
     return i;
 }
 
-double Property::toDouble()
+double Property::toDouble() const
 {
     QString val = toString();
     QRegExp nr("([0-9\\.]+)");
@@ -317,39 +365,39 @@ double Property::toDouble()
     return nr.cap(1).toDouble();
 }
 
-QColor Property::toColor()
+QColor Property::toColor() const
 {
     return stringToColor(value());
 }
 
-void Property::setValue(double val, ScaleMode scale)
+void Property::setValue(double val, ScaleMode scale) const
 {
-    if (m_bReadOnly)
+    if (m_pPrivate->m_bReadOnly)
         return;
-    m_bNull = false;
-    m_eScale = scale;
-    m_sValue = QString::number(val);
+    m_pPrivate->m_bNull = false;
+    m_pPrivate->m_eScale = scale;
+    m_pPrivate->m_sValue = QString::number(val);
 }
 
-void Property::setValue(int val, ScaleMode scale)
+void Property::setValue(int val, ScaleMode scale) const
 {
-    m_bNull = false;
-    m_eScale = scale;
-    m_sValue = QString::number(val);
+    m_pPrivate->m_bNull = false;
+    m_pPrivate->m_eScale = scale;
+    m_pPrivate->m_sValue = QString::number(val);
 }
 
-void Property::setValue(QString val, ScaleMode scale)
+void Property::setValue(QString val, ScaleMode scale) const
 {
-    m_bNull = false;
-    m_eScale = scale;
-    m_sValue = val;
+    m_pPrivate->m_bNull = false;
+    m_pPrivate->m_eScale = scale;
+    m_pPrivate->m_sValue = val;
 }
 
-void Property::setValue(QColor val, ColorFormat format)
+void Property::setValue(QColor val, ColorFormat format) const
 {
-    m_bNull = false;
-    m_eScale = smNone;
-    m_sValue = colorToString(val,format);
+    m_pPrivate->m_bNull = false;
+    m_pPrivate->m_eScale = smNone;
+    m_pPrivate->m_sValue = colorToString(val,format);
 }
 
 void Stylesheet::parse(QString css)
@@ -362,7 +410,7 @@ void Stylesheet::parse(QString css)
     QString ss,propdata,propkey,propvalue,proprules;
     QStringList proplist,proper;
     Selector* s;
-    Property* prop;
+    Property prop;
 
     int f;
     bool /*bScale,*/bHeightProp;
@@ -457,58 +505,58 @@ void Stylesheet::parse(QString css)
                     QStringList marginprops = propvalue.split(QRegExp(" +"));
                     if (marginprops.size() == 4)
                     {
-                        prop = new Property(marginprops[0],this,scale,true);
+                        prop = Property("margin-top",marginprops[0],this,scale,true);
                         s->setProperty("margin-top",prop);
 
-                        prop = new Property(marginprops[1],this,scale,false);
+                        prop = Property("margin-right",marginprops[1],this,scale,false);
                         s->setProperty("margin-right",prop);
 
-                        prop = new Property(marginprops[2],this,scale,true);
+                        prop = Property("margin-bottom",marginprops[2],this,scale,true);
                         s->setProperty("margin-bottom",prop);
 
-                        prop = new Property(marginprops[3],this,scale,false);
+                        prop = Property("margin-left",marginprops[3],this,scale,false);
                         s->setProperty("margin-left",prop);
                     }
                     else if (marginprops.size() == 3)
                     {
-                        prop = new Property(marginprops[0],this,scale,true);
+                        prop = Property("margin-top",marginprops[0],this,scale,true);
                         s->setProperty("margin-top",prop);
 
-                        prop = new Property(marginprops[1],this,scale,false);
+                        prop = Property("margin-right",marginprops[1],this,scale,false);
                         s->setProperty("margin-right",prop);
 
-                        prop = new Property(marginprops[2],this,scale,true);
+                        prop = Property("margin-bottom",marginprops[2],this,scale,true);
                         s->setProperty("margin-bottom",prop);
 
-                        prop = new Property(marginprops[1],this,scale,false);
+                        prop = Property("margin-left",marginprops[1],this,scale,false);
                         s->setProperty("margin-left",prop);
                     }
                     else if (marginprops.size() == 2)
                     {
-                        prop = new Property(marginprops[0],this,scale,true);
+                        prop = Property("margin-top",marginprops[0],this,scale,true);
                         s->setProperty("margin-top",prop);
 
-                        prop = new Property(marginprops[1],this,scale,false);
+                        prop = Property("margin-right",marginprops[1],this,scale,false);
                         s->setProperty("margin-right",prop);
 
-                        prop = new Property(marginprops[0],this,scale,true);
+                        prop = Property("margin-bottom",marginprops[0],this,scale,true);
                         s->setProperty("margin-bottom",prop);
 
-                        prop = new Property(marginprops[1],this,scale,false);
+                        prop = Property("margin-left",marginprops[1],this,scale,false);
                         s->setProperty("margin-left",prop);
                     }
                     else
                     {
-                        prop = new Property(propvalue,this,scale,true);
+                        prop = Property("margin-top",propvalue,this,scale,true);
                         s->setProperty("margin-top",prop);
 
-                        prop = new Property(propvalue,this,scale,false);
+                        prop = Property("margin-right",propvalue,this,scale,false);
                         s->setProperty("margin-right",prop);
 
-                        prop = new Property(propvalue,this,scale,true);
+                        prop = Property("margin-bottom",propvalue,this,scale,true);
                         s->setProperty("margin-bottom",prop);
 
-                        prop = new Property(propvalue,this,scale,false);
+                        prop = Property("margin-left",propvalue,this,scale,false);
                         s->setProperty("margin-left",prop);
                     }
                 }
@@ -517,78 +565,78 @@ void Stylesheet::parse(QString css)
                     QStringList paddingprops = propvalue.split(QRegExp(" +"));
                     if (paddingprops.size() == 4)
                     {
-                        prop = new Property(paddingprops[0],this,scale,true);
+                        prop = Property("padding-top",paddingprops[0],this,scale,true);
                         s->setProperty("padding-top",prop);
 
-                        prop = new Property(paddingprops[1],this,scale,false);
+                        prop = Property("padding-right",paddingprops[1],this,scale,false);
                         s->setProperty("padding-right",prop);
 
-                        prop = new Property(paddingprops[2],this,scale,true);
+                        prop = Property("padding-bottom",paddingprops[2],this,scale,true);
                         s->setProperty("padding-bottom",prop);
 
-                        prop = new Property(paddingprops[3],this,scale,false);
+                        prop = Property("padding-left",paddingprops[3],this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
                     else if (paddingprops.size() == 3)
                     {
-                        prop = new Property(paddingprops[0],this,scale,true);
+                        prop = Property("padding-top",paddingprops[0],this,scale,true);
                         s->setProperty("padding-top",prop);
 
-                        prop = new Property(paddingprops[1],this,scale,false);
+                        prop = Property("padding-right",paddingprops[1],this,scale,false);
                         s->setProperty("padding-right",prop);
 
-                        prop = new Property(paddingprops[2],this,scale,true);
+                        prop = Property("padding-bottom",paddingprops[2],this,scale,true);
                         s->setProperty("padding-bottom",prop);
 
-                        prop = new Property(paddingprops[1],this,scale,false);
+                        prop = Property("padding-left",paddingprops[1],this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
                     else if (paddingprops.size() == 2)
                     {
-                        prop = new Property(paddingprops[0],this,scale,true);
+                        prop = Property("padding-top",paddingprops[0],this,scale,true);
                         s->setProperty("padding-top",prop);
 
-                        prop = new Property(paddingprops[1],this,scale,false);
+                        prop = Property("padding-right",paddingprops[1],this,scale,false);
                         s->setProperty("padding-right",prop);
 
-                        prop = new Property(paddingprops[0],this,scale,true);
+                        prop = Property("padding-bottom",paddingprops[0],this,scale,true);
                         s->setProperty("padding-bottom",prop);
 
-                        prop = new Property(paddingprops[1],this,scale,false);
+                        prop = Property("padding-left",paddingprops[1],this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
                     else
                     {
-                        prop = new Property(propvalue,this,scale,true);
+                        prop = Property("padding-top",propvalue,this,scale,true);
                         s->setProperty("padding-top",prop);
 
-                        prop = new Property(propvalue,this,scale,false);
+                        prop = Property("padding-right",propvalue,this,scale,false);
                         s->setProperty("padding-right",prop);
 
-                        prop = new Property(propvalue,this,scale,true);
+                        prop = Property("padding-bottom",propvalue,this,scale,true);
                         s->setProperty("padding-bottom",prop);
 
-                        prop = new Property(propvalue,this,scale,false);
+                        prop = Property("padding-left",propvalue,this,scale,false);
                         s->setProperty("padding-left",prop);
                     }
                 }
                 else if (propkey == "border")
                 {
-                    prop = new Property(propvalue,this,scale,false);
+                    prop = Property("border-top",propvalue,this,scale,false);
                     s->setProperty("border-top",prop);
 
-                    prop = new Property(propvalue,this,scale,false);
+                    prop = Property("border-right",propvalue,this,scale,false);
                     s->setProperty("border-right",prop);
 
-                    prop = new Property(propvalue,this,scale,false);
+                    prop = Property("border-bottom",propvalue,this,scale,false);
                     s->setProperty("border-bottom",prop);
 
-                    prop = new Property(propvalue,this,scale,false);
+                    prop = Property("border-left",propvalue,this,scale,false);
                     s->setProperty("border-left",prop);
                 }
                 else
                 {
-                    prop = new Property(propvalue,this,scale,bHeightProp);
+                    prop = Property(propkey,propvalue,this,scale,bHeightProp);
                     s->setProperty(propkey,prop);
                 }
             }
@@ -620,8 +668,8 @@ void Stylesheet::parse(QString css)
 
         for (int n=0;n<baseprops.size();n++)
         {
-            if (s->property(baseprops[n])->isNull())
-                s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+            if (s->property(baseprops[n]).isNull())
+                s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
         }
 
         //propagate from base overlay props for overlay specific props
@@ -631,8 +679,8 @@ void Stylesheet::parse(QString css)
 
         for (int n=0;n<baseprops.size();n++)
         {
-            if (s->property(baseprops[n])->isNull())
-                s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+            if (s->property(baseprops[n]).isNull())
+                s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
         }
 
 
@@ -649,8 +697,8 @@ void Stylesheet::parse(QString css)
 
             for (int n=0;n<baseprops.size();n++)
             {
-                if (s->property(baseprops[n])->isNull())
-                    s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                if (s->property(baseprops[n]).isNull())
+                    s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
             }
 
             //propagate from layer base per section
@@ -660,8 +708,8 @@ void Stylesheet::parse(QString css)
 
             for (int n=0;n<baseprops.size();n++)
             {
-                if (s->property(baseprops[n])->isNull())
-                    s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                if (s->property(baseprops[n]).isNull())
+                    s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
             }
 
             for (int j=0;j<l->objectCount();j++)
@@ -679,8 +727,8 @@ void Stylesheet::parse(QString css)
                 for (int n=0;n<baseprops.size();n++)
                 {
                     //qDebug() << "#"+o->id()+" object" << baseprops[n];
-                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
-                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                    if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
 
                 s = selector("#"+o->id()+"::"+obj->id());
@@ -692,8 +740,8 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    if (s->property(baseprops[n])->isNull())
-                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                    if (s->property(baseprops[n]).isNull())
+                        s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
 
                 // now propagate from the layer base
@@ -702,8 +750,8 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
-                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                    if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
 
                 // and propagate from the section specific object base
@@ -713,8 +761,8 @@ void Stylesheet::parse(QString css)
                 for (int n=0;n<baseprops.size();n++)
                 {
                     //qDebug() << "#"+o->id()+"::"+obj->id() << baseprops[n];
-                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
-                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                    if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
 
             }
@@ -738,8 +786,8 @@ void Stylesheet::parse(QString css)
 
         for (int n=0;n<baseprops.size();n++)
         {
-            if (s->property(baseprops[n])->isNull())
-                s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+            if (s->property(baseprops[n]).isNull())
+                s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
         }
 
         //propagate from base overlay props for overlay specific props
@@ -749,8 +797,8 @@ void Stylesheet::parse(QString css)
 
         for (int n=0;n<baseprops.size();n++)
         {
-            if (s->property(baseprops[n])->isNull())
-                s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+            if (s->property(baseprops[n]).isNull())
+                s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
         }
 
 
@@ -767,8 +815,8 @@ void Stylesheet::parse(QString css)
 
             for (int n=0;n<baseprops.size();n++)
             {
-                if (s->property(baseprops[n])->isNull())
-                    s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                if (s->property(baseprops[n]).isNull())
+                    s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
             }
 
             //propagate from layer base per section
@@ -778,8 +826,8 @@ void Stylesheet::parse(QString css)
 
             for (int n=0;n<baseprops.size();n++)
             {
-                if (s->property(baseprops[n])->isNull())
-                    s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                if (s->property(baseprops[n]).isNull())
+                    s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
             }
 
             for (int j=0;j<l->objectCount();j++)
@@ -797,8 +845,8 @@ void Stylesheet::parse(QString css)
                 for (int n=0;n<baseprops.size();n++)
                 {
                     //qDebug() << "#"+cs->id()+" object" << baseprops[n];
-                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
-                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                    if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
 
                 s = selector("#"+cs->id()+"::"+obj->id());
@@ -810,8 +858,8 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    if (s->property(baseprops[n])->isNull())
-                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                    if (s->property(baseprops[n]).isNull())
+                        s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
 
                 // now propagate from the layer base
@@ -820,8 +868,8 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
-                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                    if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
 
                 // and propagate from the section specific object base
@@ -831,8 +879,8 @@ void Stylesheet::parse(QString css)
                 for (int n=0;n<baseprops.size();n++)
                 {
                     //qDebug() << "#"+cs->id()+"::"+obj->id() << baseprops[n];
-                    if (s->property(baseprops[n])->isNull() || !oriprops.contains(baseprops[n]))
-                        s->property(baseprops[n])->setValue(base->property(baseprops[n])->toString());
+                    if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
+                        s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
 
             }
@@ -851,7 +899,7 @@ void Stylesheet::parse(QString css)
         s = it.value();
         QStringList list = s->properties();
         for (int i=0;i<list.size();i++)
-            test += "\t"+list[i]+": "+s->property(list[i])->toString()+";\n";
+            test += "\t"+list[i]+": "+s->property(list[i]).toString()+";\n";
         test += "}\n";
     }
     qDebug() << test;*/
@@ -949,4 +997,26 @@ namespace CSS
 
         return s;
     }
+}
+
+PropertyPrivate::PropertyPrivate(Property *p)
+{
+    m_references.append(p);
+}
+
+void PropertyPrivate::registerUse(Property *p)
+{
+    m_references.append(p);
+}
+
+void PropertyPrivate::unregisterUse(Property *p)
+{
+    m_references.removeAll(p);
+}
+
+bool PropertyPrivate::isUnreferenced()
+{
+    if (m_references.size() == 0)
+        return true;
+    return false;
 }
