@@ -69,9 +69,18 @@ enum ColorFormat
     cfRgba
 };
 
+enum ValueType
+{
+    vtString=0,
+    vtInt,
+    vtDouble,
+    vtColor
+};
+
 RenderMode renderModeFromString(QString str);
 QColor stringToColor(QString color);
 QString colorToString(QColor color, ColorFormat format=cfHex);
+ValueType valueTypeFromString(QString str);
 
 class Stylesheet;
 class Animation;
@@ -79,11 +88,11 @@ class Animation;
 class PropertyPrivate
 {
 public:
-    PropertyPrivate(Property*);
+    PropertyPrivate();
 
 private:
-    void registerUse(Property* p);
-    void unregisterUse(Property *p);
+    void registerUse();
+    void unregisterUse();
     bool isUnreferenced();
 
 
@@ -94,7 +103,7 @@ private:
     Stylesheet* m_pCSS;
     bool m_bReadOnly;
 
-    QList<Property*> m_references;
+    int m_iRefCount;
 
     friend class Property;
     friend class Stylesheet;
@@ -109,11 +118,13 @@ public:
     Property();
     ~Property();
 
+    Property clone() const;
+
     QString name() const;
 
-    QString toString() const;
-    int toInt() const;
-    double toDouble() const;
+    QString toString(bool scale=true) const;
+    int toInt(bool scale=true) const;
+    double toDouble(bool scale=true) const;
     QColor toColor() const;
 
     QString value() const; //unscaled
@@ -132,8 +143,11 @@ public:
     ScaleMode scaleMode() const;
 
     virtual bool operator==(const Property&);
+    virtual Property& operator=(const Property&);
+
 
 private:
+
     QString m_sName;
     PropertyPrivate* m_pPrivate;
 
@@ -147,7 +161,7 @@ public:
     ~Selector();
 
     Property property(QString key);
-    void setProperty(QString key, const Property &prop);
+    void setProperty(QString key, const Property prop);
     QStringList properties();
 
 private:

@@ -208,7 +208,7 @@ Property Selector::property(QString key)
     return prop;
 }
 
-void Selector::setProperty(QString key, const Property &prop)
+void Selector::setProperty(QString key, const Property prop)
 {
     if (m_props.contains(key))
     {
@@ -221,7 +221,7 @@ void Selector::setProperty(QString key, const Property &prop)
 
 Property::Property(QString name, QString value, Stylesheet* css, ScaleMode scale, bool isHeightProp, bool null) : m_sName(name)
 {
-    m_pPrivate = new PropertyPrivate(this);
+    m_pPrivate = new PropertyPrivate();
     m_pPrivate->m_sValue = value;
     m_pPrivate->m_pCSS = css;
     m_pPrivate->m_eScale = scale;
@@ -232,7 +232,7 @@ Property::Property(QString name, QString value, Stylesheet* css, ScaleMode scale
 
 Property::Property(QString name, Stylesheet* css) : m_sName(name)
 {
-    m_pPrivate = new PropertyPrivate(this);
+    m_pPrivate = new PropertyPrivate();
     m_pPrivate->m_sValue = QString();
     m_pPrivate->m_pCSS = css;
     m_pPrivate->m_eScale = smNone;
@@ -243,7 +243,7 @@ Property::Property(QString name, Stylesheet* css) : m_sName(name)
 
 Property::Property() : m_sName(QString())
 {
-    m_pPrivate = new PropertyPrivate(this);
+    m_pPrivate = new PropertyPrivate();
     m_pPrivate->m_sValue = QString();
     m_pPrivate->m_pCSS = 0;
     m_pPrivate->m_eScale = smNone;
@@ -256,7 +256,22 @@ Property::Property(const Property &p)
 {
     m_sName = p.m_sName;
     m_pPrivate = p.m_pPrivate;
-    m_pPrivate->registerUse(this);
+    m_pPrivate->registerUse();
+
+
+    /*m_pPrivate = new PropertyPrivate();
+    m_pPrivate->m_sValue = p.m_pPrivate->m_sValue;
+    m_pPrivate->m_pCSS = p.m_pPrivate->m_pCSS;
+    m_pPrivate->m_eScale = p.m_pPrivate->m_eScale;
+    m_pPrivate->m_bHeightProp = p.m_pPrivate->m_bHeightProp;
+    m_pPrivate->m_bNull = p.m_pPrivate->m_bNull;
+    m_pPrivate->m_bReadOnly = p.m_pPrivate->m_bReadOnly;*/
+
+}
+
+Property Property::clone() const
+{
+    return Property(name(),value(),m_pPrivate->m_pCSS,scaleMode(),m_pPrivate->m_bHeightProp,isNull());
 }
 
 bool Property::operator ==(const Property& other)
@@ -266,9 +281,16 @@ bool Property::operator ==(const Property& other)
 
 Property::~Property()
 {
-    m_pPrivate->unregisterUse(this);
+    m_pPrivate->unregisterUse();
     if (m_pPrivate->isUnreferenced())
         delete m_pPrivate;
+}
+
+Property& Property::operator=(const Property &other)
+{
+    m_pPrivate = other.m_pPrivate;
+    m_sName = other.m_sName;
+    m_pPrivate->registerUse();
 }
 
 QString Property::name() const
@@ -291,9 +313,9 @@ bool Property::isNull() const
     return m_pPrivate->m_bNull;
 }
 
-QString Property::toString() const
+QString Property::toString(bool scale) const
 {
-    if (m_pPrivate->m_eScale != smNone)
+    if (m_pPrivate->m_eScale != smNone && scale)
     {
         QRegExp n("[0-9]+\\.*[0-9]*");
         int o = n.indexIn(value());
@@ -342,9 +364,9 @@ QString Property::value() const
     return val;
 }
 
-int Property::toInt() const
+int Property::toInt(bool scale) const
 {
-    QString val = toString();
+    QString val = toString(scale);
     QRegExp nr("([0-9]+)");
     if (nr.indexIn(val) == -1)
         return 0;
@@ -356,9 +378,9 @@ int Property::toInt() const
     return i;
 }
 
-double Property::toDouble() const
+double Property::toDouble(bool scale) const
 {
-    QString val = toString();
+    QString val = toString(scale);
     QRegExp nr("([0-9\\.]+)");
     if (nr.indexIn(val) == -1)
         return 0;
@@ -376,13 +398,25 @@ void Property::setValue(double val, ScaleMode scale) const
         return;
     m_pPrivate->m_bNull = false;
     m_pPrivate->m_eScale = scale;
-    m_pPrivate->m_sValue = QString::number(val);
+
+    QRegExp strfinder("([a-zA-Z%]+)$");
+
+    if (strfinder.indexIn(m_pPrivate->m_sValue) != -1)
+        m_pPrivate->m_sValue = QString::number(val) + strfinder.cap(1);
+    else
+        m_pPrivate->m_sValue = QString::number(val);
 }
 
 void Property::setValue(int val, ScaleMode scale) const
 {
     m_pPrivate->m_bNull = false;
     m_pPrivate->m_eScale = scale;
+
+    QRegExp strfinder("([a-zA-Z%]+)$");
+
+    if (strfinder.indexIn(m_pPrivate->m_sValue) != -1)
+        m_pPrivate->m_sValue = QString::number(val) + strfinder.cap(1);
+    else
     m_pPrivate->m_sValue = QString::number(val);
 }
 
@@ -420,8 +454,67 @@ void Stylesheet::parse(QString css)
 
     QRegExp propgroupfinder("([^\\{]+)\\{([^\\}]+)\\}");
     QRegExp varfinder("\\$([a-zA-Z_-0-9]+) *= *([^;]+);");
+    QRegExp atrulesfinder("@([a-zA-Z_-0-9]+) *([^;]+) *;");
+    QRegExp atrulesblockfinder("@([a-zA-Z_-0-9]+) *([^\\{]+) *\\{");
+
+    QRegExp animkeyframefinder("([0-9]+)[% ]*\\{([^\\}]+)\\}");
 
     int offset = 0;
+    int ao;
+
+    while (atcss.indexOf(atrulesfinder,offset) != -1)
+    {
+        if (atrulesfinder.cap(1).toLower() == "import")
+        {
+            QString fname = atrulesfinder.cap(2);
+            QByteArray data = m_pDocument->resource(fname);
+            css.replace(atrulesfinder.cap(0),QString::fromUtf8(data));
+        }
+
+        offset += atrulesfinder.cap(0).size();
+    }
+
+    offset = 0;
+    int fc;
+    int ei;
+    int ai;
+    QString atcss = css;
+
+    ai = atcss.indexOf(atrulesblockfinder,offset);
+
+    while (ai != -1)
+    {
+        ei = 0;
+
+        fc=1;
+        for (ei=ai+atrulesblockfinder.cap(0).size();ei<atcss.size();ei++)
+        {
+            if (atcss[ei] == '{')
+                fc++;
+            else if (atcss[ei] == '}')
+                fc--;
+            if (fc==0)
+                break;
+        }
+        QString block = atcss.mid(ai+atrulesblockfinder.cap(0).size(),ei - (ai+atrulesblockfinder.cap(0).size()));
+        if (atrulesblockfinder.cap(1).toLower() == "keyframes")
+        {
+            //animation
+            ao = 0;
+            while (animkeyframefinder.indexIn(block,ao) != -1)
+            {
+                proplist = animkeyframefinder.cap(2).split(";");
+
+                ao += animkeyframefinder.cap(0).size();
+            }
+        }
+
+
+        offset += atrulesblockfinder.cap(0).size() + ei;
+        ai = atcss.indexOf(atrulesblockfinder,offset);
+    }
+
+    offset = 0;
 
     while (css.indexOf(varfinder,offset) != -1)
     {
@@ -997,26 +1090,45 @@ namespace CSS
 
         return s;
     }
+
+    ValueType valueTypeFromString(QString str)
+    {
+        QRegExp intreg("^[0-9]+[a-zA-Z ]*$");
+        QRegExp dblreg("^[0-9\\.]+$");
+        QRegExp clrreg("^(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\))$");
+
+        if (intreg.indexIn(str) != -1)
+            return vtInt;
+        if (dblreg.indexIn(str) != -1)
+            return vtDouble;
+        if (clrreg.indexIn(str) != -1)
+            return vtColor;
+
+    }
 }
 
-PropertyPrivate::PropertyPrivate(Property *p)
+PropertyPrivate::PropertyPrivate()
 {
-    m_references.append(p);
+    m_iRefCount = 1;
+    //qDebug() << "proppriv c" << this << m_iRefCount << m_sValue;
 }
 
-void PropertyPrivate::registerUse(Property *p)
+void PropertyPrivate::registerUse()
 {
-    m_references.append(p);
+    m_iRefCount++;
+    //qDebug() << "proppriv r" << this << m_iRefCount << m_sValue;
 }
 
-void PropertyPrivate::unregisterUse(Property *p)
+void PropertyPrivate::unregisterUse()
 {
-    m_references.removeAll(p);
+    m_iRefCount--;
+    //qDebug() << "proppriv u" << this << m_iRefCount << m_sValue;
 }
 
 bool PropertyPrivate::isUnreferenced()
 {
-    if (m_references.size() == 0)
+    //qDebug() << "proppriv isu" << this << m_iRefCount << m_sValue;
+    if (m_iRefCount == 0)
         return true;
     return false;
 }

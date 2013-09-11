@@ -13,11 +13,15 @@ public:
     ~KeyFrame();
     Property property(QString prop);
 
+    KeyFrame* clone();
+    QStringList properties();
+
 private:
-    void addProperty(QString key, QString value);
+    void addProperty(QString key, Property value);
 
     QMap<QString, Property> m_properties;
     friend class Stylesheet;
+    friend class Animation;
 };
 
 class Animation
