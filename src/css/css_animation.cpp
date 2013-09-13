@@ -58,11 +58,29 @@ Property Animation::keyedProperty(QString property, double position)
 
 void Animation::addKeyFrame(KeyFrame* kf, int key)
 {
-    m_keyframes.insert(key,kf);
+    m_keyframes_def.insert(key,kf);
+}
+
+QStringList Animation::properties()
+{
+    QMap<int,KeyFrame*>::Iterator it;
+    QStringList props;
+    KeyFrame* kf;
+
+    for (it=m_keyframes_def.begin();it != m_keyframes_def.end();it++)
+    {
+        kf = it.value();
+        props += kf->properties();
+    }
+
+    props.removeDuplicates();
+
+    return props;
 }
 
 void Animation::generateFrames(KeyFrame* startframe)
 {
+    m_keyframes = m_keyframes_def;
     KeyFrame* kf;
     KeyFrame* lf;
     KeyFrame* nf;
@@ -89,7 +107,7 @@ void Animation::generateFrames(KeyFrame* startframe)
             }
 
             if (nextframe == -1)
-                m_keyframes.insert(i-1,m_keyframes[i-1]->clone());
+                m_keyframes.insert(i,m_keyframes[i-1]->clone());
             else
             {
                 lf = m_keyframes[lastrealframe];
@@ -140,6 +158,7 @@ void Animation::generateFrames(KeyFrame* startframe)
                      kf->addProperty(props[a],newprop);
 
                 }
+                m_keyframes.insert(i,kf);
             }
         }
     }

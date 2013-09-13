@@ -26,6 +26,7 @@
 #include "coverlay.h"
 #include "csection.h"
 #include "css_default.h"
+#include "css_animation.h"
 #include <QDebug>
 #include <qmath.h>
 
@@ -378,6 +379,14 @@ int Property::toInt(bool scale) const
     return i;
 }
 
+bool Property::toBool() const
+{
+    QString val = m_pPrivate->m_sValue;
+    if (val == "true" || val == "1")
+        return true;
+    return false;
+}
+
 double Property::toDouble(bool scale) const
 {
     QString val = toString(scale);
@@ -462,7 +471,7 @@ void Stylesheet::parse(QString css)
     int offset = 0;
     int ao;
 
-    while (atcss.indexOf(atrulesfinder,offset) != -1)
+    while (css.indexOf(atrulesfinder,offset) != -1)
     {
         if (atrulesfinder.cap(1).toLower() == "import")
         {
@@ -501,12 +510,29 @@ void Stylesheet::parse(QString css)
         {
             //animation
             ao = 0;
+            QString animname = atrulesblockfinder.cap(2);
+            Animation* ani =  new Animation();
+            int ki;
+            KeyFrame* keyf;
+
             while (animkeyframefinder.indexIn(block,ao) != -1)
             {
+                ki = animkeyframefinder.cap(1).replace(QRegExp("[^0-9]+"),"").toInt();
                 proplist = animkeyframefinder.cap(2).split(";");
-
+                for (int i=0;i<proplist.size();i++)
+                {
+                    proper = proplist[i].split(":");
+                    if (proper.size() == 2)
+                    {
+                        propkey = proper[0].replace(outerspaces,"");
+                        propvalue = proper[1].replace(outerspaces,"");
+                        keyf->addProperty(propkey,propvalue);
+                    }
+                }
+                ani->addKeyFrame(keyf,ki);
                 ao += animkeyframefinder.cap(0).size();
             }
+            m_animations.insert(animname,ani);
         }
 
 
@@ -726,6 +752,46 @@ void Stylesheet::parse(QString css)
 
                     prop = Property("border-left",propvalue,this,scale,false);
                     s->setProperty("border-left",prop);
+                }
+                else if (propkey == "animation")
+                {
+                    QStringList animprops = propvalue.split(QRegExp(" +"));
+
+                    if (animprops.size() >= 1)
+                    {
+                        prop = Property("animation-name",animprops[0],this,scale,false);
+                        s->setProperty("animation-name",prop);
+
+                        if (animprops.size() >= 2)
+                            prop = Property("animation-duration",stringToMsTimeString(animprops[1]),this,scale,false);
+                        else
+                            prop = Property("animation-duration","1000ms",this,scale,false);
+                        s->setProperty("animation-duration",prop);
+
+                        if (animprops.size() >= 3)
+                            prop = Property("animation-timing-function",animprops[2],this,scale,false);
+                        else
+                            prop = Property("animation-timing-function","ease",this,scale,false);
+                        s->setProperty("animation-timing-function",prop);
+
+                        if (animprops.size() >= 4)
+                            prop = Property("animation-delay",animprops[3],this,scale,false);
+                        else
+                            prop = Property("animation-delay","0ms",this,scale,false);
+                        s->setProperty("animation-delay",prop);
+
+                        if (animprops.size() >= 5)
+                            prop = Property("animation-iteration-count",animprops[4],this,scale,false);
+                        else
+                            prop = Property("animation-iteration-count","0",this,scale,false);
+                        s->setProperty("animation-iteration-count",prop);
+
+                        if (animprops.size() >= 6)
+                            prop = Property("animation-direction",animprops[5],this,scale,false);
+                        else
+                            prop = Property("animation-direction","normal",this,scale,false);
+                        s->setProperty("animation-direction",prop);
+                    }
                 }
                 else
                 {
@@ -1104,6 +1170,38 @@ namespace CSS
         if (clrreg.indexIn(str) != -1)
             return vtColor;
 
+    }
+
+    QString stringToMsTimeString(QString timestr)
+    {
+        QRegExp timereg("([0-9\\.]+) *(s|ms)");
+        QString s;
+        if (timereg.indexIn(timestr) != -1)
+        {
+            if (timereg.cap(2) == "s")
+                s = QString::number(timereg.cap(1).toDouble() * 1000) + "ms";
+            else
+                s = timestr;
+        }
+        else
+            s = timestr;
+        return s;
+    }
+
+    int stringToMsTime(QString timestr)
+    {
+        QRegExp timereg("([0-9\\.]+) *(s|ms)");
+        double i;
+        if (timereg.indexIn(timestr) != -1)
+        {
+            i = timereg.cap(1).toDouble();
+            if (timereg.cap(2) == "s")
+                i *= 1000;
+        }
+        else
+            i = 0;
+
+        return (int)i;
     }
 }
 

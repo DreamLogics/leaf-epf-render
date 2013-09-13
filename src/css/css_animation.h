@@ -16,12 +16,11 @@ public:
     KeyFrame* clone();
     QStringList properties();
 
-private:
     void addProperty(QString key, Property value);
 
+private:
+
     QMap<QString, Property> m_properties;
-    friend class Stylesheet;
-    friend class Animation;
 };
 
 class Animation
@@ -31,12 +30,14 @@ public:
     ~Animation();
 
     Property keyedProperty(QString property, double position);
+    void generateFrames(KeyFrame* startframe);
+    QStringList properties();
 
 private:
     void addKeyFrame(KeyFrame* kf, int key);
-    void generateFrames(KeyFrame* startframe);
 
     QMap<int,KeyFrame*> m_keyframes;
+    QMap<int,KeyFrame*> m_keyframes_def;
     friend class Stylesheet;
 };
 

@@ -29,7 +29,7 @@
 #include <QDebug>
 #include <QGLFramebufferObject>
 #include <QTime>
-
+#include "canimator.h"
 
 
 CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
@@ -232,6 +232,48 @@ void CBaseObject::layout(QRectF relrect)
 
     m_FPMutex.unlock();
 
+    //animation
+    CSS::Property anim = css->property(obj,"animation-name");
+
+    if (!anim.isNull())
+    {
+        CSS::Property anim_duration = css->property(obj,"animation-name");
+        CSS::Property anim_timing_function = css->property(obj,"animation-timing-function");
+        CSS::Property anim_delay = css->property(obj,"animation-delay");
+        CSS::Property anim_iteration_count = css->property(obj,"animation-iteration-count");
+        CSS::Property anim_direction = css->property(obj,"animation-direction");
+
+        int iter = 1;
+
+        if (anim_iteration_count.toString() == "infinite")
+            iter = -1;
+        else
+            iter = anim_iteration_count.toInt();
+
+        CAnimator::easing_function ef;
+        if (anim_timing_function.toString() == "ease-in")
+            ef = CAnimator::efEaseIn;
+        else if (anim_timing_function.toString() == "ease-out")
+            ef = CAnimator::efEaseOut;
+        else if (anim_timing_function.toString() == "none" || anim_timing_function.toString() == "normal" || anim_timing_function.toString() == "linear")
+            ef = CAnimator::efNone;
+        else
+            ef = CAnimator::efEase;
+
+        CAnimator::direction dir = CAnimator::dirNormal;
+        if (anim_direction.toString() == "reverse")
+            dir = CAnimator::dirReverse;
+        else if (anim_direction.toString() == "alternate")
+            dir = CAnimator::dirAlternate;
+        else if (anim_direction.toString() == "alternate-reverse")
+            dir = CAnimator::dirAlternateReverse;
+
+        CAnimator::get()->registerAnimation(this,anim.toString(),CSS::stringToMsTime(anim_duration.toString()),ef,CSS::stringToMsTime(anim_delay.toString()),iter,dir);
+    }
+    else
+        CAnimator::get()->unregisterAnimation(this);
+
+
     //qDebug() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;
 
     QObjectList clist = children();
@@ -345,6 +387,19 @@ CSS::Property CBaseObject::cssOverrideProp(QString prop)
     //QString t = cprop.toString();
     //qDebug() << "override prop" <<  prop  << t;
     return it.value();
+}
+
+void CBaseObject::setCSSOverrideProp(QString key, CSS::Property value)
+{
+    if (m_CSSOverrideProps.contains(key))
+    {
+        if (value.isNull())
+            m_CSSOverrideProps.remove(key);
+        else
+            m_CSSOverrideProps[key] = value;
+        return;
+    }
+    m_CSSOverrideProps.insert(key,value);
 }
 
 /*QString CBaseObject::cssOverrides()

@@ -90,6 +90,7 @@ public:
     //virtual CSS::Stylesheet* style();
 
     void setCSSOverride(QString css);
+    void setCSSOverrideProp(QString key, CSS::Property value);
     //virtual QString cssOverrides();
     CSS::Property cssOverrideProp(QString prop);
 

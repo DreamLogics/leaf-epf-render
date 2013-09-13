@@ -81,6 +81,8 @@ RenderMode renderModeFromString(QString str);
 QColor stringToColor(QString color);
 QString colorToString(QColor color, ColorFormat format=cfHex);
 ValueType valueTypeFromString(QString str);
+QString stringToMsTimeString(QString timestr);
+int stringToMsTime(QString timestr);
 
 class Stylesheet;
 class Animation;
@@ -126,6 +128,7 @@ public:
     int toInt(bool scale=true) const;
     double toDouble(bool scale=true) const;
     QColor toColor() const;
+    bool toBool() const;
 
     QString value() const; //unscaled
 
