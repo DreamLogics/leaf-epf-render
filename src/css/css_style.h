@@ -40,7 +40,7 @@ static QStringList int_props = (QStringList() << "top" << "bottom" << "left" << 
 static QStringList double_props = (QStringList() << "opacity");
 static QStringList redraw_props = (QStringList() << "height" << "width" << "background-image" << "opacity" << "render-mode");
 
-static QStringList height_props = (QStringList() << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom" << "min-height" << "max-height");
+static QStringList height_props = (QStringList() << "height" << "top" << "bottom" << "margin-top" << "margin-bottom" << "padding-top" << "padding-bottom" << "min-height" << "max-height" << "mod-top" << "mod-bottom");
 
 //static QStringList combined_props = (QStringList() << "margin" << "padding");
 

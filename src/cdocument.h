@@ -31,6 +31,7 @@
 #include <QObjectList>
 #include "epfevent.h"
 #include <QMutex>
+#include <QIODevice>
 
 //class COEPFRender;
 
@@ -45,7 +46,20 @@ class CLayout;
 class CAnimation;
 class CEPFView;
 class EPFEvent;
+class CDocument;
 
+class ResourceIO : public QIODevice
+{
+public:
+    ResourceIO(QString resource, CDocument* doc);
+
+    virtual qint64 readData(char *data, qint64 maxlen);
+    virtual qint64 writeData(const char *data, qint64 len);
+
+private:
+    CDocument* m_pDoc;
+    QString m_sResource;
+};
 
 class CDocument : public QObject, public EPFComponent
 {
@@ -60,6 +74,8 @@ public:
     CSection* sectionByPosition(int x, int y);
     int indexForSection(CSection*);
     void addSection(CSection* section);
+
+    void registerFont(int id);
 
     int overlayCount();
     COverlay* overlay(int index);
@@ -95,17 +111,20 @@ public:
         qint32 size;
         qint32 size_compressed;
         qint16 type;
+        ResourceIO* device;
+        QIODevice* external_device;
     };
 
     QByteArray resource(QString resource);
     void addResource(QString resource, QString resource_file, QString extra, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed, qint16 type);
     int resource(QString resource, char* buffer, int len, int offset=0);
+    ResourceIO* resourceIO(QString resource);
     Resource resourceInfo(QString resource);
 
     //void makeConnection(EPFComponent* src, QString event, EPFComponent* target, QString function);
     virtual void onEPFEvent(EPFEvent *ev);
 
-    void updateRenderView();
+
 
     bool shouldStopLayout();
     void stopLayout(bool b);
@@ -119,6 +138,8 @@ signals:
     //void _setActiveOverlay(QString id);
 
 public slots:
+
+    void updateRenderView();
 
     QObjectList sections();
     QObjectList overlays();
@@ -154,6 +175,10 @@ private:
     //QString m_sActiveOverlay;
     //QList<COverlay*> m_OverlayStack;
     CSS::Stylesheet* m_pStylesheet;
+
+    QMap<QString,QIODevice*> m_devices;
+
+    QList<int> m_RegisteredFonts;
 
     bool m_bShouldStopLayout;
     QMutex m_mShouldStopLayoutMutex;

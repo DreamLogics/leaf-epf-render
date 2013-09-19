@@ -64,6 +64,8 @@ public:
     void play();
     void stop();
 
+    bool isPlaying();
+
 private:
 
     void addFrame(AVFrame* frame);

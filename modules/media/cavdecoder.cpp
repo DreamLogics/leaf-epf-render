@@ -80,11 +80,17 @@ void CAVDecoder::init(QIODevice* io)
     //    return;
 
     if (avformat_open_input(&m_pFormatCtx,"media",0,0) < 0)
+    {
+        qDebug() << "Could not open media file.";
         return;
+    }
 
     // Retrieve stream information
     if(avformat_find_stream_info(m_pFormatCtx,0)<0)
+    {
+        qDebug() << "Couldn't find stream information.";
         return; // Couldn't find stream information
+    }
 
     // Dump information about file onto standard error
     //dump_format(pFormatCtx, 0, file.toStdString().c_str(), false);
@@ -101,7 +107,10 @@ void CAVDecoder::init(QIODevice* io)
             break;
     }
     if(m_iVideoStream==-1 && m_iAudioStream==-1)
+    {
+        qDebug() << "Couldn't find a video or an audio steam.";
         return; // Didn't find a video or audio stream
+    }
 
     m_bHasVideo=m_bHasAudio=true;
     if (m_iVideoStream==-1)
@@ -320,6 +329,11 @@ void CAVWorker::decodeFrames()
     delete [] buffer;
     av_free(pFrameRGB);
     av_free(pFrame);
+}
+
+bool CAVDecoder::isPlaying()
+{
+    return m_bShouldPlay;
 }
 
 CAVIOContext::CAVIOContext(QIODevice *io) : m_pIO(io)

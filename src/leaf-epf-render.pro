@@ -33,8 +33,6 @@ SOURCES += cdocument.cpp \
     epfevent.cpp \
     object_types/clabelobject.cpp \
     device.cpp \
-    object_types/cvideoobject.cpp \
-    object_types/caudioobject.cpp \
     css/css_animation.cpp \
     canimator.cpp
 
@@ -65,8 +63,6 @@ HEADERS += leaf-epf-render_global.h \
     css/css_default.h \
     epfevent.h \
     object_types/clabelobject.h \
-    object_types/cvideoobject.h \
-    object_types/caudioobject.h \
     css/css_animation.h \
     canimator.h
 

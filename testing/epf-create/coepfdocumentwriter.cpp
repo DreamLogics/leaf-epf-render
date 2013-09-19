@@ -102,7 +102,7 @@ void COEPFDocumentWriter::parseContentDir(QFile *ds, QString dir, QList<resource
 {
     struct resource res;
     QDir d(dir);
-    QStringList excludecompress = QStringList() << "ogv" << "ogg";
+    QStringList excludecompress = QStringList() << "ogv" << "ogg" << "webm";
     QFileInfoList info = d.entryInfoList();
     QByteArray data;
     CZLib zipper;
@@ -115,7 +115,7 @@ void COEPFDocumentWriter::parseContentDir(QFile *ds, QString dir, QList<resource
             {
                 data = f.readAll();
                 res.filesize = data.size();
-                if (excludecompress.contains(info.at(i).fileName().right(3)))
+                if (excludecompress.contains(info.at(i).fileName().section(".",-1)))
                 {
                     res.filesizecompressed = 0;
                     res.crc32 = 0;

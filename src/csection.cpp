@@ -539,9 +539,11 @@ void CSection::mouseReleaseEvent( int x, int y )
 
     if (m_pControlObj)
     {
+        qDebug() << "mouseRelease controlobj";
         m_pControlObj->mouseReleaseEvent(QPoint(x,y));
         return;
     }
+
 
     CBaseObject* obj = objectOnPos(x,y);
     if (!obj)

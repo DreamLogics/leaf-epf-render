@@ -526,7 +526,7 @@ void Stylesheet::parse(QString css)
                     {
                         propkey = proper[0].replace(outerspaces,"");
                         propvalue = proper[1].replace(outerspaces,"");
-                        keyf->addProperty(propkey,propvalue);
+                        keyf->addProperty(propkey,Property(propkey,propvalue,this,smNone,false));
                     }
                 }
                 ani->addKeyFrame(keyf,ki);
@@ -1229,4 +1229,11 @@ bool PropertyPrivate::isUnreferenced()
     if (m_iRefCount == 0)
         return true;
     return false;
+}
+
+Animation* Stylesheet::animation(QString animation)
+{
+    if (m_animations.contains(animation))
+        return m_animations[animation];
+    return 0;
 }

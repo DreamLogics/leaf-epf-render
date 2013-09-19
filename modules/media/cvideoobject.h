@@ -31,6 +31,11 @@ class CVideoObjectFactory : public IEPFObjectFactory
     virtual CBaseObject* create(QString id, CLayer *layer);
 };
 
+namespace AV {
+    class CAVDecoder;
+}
+class CAVDecoder;
+
 class CVideoObject : public CBaseObject
 {
     Q_OBJECT
@@ -38,8 +43,17 @@ public:
     CVideoObject(QString id, CLayer* layer);
 
     virtual void preload();
+
+    virtual void layout(QRectF relativeTo);
+
     virtual void paint(QPainter *painter);
     virtual void paintBuffered(QPainter *p);
+
+    virtual void mouseReleaseEvent(QPoint pos);
+
+private:
+    AV::CAVDecoder* m_pAV;
+    QString m_sVideo;
 };
 
 #endif // CVideoOBJECT_H

@@ -24,13 +24,14 @@
 #define CSECTION_H
 
 #include <QObject>
-#include <QGraphicsScene>
+//#include <QGraphicsScene>
 #include <QString>
 #include <QMap>
 #include <QImage>
-#include <QGraphicsObject>
+//#include <QGraphicsObject>
 #include <QMutex>
 #include "epfevent.h"
+#include <QColor>
 
 class CDocument;
 class CLayer;

@@ -186,6 +186,35 @@ void CBaseObject::layout(QRectF relrect)
         newrect.moveLeft(marginLeft());
     }
 
+    //mod position
+    CSS::Property modtop = css->property(this,"mod-top");
+    CSS::Property modbot = css->property(this,"mod-bottom");
+    CSS::Property modleft = css->property(this,"mod-left");
+    CSS::Property modright = css->property(this,"mod-right");
+
+    if (!modtop.isNull() && !modbot.isNull())
+    {
+        newrect.setTop(newrect.top()+modtop.toInt());
+        newrect.setBottom(newrect.bottom()+modbot.toInt());
+    }
+    else if (!modbot.isNull())
+        newrect.moveBottom(newrect.bottom()+modbot.toInt());
+    else if (!modtop.isNull())
+        newrect.moveTop(newrect.top()+modtop.toInt());
+
+
+
+    if (!modleft.isNull() && !modright.isNull())
+    {
+        newrect.setLeft(newrect.left()+modleft.toInt());
+        newrect.setRight(newrect.right()+modright.toInt());
+    }
+    else if (!modright.isNull())
+        newrect.moveRight(newrect.right()+modright.toInt());
+    else if (!modleft.isNull())
+        newrect.moveLeft(newrect.left()+modleft.toInt());
+
+
 
     //min/max height/width
     if (!css->property(this,"min-height").isNull() && newrect.height() < css->property(this,"min-height").toInt())
@@ -233,15 +262,15 @@ void CBaseObject::layout(QRectF relrect)
     m_FPMutex.unlock();
 
     //animation
-    CSS::Property anim = css->property(obj,"animation-name");
+    CSS::Property anim = css->property(this,"animation-name");
 
     if (!anim.isNull())
     {
-        CSS::Property anim_duration = css->property(obj,"animation-name");
-        CSS::Property anim_timing_function = css->property(obj,"animation-timing-function");
-        CSS::Property anim_delay = css->property(obj,"animation-delay");
-        CSS::Property anim_iteration_count = css->property(obj,"animation-iteration-count");
-        CSS::Property anim_direction = css->property(obj,"animation-direction");
+        CSS::Property anim_duration = css->property(this,"animation-name");
+        CSS::Property anim_timing_function = css->property(this,"animation-timing-function");
+        CSS::Property anim_delay = css->property(this,"animation-delay");
+        CSS::Property anim_iteration_count = css->property(this,"animation-iteration-count");
+        CSS::Property anim_direction = css->property(this,"animation-direction");
 
         int iter = 1;
 

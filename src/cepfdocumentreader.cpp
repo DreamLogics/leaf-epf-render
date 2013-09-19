@@ -38,11 +38,12 @@
 #include <QObject>
 #include "epfevent.h"
 #include "canimation.h"
+#include "idevice.h"
 
 #include "object_types/cblockobject.h"
 #include "object_types/ctextobject.h"
-#include "object_types/cvideoobject.h"
-#include "object_types/caudioobject.h"
+//#include "object_types/cvideoobject.h"
+//#include "object_types/caudioobject.h"
 #include "object_types/cimageobject.h"
 #include "object_types/cscriptobject.h"
 #include "object_types/clabelobject.h"
@@ -52,8 +53,6 @@ CEPFDocumentReader::CEPFDocumentReader()
     registerObjectType("text",new CTextObjectFactory());
     registerObjectType("image",new CImageObjectFactory());
     registerObjectType("block",new CBlockObjectFactory());
-    registerObjectType("video",new CVideoObjectFactory());
-    registerObjectType("audio",new CAudioObjectFactory());
     registerObjectType("scripted",new CScriptObjectFactory());
     registerObjectType("label",new CLabelObjectFactory());
 }
@@ -218,8 +217,11 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
         pugi::xml_node fonts = containerxml.child("EPF").child("fonts");
         for (pugi::xml_node font = fonts.child("font"); font; font = font.next_sibling("font"))
         {
-            if (QFontDatabase::addApplicationFontFromData(document->resource(font.attribute("src").value())) == -1)
+            int fid = Device::currentDevice()->addApplicationFont(document->resource(font.attribute("src").value()));//QFontDatabase::addApplicationFontFromData(document->resource(font.attribute("src").value()));
+            if (fid == -1)
                 qDebug() << "Could not load font:" << font.attribute("src").value();
+            else
+                document->registerFont(fid);
         }
 
         pugi::xml_node layouts = containerxml.child("EPF").child("layouts");

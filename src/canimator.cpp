@@ -17,7 +17,7 @@ CAnimator::CAnimator(QObject *parent) :
     m_pTimer->start();
 }
 
-static CAnimator* CAnimator::get()
+CAnimator* CAnimator::get()
 {
     static CAnimator* p=0;
     if (!p)
@@ -29,7 +29,7 @@ void CAnimator::update()
 {
     QMap<CBaseObject*,registered_animation>::Iterator it;
     double pos;
-    CSection* s;
+    CSection* s=0;
 
     for (it=m_Animations.begin();it != m_Animations.end();it++)
     {
@@ -88,7 +88,8 @@ void CAnimator::update()
         }
     }
 
-    s->layout();
+    if (s)
+        s->layout();
 
     m_iTime+=FRAMERATE;
 }
@@ -111,7 +112,7 @@ void CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_ti
 
         for (int i=0;i<props.size();i++)
         {
-            kf->addProperty(props[i],css->property(obj,props[i]).toString(false));
+            kf->addProperty(props[i],css->property(obj,props[i]));
         }
 
         ani->generateFrames(kf);
@@ -161,7 +162,7 @@ void CAnimator::stylesheetChange(CSS::Stylesheet* css)
 
             for (int i=0;i<props.size();i++)
             {
-                kf->addProperty(props[i],css->property(obj,props[i]).toString(false));
+                kf->addProperty(props[i],css->property(it.key(),props[i]));
             }
 
             ani->generateFrames(kf);

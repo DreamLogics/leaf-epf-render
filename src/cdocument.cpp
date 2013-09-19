@@ -34,6 +34,7 @@
 #include "cbaseobject.h"
 #include "css/css_style.h"
 #include <QTimer>
+#include "idevice.h"
 
 CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
 {
@@ -54,6 +55,26 @@ CDocument::~CDocument()
 
     for (int i=0;i<m_Layouts.size();i++)
         delete m_Layouts[i];
+
+    QMap<QString,struct Resource>::Iterator it;
+
+    for (it=m_Resources.begin();it!=m_Resources.end();it++)
+    {
+        it.value().device->close();
+        delete it.value().device;
+    }
+
+    QMap<QString,QIODevice*>::Iterator it2;
+
+    for (it2=m_devices.begin();it2!=m_devices.end();it2++)
+    {
+        it2.value()->close();
+        delete it2.value();
+    }
+
+    for (int i=0;i<m_RegisteredFonts.size();i++)
+        Device::currentDevice()->removeApplicationFont(m_RegisteredFonts[i]);
+
 
     //QFontDatabase::removeAllApplicationFonts();
 
@@ -414,6 +435,22 @@ void CDocument::addResource(QString resource, QString container_file, QString ex
     res.offset = offset;
     res.size = size;
     res.size_compressed = size_compressed;
+    res.device = new ResourceIO(resource,this);
+
+    res.device->open(QIODevice::ReadOnly);
+
+    if (res.type == 0 || res.type == 1 || res.type == 3)
+    {
+        if (m_devices.contains(res.container))
+            res.external_device = m_devices[res.container];
+        else
+        {
+            res.external_device = new QFile(res.container);
+            if (!res.external_device->open(QIODevice::ReadOnly))
+                qDebug() << "unable to open file resource container";
+            m_devices.insert(res.container,res.external_device);
+        }
+    }
 
     m_Resources.insert(resource,res);
 }
@@ -661,3 +698,37 @@ void CDocument::clearBuffers()
         delete m_pStylesheet;
     m_pStylesheet = 0;
 }
+
+void CDocument::registerFont(int id)
+{
+    qDebug() << "font registered" << id;
+    m_RegisteredFonts.append(id);
+}
+
+ResourceIO* CDocument::resourceIO(QString resource)
+{
+    if (m_Resources.contains(resource))
+        return m_Resources[resource].device;
+    return 0;
+}
+
+ResourceIO::ResourceIO(QString resource, CDocument *doc) : m_sResource(resource), m_pDoc(doc)
+{
+
+}
+
+qint64 ResourceIO::readData(char *data, qint64 maxlen)
+{
+    qDebug() << "read data";
+    CDocument::Resource r = m_pDoc->resourceInfo(m_sResource);
+    r.external_device->seek(r.offset+pos());
+    return r.external_device->read(data,maxlen);
+    //return m_pDoc->resource(m_sResource,data,maxlen,pos());
+}
+
+qint64 ResourceIO::writeData(const char *data, qint64 len)
+{
+    qDebug() << "write data";
+    return 0;
+}
+
