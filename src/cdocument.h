@@ -47,6 +47,7 @@ class CAnimation;
 class CEPFView;
 class EPFEvent;
 class CDocument;
+class CEPFJS;
 
 class ResourceIO : public QIODevice
 {
@@ -153,6 +154,8 @@ public slots:
 
     //void setActiveOverlay(QString overlay_id);
 
+private slots:
+
     void load(int height, int width, int sectionid);
     void layout(int height, int width, int section, bool bCurrentSectionOnly);
 
@@ -187,6 +190,10 @@ private:
 
     int m_iLayoutHeight;
     int m_iLayoutWidth;
+
+    CEPFJS* m_pJS;
+
+    friend class CEPFView;
 };
 
 #endif // CDOCUMENT_H

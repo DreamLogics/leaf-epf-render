@@ -469,9 +469,10 @@ void Stylesheet::parse(QString css)
     QRegExp animkeyframefinder("([0-9]+)[% ]*\\{([^\\}]+)\\}");
 
     int offset = 0;
+    int index = css.indexOf(atrulesfinder,offset);
     int ao;
 
-    while (css.indexOf(atrulesfinder,offset) != -1)
+    while (index != -1)
     {
         if (atrulesfinder.cap(1).toLower() == "import")
         {
@@ -480,7 +481,8 @@ void Stylesheet::parse(QString css)
             css.replace(atrulesfinder.cap(0),QString::fromUtf8(data));
         }
 
-        offset += atrulesfinder.cap(0).size();
+        offset = index + atrulesfinder.cap(0).size();
+        index = css.indexOf(atrulesfinder,offset);
     }
 
     offset = 0;
@@ -536,24 +538,27 @@ void Stylesheet::parse(QString css)
         }
 
 
-        offset += atrulesblockfinder.cap(0).size() + ei;
+        offset = ai + atrulesblockfinder.cap(0).size() + ei;
         ai = atcss.indexOf(atrulesblockfinder,offset);
     }
 
     offset = 0;
 
-    while (css.indexOf(varfinder,offset) != -1)
+    index = css.indexOf(varfinder,offset);
+    while (index != -1)
     {
         ss = varfinder.cap(2).replace(outerspaces,"");
         ss.replace("\"","");
         setVariable(varfinder.cap(1),ss);
-        offset += varfinder.cap(0).size();
+        offset = index + varfinder.cap(0).size();
+        index = css.indexOf(varfinder,offset);
         qDebug() << "css var added" << varfinder.cap(1) << ss;
     }
 
     offset = 0;
 
-    while (css.indexOf(propgroupfinder,offset) != -1)
+    index = css.indexOf(propgroupfinder,offset);
+    while (index != -1)
     {
         ss = propgroupfinder.cap(1).replace(outerspaces,"");
         propdata = propgroupfinder.cap(2);
@@ -801,7 +806,8 @@ void Stylesheet::parse(QString css)
             }
         }
 
-        offset += propgroupfinder.cap(0).size();
+        offset = index + propgroupfinder.cap(0).size();
+        index = css.indexOf(propgroupfinder,offset);
     }
 
     //propagate properties

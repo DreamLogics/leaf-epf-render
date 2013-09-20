@@ -175,7 +175,7 @@ QObject* CSection::getActiveLayer()
 */
 QObject* CSection::getObjectByID(QString id)
 {
-    return getObjectByID(id);
+    return objectByID(id);
 }
 /*
 void CSection::rendered(QPainter *p)

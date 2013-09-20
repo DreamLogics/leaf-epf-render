@@ -35,6 +35,7 @@
 #include "css/css_style.h"
 #include <QTimer>
 #include "idevice.h"
+#include "cepfjs.h"
 
 CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
 {
@@ -43,6 +44,7 @@ CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(plat
     //m_pActiveOverlay = 0;
     m_pStylesheet = 0;
     m_bShouldStopLayout = false;
+    m_pJS = 0;
 }
 
 CDocument::~CDocument()
@@ -75,6 +77,9 @@ CDocument::~CDocument()
     for (int i=0;i<m_RegisteredFonts.size();i++)
         Device::currentDevice()->removeApplicationFont(m_RegisteredFonts[i]);
 
+
+    if (m_pJS)
+        delete m_pJS;
 
     //QFontDatabase::removeAllApplicationFonts();
 
@@ -422,7 +427,7 @@ CDocument::Resource CDocument::resourceInfo(QString resource)
     return res;
 }
 
-void CDocument::addResource(QString resource, QString container_file, QString extra, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed, qint16 type)
+void CDocument::addResource(QString re, QString container_file, QString extra, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed, qint16 type)
 {
     struct Resource res;
     if (type == 1 || type == 3)
@@ -435,7 +440,7 @@ void CDocument::addResource(QString resource, QString container_file, QString ex
     res.offset = offset;
     res.size = size;
     res.size_compressed = size_compressed;
-    res.device = new ResourceIO(resource,this);
+    res.device = new ResourceIO(re,this);
 
     res.device->open(QIODevice::ReadOnly);
 
@@ -452,7 +457,12 @@ void CDocument::addResource(QString resource, QString container_file, QString ex
         }
     }
 
-    m_Resources.insert(resource,res);
+    m_Resources.insert(re,res);
+
+    if (re == "main.js")
+    {
+        m_pJS = new CEPFJS(QString::fromUtf8(resource(re)),this);
+    }
 }
 
 CLayout* CDocument::currentLayout()
@@ -584,6 +594,9 @@ void CDocument::load(int height, int width, int sectionid)
     }
 
     layout(height,width,sectionid,false);
+
+    if (m_pJS)
+        m_pJS->run();
 
     //QTimer::singleShot(1000,this,SIGNAL(finishedLoading()));
     sendEvent("finishedLoading");
