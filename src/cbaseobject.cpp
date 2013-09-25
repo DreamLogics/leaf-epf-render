@@ -368,6 +368,7 @@ void CBaseObject::mousePressEvent(QPoint contentpos)
 void CBaseObject::mouseReleaseEvent(QPoint contentpos)
 {
     sendEvent("clicked");
+    emit clicked();
 }
 void CBaseObject::mouseMoveEvent(QPoint contentpos)
 {

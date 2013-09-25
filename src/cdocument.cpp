@@ -727,15 +727,31 @@ ResourceIO* CDocument::resourceIO(QString resource)
 
 ResourceIO::ResourceIO(QString resource, CDocument *doc) : m_sResource(resource), m_pDoc(doc)
 {
-
+    //m_iPos = 0;
 }
 
 qint64 ResourceIO::readData(char *data, qint64 maxlen)
 {
-    qDebug() << "read data";
     CDocument::Resource r = m_pDoc->resourceInfo(m_sResource);
-    r.external_device->seek(r.offset+pos());
-    return r.external_device->read(data,maxlen);
+    int len=maxlen;
+    if (pos()+maxlen > r.size)
+    {
+        len -= (pos() + maxlen) - r.size;
+    }
+
+    if (len == 0)
+        return 0;
+    else if (len < 0)
+        return -1;
+
+    if (!r.external_device->seek(r.offset+pos()))
+        return -1;
+    /*int read = r.external_device->read(data,len);
+    if (read == -1)
+        return -1;*/
+    //m_iPos += read;
+    //qDebug() << "read data" << r.size << pos();
+    return r.external_device->read(data,len);
     //return m_pDoc->resource(m_sResource,data,maxlen,pos());
 }
 
@@ -745,3 +761,31 @@ qint64 ResourceIO::writeData(const char *data, qint64 len)
     return 0;
 }
 
+qint64 ResourceIO::bytesAvailable() const
+{
+    CDocument::Resource r = m_pDoc->resourceInfo(m_sResource);
+    return r.size - pos()/* + QIODevice::bytesAvailable()*/;
+}
+
+qint64 ResourceIO::size() const
+{
+    CDocument::Resource r = m_pDoc->resourceInfo(m_sResource);
+    return r.size/* + QIODevice::bytesAvailable()*/;
+}
+
+bool ResourceIO::isSequential() const
+{
+    return false;
+}
+
+bool ResourceIO::seek(qint64 p)
+{
+    //return true;
+    qDebug() << "seek b" << p << pos();
+    return QIODevice::seek(p);
+}
+/*
+qint64 ResourceIO::pos() const
+{
+    return m_iPos;
+}*/

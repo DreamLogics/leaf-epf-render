@@ -56,10 +56,16 @@ public:
 
     virtual qint64 readData(char *data, qint64 maxlen);
     virtual qint64 writeData(const char *data, qint64 len);
+    virtual qint64 size() const;
+    virtual qint64 bytesAvailable() const;
+    virtual bool isSequential() const;
+    virtual bool seek(qint64 pos);
+    //virtual qint64 pos() const;
 
 private:
     CDocument* m_pDoc;
     QString m_sResource;
+    qint64 m_iPos;
 };
 
 class CDocument : public QObject, public EPFComponent
@@ -150,7 +156,7 @@ public slots:
     QObject* getCurrentSection();
     void setCurrentSection(QString section_id);
 
-    void playAnimation(QString animation, bool loop);
+    void playAnimation(QString animation, bool loop=false);
 
     //void setActiveOverlay(QString overlay_id);
 

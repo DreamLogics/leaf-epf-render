@@ -75,6 +75,7 @@ void CAVDecoder::init(QIODevice* io)
     //set iocontext
     m_pFormatCtx = avformat_alloc_context();
     m_pFormatCtx->pb = avio_alloc_context(m_ucDataBuffer,DATA_BUFFER_SIZE,0,m_pIOContext,&m_pIOContext->read,0,&m_pIOContext->seek);
+    m_pFormatCtx->flags = AVFMT_FLAG_CUSTOM_IO;
 
     //if (av_open_input_stream(m_pFormatCtx,,"media",m_pInputFormat,0)<0)
     //    return;
@@ -352,10 +353,18 @@ int64_t CAVIOContext::seek(void *opaque, int64_t offset, int whence)
     CAVIOContext* avio = static_cast<CAVIOContext*>(opaque);
     int i = 0;
 
-    if (whence == SEEK_CUR)
+    if (whence == SEEK_END)
+    {
+        offset = avio->m_pIO->size() - offset;
+        qDebug() << "seek end";
+    }
+    else if (whence == SEEK_CUR)
+    {
         offset = avio->m_pIO->pos() + offset;
-    else if (whence == SEEK_END)
-        offset = avio->m_pIO->bytesAvailable() - offset;
+        qDebug() << "seek cur";
+    }
+
+    qDebug() << "seek a";
 
     if (!avio->m_pIO->seek(offset))
         i=-1;

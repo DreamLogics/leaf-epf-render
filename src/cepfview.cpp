@@ -441,26 +441,29 @@ void CEPFView::paintEvent(QPaintEvent *ev)
             {
 
                 cs = m_pDocument->section(i);
-                if (m_TransFx == CSection::SlideFx)
+                if (!(cs->isHidden() && i != m_iCurrentSection))
                 {
-                    p.resetTransform();
-                    p.translate(cs->x()*width()-nx,cs->y()*height()-ny);
-                }
-                else
-                {
-                    if (m_TransFx == CSection::FadeFx && i == m_iCurrentSection)
+                    if (m_TransFx == CSection::SlideFx)
                     {
-                        //qDebug() << "transition" << 1-m_dTransition << cs->id();
-                        p.setOpacity(1-m_dTransition);
+                        p.resetTransform();
+                        p.translate(cs->x()*width()-nx,cs->y()*height()-ny);
                     }
                     else
-                        p.setOpacity(1.0);
+                    {
+                        if (m_TransFx == CSection::FadeFx && i == m_iCurrentSection)
+                        {
+                            //qDebug() << "transition" << 1-m_dTransition << cs->id();
+                            p.setOpacity(1-m_dTransition);
+                        }
+                        else
+                            p.setOpacity(1.0);
 
-                    nx = cs->x() * width();
-                    ny = cs->y() * height();
+                        nx = cs->x() * width();
+                        ny = cs->y() * height();
 
+                    }
+                    cs->render(&p,QRectF(nx,ny,width(),height()));
                 }
-                cs->render(&p,QRectF(nx,ny,width(),height()));
             }
 
             if (m_iCurrentSection < m_iPreviousSection)

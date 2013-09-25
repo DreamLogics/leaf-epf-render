@@ -1,6 +1,13 @@
 #include "cepfjs.h"
 #include <QScriptEngine>
 #include "cdocument.h"
+#include <QDebug>
+
+static QScriptValue jsAlert(QScriptContext *context, QScriptEngine *engine)
+{
+    qDebug() << "javascript:" << context->argument(0).toString();
+    return QScriptValue();
+}
 
 CEPFJS::CEPFJS(QString script, CDocument* doc) : m_pDocument(doc)
 {
@@ -8,6 +15,7 @@ CEPFJS::CEPFJS(QString script, CDocument* doc) : m_pDocument(doc)
 
     QScriptValue docobj = m_pEngine->newQObject(doc);
     m_pEngine->globalObject().setProperty("document",docobj);
+    m_pEngine->globalObject().setProperty("alert",m_pEngine->newFunction(jsAlert));
 
     m_sScript = QScriptProgram(parseScript(script),"main.js");
 }
@@ -20,6 +28,10 @@ CEPFJS::~CEPFJS()
 void CEPFJS::run()
 {
     m_pEngine->evaluate(m_sScript);
+    if (m_pEngine->hasUncaughtException())
+    {
+        qDebug() << "javascript:" << m_pEngine->uncaughtExceptionBacktrace() << m_pEngine->uncaughtException().toString();
+    }
 }
 
 QString CEPFJS::parseScript(QString script)
