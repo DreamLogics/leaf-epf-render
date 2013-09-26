@@ -58,23 +58,34 @@ public:
     ~CAVDecoder();
 
     void init(QIODevice* io);
-    void drawFrame(QPainter* p);
+    void drawFrame(QPainter* p, int height=-1, int width=-1);
     void release();
 
     void play();
+    void pause();
     void stop();
+    void seek(int time_ms);
 
     bool isPlaying();
 
+    int duration();
+
+    struct vid_frame
+    {
+        QImage* data;
+        int frametime;
+    };
+
 private:
 
-    void addFrame(AVFrame* frame);
+    void addFrame(AVFrame* frame, qint64 time);
     int frameBufferCount();
 
 signals:
 
     void needMoreFrames();
     void update();
+    void updateTime(int time_ms);
     
 public slots:
 
@@ -83,8 +94,12 @@ public slots:
 private:
     bool m_bIsInited;
     bool m_bShouldPlay;
+    bool m_bPaused;
     CAVIOContext* m_pIOContext;
-    QImage* m_Frames[FRAME_BUFFER_SIZE];
+    //QImage* m_Frames[FRAME_BUFFER_SIZE];
+    vid_frame m_Frames[FRAME_BUFFER_SIZE];
+    QImage* m_CurrentFrame;
+    QImage m_CurrentFrameBuffered;
     QMutex m_mFrameMutex;
     CAVWorker* m_pWorker;
     QThread* m_pWorkerThread;
@@ -100,8 +115,11 @@ private:
 
     int m_iFrameRateSync;
     int m_iNextFrameTime;
+    int m_iNextUpdateTime;
 
     bool m_bEndOfStream;
+
+    int m_iLength;
 
     AVFormatContext *m_pFormatCtx;
     int              m_iVideoStream;

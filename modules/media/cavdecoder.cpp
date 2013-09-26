@@ -10,6 +10,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
+#include <libavutil/mathematics.h>
 
 }
 
@@ -36,6 +37,10 @@ CAVDecoder::CAVDecoder(QObject *parent) :
 
     m_bEndOfStream = false;
 
+    m_iLength = 0;
+
+    m_bPaused = false;
+
     m_ucDataBuffer = new unsigned char[DATA_BUFFER_SIZE];
 
     connect(m_pTimer,SIGNAL(timeout()),this,SLOT(nextFrame()));
@@ -48,7 +53,7 @@ CAVDecoder::CAVDecoder(QObject *parent) :
 CAVDecoder::~CAVDecoder()
 {
     for (int i=0;i<FRAME_BUFFER_SIZE;i++)
-        delete m_Frames[i];
+        delete m_Frames[i].data;
     delete m_pIOContext;
     delete m_ucDataBuffer;
 }
@@ -134,49 +139,63 @@ void CAVDecoder::init(QIODevice* io)
     m_pSWSContext = sws_getCachedContext(NULL,m_pCodecCtx->width, m_pCodecCtx->height,
                                                        m_pCodecCtx->pix_fmt,
                                                        m_pCodecCtx->width, m_pCodecCtx->height,
-                                                       PIX_FMT_RGB24, SWS_BILINEAR,
+                                                       PIX_FMT_RGB24, SWS_FAST_BILINEAR,
                                                        NULL, NULL, NULL);
 
     for (int i=0;i<FRAME_BUFFER_SIZE;i++)
-        m_Frames[i] = new QImage(m_pCodecCtx->width,m_pCodecCtx->height,QImage::Format_RGB888);
+    {
+        m_Frames[i].data = new QImage(m_pCodecCtx->width,m_pCodecCtx->height,QImage::Format_RGB888);
+    }
+
+    m_CurrentFrame = m_Frames[0].data;
+
+    AVRational millisecondbase = {1, 1000};
+    m_iLength  = av_rescale_q(m_pFormatCtx->streams[m_iVideoStream]->duration,m_pFormatCtx->streams[m_iVideoStream]->time_base,millisecondbase);
 
     emit needMoreFrames();
 
     m_bIsInited = true;
 }
 
-void CAVDecoder::drawFrame(QPainter* p)
+void CAVDecoder::drawFrame(QPainter *p, int height, int width)
 {
     if (!m_bIsInited)
+    {
+        p->fillRect(0,0,width,height,QColor("black"));
         return;
+    }
     if (!m_bHasVideo)
+    {
+        p->fillRect(0,0,width,height,QColor("black"));
         return;
+    }
 
-    m_mFrameMutex.lock();
-    if (m_Frames[0]->isNull() || m_iFrameCount == 0)
+    /*m_mFrameMutex.lock();
+    if (m_Frames[0].data->isNull() || m_iFrameCount == 0)
     {
         m_mFrameMutex.unlock();
         return;
     }
-    p->drawImage(0,0,*m_Frames[0]);
-    //p->drawImage(0,0,m_Frames[0]->scaled(p->device()->width(),p->device()->height(),Qt::KeepAspectRatio,Qt::FastTransformation));
-    for (int i=0;i<FRAME_BUFFER_SIZE;i++)
+    if (height == -1 || width == -1)
+        p->drawImage(0,0,*m_Frames[0].data);
+    else
+        p->drawImage(0,0,m_Frames[0].data->scaled(width,height,Qt::KeepAspectRatio,Qt::FastTransformation));
+
+    m_mFrameMutex.unlock();*/
+    if (m_bNextFrame)
     {
-        if (i == FRAME_BUFFER_SIZE-1)
-            m_Frames[i] = m_Frames[0];
+        m_mFrameMutex.lock();
+        if (height == -1 || width == -1)
+            m_CurrentFrameBuffered = *m_CurrentFrame;
         else
-            m_Frames[i] = m_Frames[i+1];
+            m_CurrentFrameBuffered = m_CurrentFrame->scaled(width,height,Qt::KeepAspectRatio,Qt::FastTransformation);
+        m_mFrameMutex.unlock();
+        m_bNextFrame = false;
     }
-    m_iFrameCount--;
-    m_bNextFrame = false;
-
-    if (!m_bEndOfStream)
-        emit needMoreFrames();
-
-    m_mFrameMutex.unlock();
+    p->drawImage(0,0,m_CurrentFrameBuffered);
 }
 
-void CAVDecoder::addFrame(AVFrame *frame)
+void CAVDecoder::addFrame(AVFrame *frame, qint64 time)
 {
     m_mFrameMutex.lock();
     int x,y;
@@ -184,7 +203,7 @@ void CAVDecoder::addFrame(AVFrame *frame)
     unsigned char r,g,b;
 
 
-    for (y=0;y<m_pCodecCtx->height;y++)
+    /*for (y=0;y<m_pCodecCtx->height;y++)
     {
         for (x=0;x<frame->linesize[0];x+=3)
         {
@@ -194,7 +213,14 @@ void CAVDecoder::addFrame(AVFrame *frame)
             p = qRgb(r,g,b);
             m_Frames[m_iFrameCount]->setPixel(x/3,y,p);
         }
-    }
+    }*/
+
+    for(int y=0;y<m_pCodecCtx->height;y++)
+        memcpy(m_Frames[m_iFrameCount].data->scanLine(y),frame->data[0]+y*frame->linesize[0],m_pCodecCtx->width*3);
+
+    AVRational millisecondbase = {1, 1000};
+    int frametime = av_rescale_q(time,m_pFormatCtx->streams[m_iVideoStream]->time_base,millisecondbase);
+    m_Frames[m_iFrameCount].frametime = frametime;
 
     m_iFrameCount++;
 
@@ -205,7 +231,7 @@ void CAVDecoder::addFrame(AVFrame *frame)
 
 void CAVDecoder::nextFrame()
 {
-    int syncsec = m_tFrameSync.msecsTo(QTime::currentTime());
+    /*int syncsec = m_tFrameSync.msecsTo(QTime::currentTime());
     static int framecount=0;
     if (syncsec >= 1000)
     {
@@ -226,7 +252,57 @@ void CAVDecoder::nextFrame()
         m_tFPSTime = m_tFPSTime.addMSecs(m_iNextFrameTime);
         framecount++;
         //qDebug() << "next frame" << framecount << syncsec;
+    }*/
+
+    static int framecount=0;
+    if (framecount == 24)
+    {
+        m_iNextFrameTime = m_tFrameSync.msecsTo(QTime::currentTime());
     }
+    else
+        m_iNextFrameTime++;
+
+    if (m_iNextFrameTime >= m_iNextUpdateTime)
+    {
+        emit updateTime(m_iNextFrameTime);
+        emit update();
+        m_iNextUpdateTime = m_iNextFrameTime + 100;
+    }
+
+    m_mFrameMutex.lock();
+
+    if (m_Frames[0].frametime < m_iNextFrameTime)
+    {
+        emit update();
+        for (int i=0;i<FRAME_BUFFER_SIZE;i++)
+        {
+            if (i == FRAME_BUFFER_SIZE-1)
+                m_Frames[i] = m_Frames[0];
+            else
+                m_Frames[i] = m_Frames[i+1];
+        }
+        m_CurrentFrame = m_Frames[0].data;
+        m_bNextFrame = true;
+        m_iFrameCount--;
+        //m_bNextFrame = false;
+
+        if (!m_bEndOfStream)
+            emit needMoreFrames();
+    }
+
+    m_mFrameMutex.unlock();
+
+    /*m_iNextFrameTime++;
+
+    AVRational millisecondbase = {1, 1000};
+    int frametime = av_rescale_q(m_pFormatCtx->streams[m_iVideoStream]->cur_dts,m_pFormatCtx->streams[m_iVideoStream]->time_base,millisecondbase);
+
+    if (m_iNextFrameTime >= frametime)
+    {
+        m_bNextFrame = true;
+        emit update();
+        //framecount++;
+    }*/
 
     if (m_bEndOfStream && m_iFrameCount == 0)
         m_bShouldPlay = false;
@@ -242,17 +318,32 @@ void CAVDecoder::play()
     if (!m_bIsInited)
         return;
 
-    //double fps = m_pCodecCtx->time_base.num / m_pCodecCtx->time_base.den;
-    int i = m_pFormatCtx->streams[m_iVideoStream]->avg_frame_rate.num / m_pFormatCtx->streams[m_iVideoStream]->avg_frame_rate.den;
-    //i /= m_pCodecCtx->time_base.num / m_pCodecCtx->time_base.den;
-    i=m_pCodecCtx->time_base.den/(i*m_pCodecCtx->time_base.num);
+    m_iNextUpdateTime = 0;
 
-    qDebug() << "fps" << i << m_pFormatCtx->streams[m_iVideoStream]->avg_frame_rate.num << m_pFormatCtx->streams[m_iVideoStream]->avg_frame_rate.den;
-    m_iNextFrameTime = i;
-    m_tFPSTime = QTime::currentTime();
-    m_tFPSTime.addMSecs(i);
+    if (m_bPaused)
+    {
+        m_tFrameSync.addMSecs(m_tFrameSync.msecsTo(QTime::currentTime())-m_iNextFrameTime);
+        m_bPaused = false;
+        m_pTimer->start();
+        return;
+    }
+
+    //double fps = m_pCodecCtx->time_base.num / m_pCodecCtx->time_base.den;
+    //int i = m_pFormatCtx->streams[m_iVideoStream]->avg_frame_rate.num / m_pFormatCtx->streams[m_iVideoStream]->avg_frame_rate.den;
+    //i /= m_pCodecCtx->time_base.num / m_pCodecCtx->time_base.den;
+    //i=m_pCodecCtx->time_base.den/(i*m_pCodecCtx->time_base.num);
+    avformat_seek_file(m_pFormatCtx,m_iVideoStream,0,0,0,AVSEEK_FLAG_BYTE);
+    avcodec_flush_buffers(m_pCodecCtx);
+    //av_seek_frame(m_pFormatCtx,-1,0,0);
+
+
+    //qDebug() << "fps" << i << m_pFormatCtx->streams[m_iVideoStream]->avg_frame_rate.num << m_pFormatCtx->streams[m_iVideoStream]->avg_frame_rate.den;
+    m_iNextFrameTime = 0;
+    //m_tFPSTime = QTime::currentTime();
+    //m_tFPSTime.addMSecs(i);
     m_tFrameSync = QTime::currentTime();
     m_bShouldPlay = true;
+    m_bPaused=false;
     m_pTimer->start();
 }
 
@@ -311,7 +402,7 @@ void CAVWorker::decodeFrames()
             {
                 // Convert the image from its native format to RGB
                 sws_scale(m_pDecoder->m_pSWSContext, pFrame->data, pFrame->linesize, 0, m_pDecoder->m_pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
-                m_pDecoder->addFrame(pFrameRGB);
+                m_pDecoder->addFrame(pFrameRGB,packet.pts);
                 //m_pDecoder->addFrame(pFrame);
                 framecount--;
             }
@@ -334,7 +425,25 @@ void CAVWorker::decodeFrames()
 
 bool CAVDecoder::isPlaying()
 {
-    return m_bShouldPlay;
+    if (m_bShouldPlay && !m_bPaused)
+        return true;
+    return false;
+}
+
+void CAVDecoder::pause()
+{
+    m_bPaused = true;
+    m_pTimer->stop();
+}
+
+void CAVDecoder::seek(int time_ms)
+{
+
+}
+
+int CAVDecoder::duration()
+{
+    return m_iLength;
 }
 
 CAVIOContext::CAVIOContext(QIODevice *io) : m_pIO(io)
@@ -363,10 +472,16 @@ int64_t CAVIOContext::seek(void *opaque, int64_t offset, int whence)
         offset = avio->m_pIO->pos() + offset;
         qDebug() << "seek cur";
     }
+    else if (whence == AVSEEK_SIZE)
+    {
+        return avio->m_pIO->size();
+    }
 
     qDebug() << "seek a";
 
     if (!avio->m_pIO->seek(offset))
         i=-1;
+    else
+        i=offset;
     return i;
 }

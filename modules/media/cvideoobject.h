@@ -35,12 +35,25 @@ namespace AV {
     class CAVDecoder;
 }
 class CAVDecoder;
+class CVideoObject;
+
+class CVideoPrivate : public QObject
+{
+    Q_OBJECT
+public:
+    CVideoPrivate(CVideoObject *p);
+public slots:
+    void updateTime(int time);
+private:
+    CVideoObject* m_pObject;
+};
 
 class CVideoObject : public CBaseObject
 {
     Q_OBJECT
 public:
     CVideoObject(QString id, CLayer* layer);
+    virtual ~CVideoObject();
 
     virtual void preload();
 
@@ -52,8 +65,15 @@ public:
     virtual void mouseReleaseEvent(QPoint pos);
 
 private:
+
+    void drawAVControls(QPainter* p);
+
+private:
     AV::CAVDecoder* m_pAV;
     QString m_sVideo;
+    int m_iCurTime;
+    CVideoPrivate* m_pPrivate;
+    friend class CVideoPrivate;
 };
 
 #endif // CVideoOBJECT_H
