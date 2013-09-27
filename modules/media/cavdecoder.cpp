@@ -198,25 +198,15 @@ void CAVDecoder::drawFrame(QPainter *p, int height, int width)
 void CAVDecoder::addFrame(AVFrame *frame, qint64 time)
 {
     m_mFrameMutex.lock();
-    int x,y;
-    unsigned int p;
-    unsigned char r,g,b;
-
-
-    /*for (y=0;y<m_pCodecCtx->height;y++)
-    {
-        for (x=0;x<frame->linesize[0];x+=3)
-        {
-            memcpy(&r,frame->data[0]+y*frame->linesize[0]+x,1);
-            memcpy(&g,frame->data[0]+y*frame->linesize[0]+x+1,1);
-            memcpy(&b,frame->data[0]+y*frame->linesize[0]+x+2,1);
-            p = qRgb(r,g,b);
-            m_Frames[m_iFrameCount]->setPixel(x/3,y,p);
-        }
-    }*/
 
     for(int y=0;y<m_pCodecCtx->height;y++)
+    {
+        if (!m_Frames[m_iFrameCount].data)
+            qDebug() << "inv img";
+        if (!m_Frames[m_iFrameCount].data->scanLine(y))
+            qDebug() << "inv scan";
         memcpy(m_Frames[m_iFrameCount].data->scanLine(y),frame->data[0]+y*frame->linesize[0],m_pCodecCtx->width*3);
+    }
 
     AVRational millisecondbase = {1, 1000};
     int frametime = av_rescale_q(time,m_pFormatCtx->streams[m_iVideoStream]->time_base,millisecondbase);
