@@ -25,11 +25,11 @@
 
 #include <QMap>
 #include <QString>
-#include "cbaseobject.h"
-#include "clayer.h"
-#include "csection.h"
-#include "clayout.h"
-#include "cdocument.h"
+#include "../cbaseobject.h"
+#include "../clayer.h"
+#include "../csection.h"
+#include "../clayout.h"
+#include "../cdocument.h"
 
 namespace CSS
 {

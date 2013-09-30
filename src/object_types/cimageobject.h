@@ -23,8 +23,8 @@
 #ifndef CIMAGEOBJECT_H
 #define CIMAGEOBJECT_H
 
-#include "cbaseobject.h"
-#include "iepfobjectfactory.h"
+#include "../cbaseobject.h"
+#include "../iepfobjectfactory.h"
 
 class CImageObjectFactory : public IEPFObjectFactory
 {

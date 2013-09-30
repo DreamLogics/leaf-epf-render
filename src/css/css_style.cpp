@@ -23,8 +23,8 @@
 #include "css_style.h"
 #include <QRegExp>
 #include <QStringList>
-#include "coverlay.h"
-#include "csection.h"
+#include "../coverlay.h"
+#include "../csection.h"
 #include "css_default.h"
 #include "css_animation.h"
 #include <QDebug>
@@ -292,6 +292,7 @@ Property& Property::operator=(const Property &other)
     m_pPrivate = other.m_pPrivate;
     m_sName = other.m_sName;
     m_pPrivate->registerUse();
+    return *this;
 }
 
 QString Property::name() const

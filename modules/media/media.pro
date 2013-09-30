@@ -40,3 +40,14 @@ macx: LIBS += /usr/local/lib/libswscale.a
 macx: LIBS += /usr/lib/libbz2.dylib
 macx: LIBS += /usr/lib/libz.dylib
 macx: LIBS += /usr/local/lib/libvpx.a
+
+win32:INCLUDEPATH += D:/CPP-Libs/libav/include
+win32:INCLUDEPATH += D:/CPP-Libs/inttypes
+
+win32: LIBS += D:/CPP-Libs/libav/lib/libavcodec.a
+win32: LIBS += D:/CPP-Libs/libav/lib/libavformat.a
+win32: LIBS += D:/CPP-Libs/libav/lib/libavutil.a
+win32: LIBS += D:/CPP-Libs/libav/lib/libswscale.a
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../build-leaf-epf-render-Desktop_Qt_5_1_0_MSVC2012_OpenGL_64bit-Debug/release/ -lleaf-epf-render
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../build-leaf-epf-render-Desktop_Qt_5_1_0_MSVC2012_OpenGL_64bit-Debug/debug/ -lleaf-epf-render

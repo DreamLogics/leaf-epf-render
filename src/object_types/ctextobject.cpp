@@ -25,9 +25,9 @@
 #include <QStyleOptionGraphicsItem>
 #include <QWidget>
 #include <QTextDocument>
-#include "cdocument.h"
-#include "css/css_style.h"
-#include "css/css_painters.h"
+#include "../cdocument.h"
+#include "../css/css_style.h"
+#include "../css/css_painters.h"
 #include <QUrl>
 #include <QDebug>
 #include <QTextCursor>

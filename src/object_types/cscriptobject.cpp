@@ -22,7 +22,7 @@
 
 #include "cscriptobject.h"
 #include <QPainter>
-#include "cdocument.h"
+#include "../cdocument.h"
 
 CBaseObject* CScriptObjectFactory::create(QString id, CLayer *layer)
 {

@@ -23,8 +23,8 @@
 #ifndef CBLOCKOBJECT_H
 #define CBLOCKOBJECT_H
 
-#include "cbaseobject.h"
-#include "iepfobjectfactory.h"
+#include "../cbaseobject.h"
+#include "../iepfobjectfactory.h"
 
 class QPainter;
 

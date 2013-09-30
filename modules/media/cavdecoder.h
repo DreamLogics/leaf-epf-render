@@ -8,6 +8,7 @@
 #include <QMutex>
 #include <QThread>
 #include <QTime>
+#include <inttypes.h>
 
 #define FRAME_BUFFER_SIZE 30
 #define DATA_BUFFER_SIZE 32768

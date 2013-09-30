@@ -23,8 +23,8 @@
 #ifndef CSCRIPTOBJECT_H
 #define CSCRIPTOBJECT_H
 
-#include "cbaseobject.h"
-#include "iepfobjectfactory.h"
+#include "../cbaseobject.h"
+#include "../iepfobjectfactory.h"
 #include <QScriptEngine>
 
 class CScriptObjectFactory : public IEPFObjectFactory

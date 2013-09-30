@@ -24,7 +24,7 @@
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 #include <QWidget>
-#include "css/css_painters.h"
+#include "../css/css_painters.h"
 #include <QDebug>
 
 CBaseObject* CLabelObjectFactory::create(QString id, CLayer *layer)

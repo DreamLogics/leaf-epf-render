@@ -2,7 +2,7 @@
 #include <QFile>
 #include <QDir>
 #include <QDataStream>
-#include <czlib.h>
+#include "czlib.h"
 #include <QByteArray>
 #include <QDebug>
 

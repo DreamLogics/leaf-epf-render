@@ -1,7 +1,7 @@
 #include "css_painters.h"
 #include <QPainter>
-#include "cdocument.h"
-#include "cbaseobject.h"
+#include "../cdocument.h"
+#include "../cbaseobject.h"
 #include <QPen>
 #include <QtCore/qmath.h>
 #include <QImage>

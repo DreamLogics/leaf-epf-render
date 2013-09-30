@@ -23,8 +23,8 @@
 #ifndef CTEXTOBJECT_H
 #define CTEXTOBJECT_H
 
-#include "cbaseobject.h"
-#include "iepfobjectfactory.h"
+#include "../cbaseobject.h"
+#include "../iepfobjectfactory.h"
 
 class QPainter;
 class QTextDocument;
