@@ -64,7 +64,7 @@ CEPFDocumentReader::~CEPFDocumentReader()
         delete it.value();
 }
 
-CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QThread* create_in_thread)
+CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bool ignore_modules, QThread* create_in_thread)
 {
     QFile f(filename);
     QByteArray data,container;
@@ -192,19 +192,22 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, QT
             return 0;
         }
 
-        pugi::xml_node modules = containerxml.child("EPF").child("modules");
-
-        for (pugi::xml_node module = modules.child("module"); module; module = module.next_sibling("module"))
+        if (!ignore_modules)
         {
-            if (module.attribute("required").as_bool() && !m_Modules.contains(module.attribute("id").value()))
+
+            pugi::xml_node modules = containerxml.child("EPF").child("modules");
+
+            for (pugi::xml_node module = modules.child("module"); module; module = module.next_sibling("module"))
             {
-                (*error) = "The module \""+QString(module.attribute("id").value())+"\" is required but not available.";
-                delete document;
-                return 0;
+                if (module.attribute("required").as_bool() && !m_Modules.contains(module.attribute("id").value()))
+                {
+                    (*error) = "The module \""+QString(module.attribute("id").value())+"\" is required but not available.";
+                    delete document;
+                    return 0;
+                }
             }
+
         }
-
-
 
         pugi::xml_node props = containerxml.child("EPF").child("info");
 

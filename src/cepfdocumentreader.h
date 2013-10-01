@@ -41,7 +41,7 @@ public:
     CEPFDocumentReader();
     ~CEPFDocumentReader();
 
-    CDocument* loadFromFile(QString filename, QString *error, QThread* create_in_thread=0);
+    CDocument* loadFromFile(QString filename, QString *error, bool ignore_modules=false, QThread* create_in_thread=0);
     void registerObjectType(QString type, IEPFObjectFactory* factory);
     void addPlatform(QString platform);
     void setLanguage(QString language);

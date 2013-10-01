@@ -271,7 +271,7 @@ void CAVDecoder::nextFrame()
             else
                 m_Frames[i] = m_Frames[i+1];
         }
-        m_CurrentFrame = m_Frames[0].data;
+        m_CurrentFrame = m_Frames[0].data; //TODO naar boven halen
         m_bNextFrame = true;
         m_iFrameCount--;
         //m_bNextFrame = false;

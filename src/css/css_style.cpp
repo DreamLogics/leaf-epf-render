@@ -514,6 +514,7 @@ void Stylesheet::parse(QString css)
             //animation
             ao = 0;
             QString animname = atrulesblockfinder.cap(2);
+            animname = animname.replace(outerspaces,"");
             Animation* ani =  new Animation();
             int ki;
             KeyFrame* keyf;
@@ -522,6 +523,7 @@ void Stylesheet::parse(QString css)
             {
                 ki = animkeyframefinder.cap(1).replace(QRegExp("[^0-9]+"),"").toInt();
                 proplist = animkeyframefinder.cap(2).split(";");
+                keyf = new KeyFrame();
                 for (int i=0;i<proplist.size();i++)
                 {
                     proper = proplist[i].split(":");
@@ -529,12 +531,53 @@ void Stylesheet::parse(QString css)
                     {
                         propkey = proper[0].replace(outerspaces,"");
                         propvalue = proper[1].replace(outerspaces,"");
-                        keyf->addProperty(propkey,Property(propkey,propvalue,this,smNone,false));
+
+                        f = propvalue.indexOf("!");
+                        if (f != -1)
+                        {
+                            proprules = propvalue.mid(f).toLower();
+                            propvalue = propvalue.left(f).toLower();
+                            propvalue = propvalue.replace(outerspaces,"");
+
+                            //bScale = false;
+                            scale = smNone;
+                            bHeightProp = false;
+
+                            if (height_props.contains(propkey))
+                                bHeightProp = true;
+
+                            /*if (proprules.indexOf("!scale") != -1)
+                                bScale = true;*/
+
+                            if (proprules.indexOf("!scale") != -1)
+                                scale = smScale;
+
+                            if (proprules.indexOf("!scale-width") != -1)
+                                scale = smScaleWidth;
+
+                            if (proprules.indexOf("!scale-height") != -1)
+                                scale = smScaleHeight;
+
+
+                        }
+                        else
+                        {
+                            bHeightProp = false;
+
+                            if (height_props.contains(propkey))
+                                bHeightProp = true;
+
+                            //bScale = false;
+                            scale = smNone;
+                        }
+
+                        keyf->addProperty(propkey,Property(propkey,propvalue,this,scale,bHeightProp));
                     }
                 }
                 ani->addKeyFrame(keyf,ki);
                 ao += animkeyframefinder.cap(0).size();
             }
+
             m_animations.insert(animname,ani);
         }
 
@@ -789,7 +832,7 @@ void Stylesheet::parse(QString css)
                         if (animprops.size() >= 5)
                             prop = Property("animation-iteration-count",animprops[4],this,scale,false);
                         else
-                            prop = Property("animation-iteration-count","0",this,scale,false);
+                            prop = Property("animation-iteration-count","1",this,scale,false);
                         s->setProperty("animation-iteration-count",prop);
 
                         if (animprops.size() >= 6)
@@ -1207,6 +1250,8 @@ namespace CSS
         }
         else
             i = 0;
+
+        //qDebug() << "stringToMsTime" << timestr << i;
 
         return (int)i;
     }

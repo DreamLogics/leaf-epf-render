@@ -26,7 +26,7 @@
 
 COverlay::COverlay(QString id,CDocument* doc,bool visible) : CSection(id,doc,true), m_bVisible(visible)
 {
-
+    m_bActive = false;
 }
 
 COverlay::~COverlay()

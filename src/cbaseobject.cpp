@@ -53,6 +53,9 @@ CBaseObject::~CBaseObject()
 {
     //if (m_pBuffer)
     //    delete m_pBuffer;
+
+    //unregister from animator
+    CAnimator::get()->unregisterAnimation(this);
 }
 
 bool CBaseObject::enabled() const
@@ -266,7 +269,7 @@ void CBaseObject::layout(QRectF relrect)
 
     if (!anim.isNull())
     {
-        CSS::Property anim_duration = css->property(this,"animation-name");
+        CSS::Property anim_duration = css->property(this,"animation-duration");
         CSS::Property anim_timing_function = css->property(this,"animation-timing-function");
         CSS::Property anim_delay = css->property(this,"animation-delay");
         CSS::Property anim_iteration_count = css->property(this,"animation-iteration-count");

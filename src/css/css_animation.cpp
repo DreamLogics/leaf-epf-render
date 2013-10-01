@@ -1,5 +1,6 @@
 #include "css_animation.h"
 #include <qmath.h>
+#include <QDebug>
 
 using namespace CSS;
 
@@ -16,8 +17,11 @@ Animation::~Animation()
 
 Property Animation::keyedProperty(QString property, double position)
 {
+    position*=100;
     int startframe = qFloor(position);
     int endframe = qCeil(position);
+
+    qDebug() << "creating keyed prop" << property << position << startframe << endframe;
 
     if (startframe == endframe)
         return m_keyframes[startframe]->property(property);
@@ -88,7 +92,7 @@ void Animation::generateFrames(KeyFrame* startframe)
     QStringList props;
     int nextframe=0;
     int lastrealframe=0;
-    for (int i=0;i<100;i++)
+    for (int i=0;i<=100;i++)
     {
         if (i == 0 && !m_keyframes.contains(0))
             m_keyframes.insert(0,startframe->clone());
@@ -97,7 +101,7 @@ void Animation::generateFrames(KeyFrame* startframe)
             if (i > nextframe && nextframe != -1)
             {
                 lastrealframe = nextframe;
-                for (int n=i;n<100;n++)
+                for (int n=i;n<=100;n++)
                 {
                     if (m_keyframes.contains(n))
                         nextframe = n;
@@ -116,11 +120,13 @@ void Animation::generateFrames(KeyFrame* startframe)
                 props = lf->properties();
                 props += nf->properties();
                 props.removeDuplicates();
-                pos = (i - lastrealframe) / (nextframe - lastrealframe);
+                pos = (double)(i - lastrealframe) / (double)(nextframe - lastrealframe);
                 for (int a=0;a<props.size();a++)
                 {
                     Property propstart = lf->property(props[a]);
                     Property propend = nf->property(props[a]);
+
+                    qDebug() << "generating keyframe" << props[a] << propstart.value() << propend.value() << pos;
 
                     if (propend.isNull())
                     {
@@ -171,6 +177,8 @@ KeyFrame::~KeyFrame()
 
 Property KeyFrame::property(QString prop)
 {
+    if (m_properties.contains(prop))
+        return m_properties[prop];
     return Property();
 }
 

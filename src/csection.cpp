@@ -60,11 +60,11 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
 {
     setParent(doc);
 
-    int fx=x;
+    /*int fx=x;
     while (doc->sectionByPosition(fx,y) != 0)
-        fx++;
+        fx++;*/
 
-    m_iX = fx;
+    m_iX = x;
     m_iY = y;
 
     m_iScrollX = 0;
@@ -84,6 +84,8 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
 CSection::~CSection()
 {
     delete m_pViewportItem;
+
+    for
 }
 
 int CSection::objectCount()

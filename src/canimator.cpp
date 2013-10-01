@@ -4,6 +4,7 @@
 #include "css/css_animation.h"
 #include <QTimer>
 #include <QEasingCurve>
+#include <QDebug>
 
 #define FRAMERATE 30
 
@@ -28,14 +29,16 @@ CAnimator* CAnimator::get()
 void CAnimator::update()
 {
     QMap<CBaseObject*,registered_animation>::Iterator it;
+    //QMap<CBaseObject*,registered_animation> nmap;
     double pos;
     CSection* s=0;
 
     for (it=m_Animations.begin();it != m_Animations.end();it++)
     {
         registered_animation regani = it.value();
+        //qDebug() << "CAnimator::update()" << m_iTime << regani.m_iStartTime;
         if (it == m_Animations.begin())
-            s = regani.m_pObject->section();
+            s = regani.m_pObject->section();// TODO currect section from document
         if (m_iTime >= regani.m_iStartTime)
         {
             if (regani.m_iCurFrame > regani.m_iFrames)
@@ -55,7 +58,10 @@ void CAnimator::update()
                     continue;
             }
 
-            pos = regani.m_iCurFrame / regani.m_iFrames;
+            pos = (double)regani.m_iCurFrame / (double)regani.m_iFrames;
+
+            //qDebug() << "curframes" << regani.m_iCurFrame << "frames" << regani.m_iFrames;
+            //qDebug() << "pos pre-ease" << pos;
 
             if (regani.m_efEasing == efEase)
             {
@@ -73,6 +79,8 @@ void CAnimator::update()
                 pos = ec.valueForProgress(pos);
             }
 
+            //qDebug() << "pos post-ease" << pos;
+
             if (regani.m_dirDirection == dirReverse || (regani.m_dirDirection == dirAlternate && regani.m_bAlternate)
                     || (regani.m_dirDirection == dirAlternateReverse && !regani.m_bAlternate) )
                 pos = 1 - pos;
@@ -82,11 +90,14 @@ void CAnimator::update()
             {
                 regani.m_pObject->setCSSOverrideProp(props[i],regani.m_pAnim->keyedProperty(props[i],pos));
             }
-
             regani.m_iCurFrame++;
             m_Animations[it.key()] = regani;
+            //m_Animations.insert(it,it.key(),regani);
+            //nmap.insert(it.key(),regani);
         }
     }
+
+    //m_Animations = nmap;
 
     if (s)
         s->layout();
@@ -96,23 +107,29 @@ void CAnimator::update()
 
 void CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_time, easing_function ef, int ms_delay, int iterations, direction dir)
 {
+    qDebug() << "register animation for object" << obj->id();
     registered_animation regani;
     CSS::Stylesheet* css = obj->document()->stylesheet();
     CSS::Animation* ani;
     CSS::KeyFrame* kf;
 
     if (isRegistered(obj))
-        unregisterAnimation(obj);
+        return;
+        //unregisterAnimation(obj);
 
     ani = css->animation(animation);
     if (ani)
     {
+
+        if (ms_time == 0)
+            return;
+
         kf = new CSS::KeyFrame();
         QStringList props = ani->properties();
 
         for (int i=0;i<props.size();i++)
         {
-            kf->addProperty(props[i],css->property(obj,props[i]));
+            kf->addProperty(props[i],css->property(obj,props[i]).clone());
         }
 
         ani->generateFrames(kf);
@@ -136,6 +153,7 @@ void CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_ti
 
 void CAnimator::unregisterAnimation(CBaseObject *obj)
 {
+    //qDebug() << "unregister animation for object" << obj->id();
     m_Animations.remove(obj);
 }
 
