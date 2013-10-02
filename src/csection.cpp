@@ -85,7 +85,8 @@ CSection::~CSection()
 {
     delete m_pViewportItem;
 
-    for
+    /*for (int i=0;i<m_Layers.size();i++)
+        delete m_Layers[i];*/
 }
 
 int CSection::objectCount()
@@ -513,8 +514,26 @@ void CSection::mouseDoubleClickEvent ( int x, int y )
 
 void CSection::mousePressEvent( int x, int y )
 {
+    m_ClickStartPoint.setX(x);
+    m_ClickStartPoint.setY(y);
+
     x += scrollX();
     y += scrollY();
+
+    if (scrollYMax() > 0 && m_rVertScroller.contains(m_ClickStartPoint))
+    {
+        m_iScrollYStart = scrollY();
+        return;
+    }
+    else if (scrollYMax() > 0 && m_rVertScrollerBar.contains(m_ClickStartPoint))
+    {
+        m_iScrollYStart = -2;
+        return;
+    }
+    else
+        m_iScrollYStart = -1;
+
+    //m_iScrollXStart = scrollX();
 
     if (m_pControlObj)
     {
@@ -536,6 +555,21 @@ void CSection::mouseReleaseEvent( int x, int y )
 {
     x += scrollX();
     y += scrollY();
+
+    if (m_iScrollYStart == -2)
+    {
+        if (m_ClickStartPoint.y() < m_rVertScroller.top())
+            setScrollY(scrollY() - m_rRect.height()/5);
+        else
+            setScrollY(scrollY() + m_rRect.height()/5);
+        document()->updateRenderView();
+        return;
+    }
+    else if (m_iScrollYStart >= 0)
+        return;
+
+    m_ClickStartPoint.setX(0);
+    m_ClickStartPoint.setY(0);
 
     m_pFocusObj = 0;
 
@@ -561,6 +595,15 @@ void CSection::mouseReleaseEvent( int x, int y )
 
 void CSection::mouseMoveEvent( int x, int y )
 {
+    if (scrollYMax() > 0 && m_iScrollYStart >= 0)
+    {
+        int delta = y - m_ClickStartPoint.y();//scrollYMax() * (y - m_ClickStartPoint.y()) / m_rRect.height();
+        //qDebug() << m_iScrollYStart << y << m_ClickStartPoint.y() << delta;
+        setScrollY(m_iScrollYStart + delta);
+        document()->updateRenderView();
+        return;
+    }
+
     x += scrollX();
     y += scrollY();
 
@@ -648,8 +691,11 @@ void CSection::drawScrollbar(QPainter *p)
         int scrollareay = h - scrollerheight;
         int scrolleroffsety = scrolly * scrollareay / scrollymax;
 
-        p->fillRect(w-10,0,10,h,QColor(128,128,128,128));
-        p->fillRect(w-10,scrolleroffsety,10,scrollerheight,QColor(40,40,40,160));
+        m_rVertScroller = QRectF(w-10,scrolleroffsety,10,scrollerheight);
+        m_rVertScrollerBar = QRectF(w-10,0,10,h);
+
+        p->fillRect(m_rVertScrollerBar,QColor(128,128,128,128));
+        p->fillRect(m_rVertScroller,QColor(40,40,40,160));
         p->drawRect(w-10,scrolleroffsety,w-1,scrollerheight-1);
     }
     else if (scrollxmax > 0) //y > 0 already implied / both scrollbars

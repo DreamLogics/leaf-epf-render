@@ -71,6 +71,10 @@ void CEPFView::setDocument(CDocument *doc)
     }*/
 
     m_pDocument = doc;
+
+    if (doc == 0)
+        return;
+
     int i,first=-1;
 
     qDebug() << "setting document";
@@ -116,12 +120,14 @@ void CEPFView::setDocument(CDocument *doc)
 
     disconnect(this,SIGNAL(loadDocument()),0,0);
     disconnect(this,SIGNAL(layout(int,int)),0,0);
+    disconnect(this,SIGNAL(sectionChange(QString)),0,0);
     connect(this,SIGNAL(loadDocument(int,int,int)),doc,SLOT(load(int,int,int)));
     connect(this,SIGNAL(layout(int,int,int,bool)),doc,SLOT(layout(int,int,int,bool)));
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
     connect(doc,SIGNAL(_updateRenderView()),this,SLOT(update()));
     connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
     connect(this,SIGNAL(clearBuffers()),doc,SLOT(clearBuffers()));
+    connect(this,SIGNAL(sectionChange(QString)),doc,SLOT(sectionChange(QString)));
 
     emit loadDocument(height(),width(),first);
 }
@@ -163,6 +169,8 @@ void CEPFView::setSection(int index)
         m_dTransition = 1.0;
         transitionAnim();
     }
+    else
+        emit sectionChange(s->id());
 
     update();
 }
@@ -569,6 +577,8 @@ void CEPFView::transitionAnim()
     update();
     if (m_dTransition > 0)
         QTimer::singleShot(20,this,SLOT(transitionAnim()));
+    else
+        emit sectionChange(m_pDocument->section(m_iCurrentSection)->id());
 }
 
 void CEPFView::wheelEvent(QWheelEvent *ev)
@@ -603,6 +613,16 @@ bool CEPFView::event(QEvent *ev)
         {
 
         }
+    }
+    else if (ev->type() == QEvent::Hide)
+    {
+        if (!m_bIsLoading && m_pDocument)
+            emit sectionChange("");
+    }
+    else if (ev->type() == QEvent::Show)
+    {
+        if (!m_bIsLoading && m_pDocument)
+            emit sectionChange(m_pDocument->section(m_iCurrentSection)->id());
     }
     return b;
 }

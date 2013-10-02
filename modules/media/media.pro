@@ -27,10 +27,10 @@ DEPENDPATH += $$PWD/../../src
 
 macx:INCLUDEPATH += /usr/local/include
 
-unix: LIBS += -lavcodec
-unix: LIBS += -lavformat
-unix: LIBS += -lavutil
-unix: LIBS += -lswscale
+linux-g++: LIBS += -lavcodec
+linux-g++: LIBS += -lavformat
+linux-g++: LIBS += -lavutil
+linux-g++: LIBS += -lswscale
 
 macx: LIBS += /usr/local/lib/libavcodec.a
 macx: LIBS += /usr/local/lib/libavformat.a

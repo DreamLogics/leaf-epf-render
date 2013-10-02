@@ -7,6 +7,23 @@
 namespace CSS
 {
 
+enum easing_function
+{
+    efNone=0,
+    efEase,
+    efEaseIn,
+    efEaseOut
+};
+
+enum direction
+{
+    dirNormal=0,
+    dirReverse,
+    dirAlternate,
+    dirAlternateReverse
+
+};
+
 class KeyFrame
 {
 public:

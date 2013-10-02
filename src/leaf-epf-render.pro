@@ -35,7 +35,8 @@ SOURCES += cdocument.cpp \
     device.cpp \
     css/css_animation.cpp \
     canimator.cpp \
-    cepfjs.cpp
+    cepfjs.cpp \
+    css/css_transition.cpp
 
 HEADERS += leaf-epf-render_global.h \
     cdocument.h \
@@ -66,7 +67,8 @@ HEADERS += leaf-epf-render_global.h \
     object_types/clabelobject.h \
     css/css_animation.h \
     canimator.h \
-    cepfjs.h
+    cepfjs.h \
+    css/css_transition.h
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN

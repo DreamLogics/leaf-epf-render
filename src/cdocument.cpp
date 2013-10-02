@@ -36,6 +36,7 @@
 #include <QTimer>
 #include "idevice.h"
 #include "cepfjs.h"
+#include "canimator.h"
 
 CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
 {
@@ -789,3 +790,10 @@ qint64 ResourceIO::pos() const
 {
     return m_iPos;
 }*/
+void CDocument::sectionChange(QString id)
+{
+    CSection* s=0;
+    if (id != "")
+        s = sectionByID(id);
+    CAnimator::get(thread())->setSection(s);
+}

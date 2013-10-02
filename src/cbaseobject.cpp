@@ -55,7 +55,7 @@ CBaseObject::~CBaseObject()
     //    delete m_pBuffer;
 
     //unregister from animator
-    CAnimator::get()->unregisterAnimation(this);
+    CAnimator::get(this->thread())->unregisterAnimation(this);
 }
 
 bool CBaseObject::enabled() const
@@ -282,28 +282,28 @@ void CBaseObject::layout(QRectF relrect)
         else
             iter = anim_iteration_count.toInt();
 
-        CAnimator::easing_function ef;
+        CSS::easing_function ef;
         if (anim_timing_function.toString() == "ease-in")
-            ef = CAnimator::efEaseIn;
+            ef = CSS::efEaseIn;
         else if (anim_timing_function.toString() == "ease-out")
-            ef = CAnimator::efEaseOut;
+            ef = CSS::efEaseOut;
         else if (anim_timing_function.toString() == "none" || anim_timing_function.toString() == "normal" || anim_timing_function.toString() == "linear")
-            ef = CAnimator::efNone;
+            ef = CSS::efNone;
         else
-            ef = CAnimator::efEase;
+            ef = CSS::efEase;
 
-        CAnimator::direction dir = CAnimator::dirNormal;
+        CSS::direction dir = CSS::dirNormal;
         if (anim_direction.toString() == "reverse")
-            dir = CAnimator::dirReverse;
+            dir = CSS::dirReverse;
         else if (anim_direction.toString() == "alternate")
-            dir = CAnimator::dirAlternate;
+            dir = CSS::dirAlternate;
         else if (anim_direction.toString() == "alternate-reverse")
-            dir = CAnimator::dirAlternateReverse;
+            dir = CSS::dirAlternateReverse;
 
-        CAnimator::get()->registerAnimation(this,anim.toString(),CSS::stringToMsTime(anim_duration.toString()),ef,CSS::stringToMsTime(anim_delay.toString()),iter,dir);
+        CAnimator::get(this->thread())->registerAnimation(this,anim.toString(),CSS::stringToMsTime(anim_duration.toString()),ef,CSS::stringToMsTime(anim_delay.toString()),iter,dir);
     }
     else
-        CAnimator::get()->unregisterAnimation(this);
+        CAnimator::get(this->thread())->unregisterAnimation(this);
 
 
     //qDebug() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;

@@ -168,6 +168,7 @@ private slots:
     void saveBuffers();
     void clearBuffers();
 
+    void sectionChange(QString id);
 
 private:
     QList<CSection*> m_Sections;

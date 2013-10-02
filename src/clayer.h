@@ -35,6 +35,7 @@ class CLayer : public QObject
     Q_OBJECT
 public:
     CLayer(QString id, CSection *parent = 0);
+    virtual ~CLayer();
 
     QString id();
 

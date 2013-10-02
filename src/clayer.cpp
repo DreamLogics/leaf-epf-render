@@ -30,6 +30,12 @@ CLayer::CLayer(QString id, CSection* s) : QObject(),
     setParent((QObject*)s);
 }
 
+CLayer::~CLayer()
+{
+    /*for (int i=0;i<m_Objects.size();i++)
+        delete m_Objects[i];*/
+}
+
 QString CLayer::id()
 {
     return m_sID;

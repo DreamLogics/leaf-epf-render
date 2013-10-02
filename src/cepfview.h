@@ -70,6 +70,7 @@ signals:
 
     void loadDocument(int height, int width, int currentsection);
     void viewChanged(int dy);
+    void sectionChange(QString id);
     //void scrollSection(int dx, int dy);
 
     //void updateRendered(QRectF);

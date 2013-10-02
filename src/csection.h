@@ -60,7 +60,7 @@ class CSection : public QObject, public EPFComponent
 public:
     CSection(QString id, CDocument* doc,bool hidden,int x=0, int y=0);
 
-    ~CSection();
+    virtual ~CSection();
 
     virtual int objectCount();
 
@@ -163,6 +163,9 @@ private:
     int m_iX;
     int m_iY;
 
+    int m_iScrollXStart;
+    int m_iScrollYStart;
+
     int m_iScrollX;
     int m_iScrollY;
     int m_iScrollXMax;
@@ -178,6 +181,14 @@ private:
 
     QColor m_qcScrollbarColor;
     QColor m_qcScrollerColor;
+
+    QRectF m_rVertScroller;
+    QRectF m_rHorScroller;
+
+    QRectF m_rVertScrollerBar;
+    QRectF m_rHorScrollerBar;
+
+    QPoint m_ClickStartPoint;
 
     TransitionFx m_iTransitionFx;
 

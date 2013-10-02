@@ -5,12 +5,19 @@
 #include <QTimer>
 #include <QEasingCurve>
 #include <QDebug>
+#include <QMap>
+#include <QThread>
+#include <QMutex>
+#include <QList>
 
-#define FRAMERATE 30
+#define FRAMERATE 24
+
+QMutex g_gettermutex;
 
 CAnimator::CAnimator(QObject *parent) :
     QObject(parent)
 {
+    m_pSection = 0;
     m_iTime = 0;
     m_pTimer = new QTimer();
     m_pTimer->setInterval(FRAMERATE);
@@ -18,11 +25,21 @@ CAnimator::CAnimator(QObject *parent) :
     m_pTimer->start();
 }
 
-CAnimator* CAnimator::get()
+CAnimator* CAnimator::get(QThread *th)
 {
-    static CAnimator* p=0;
-    if (!p)
+    //static CAnimator* p=0;
+    g_gettermutex.lock();
+    static QMap<QThread*,CAnimator*> plist;
+    CAnimator* p;
+    if (!plist.contains(th))
+    {
         p = new CAnimator();
+        plist.insert(th,p);
+        g_gettermutex.unlock();
+        return p;
+    }
+    p = plist[th];
+    g_gettermutex.unlock();
     return p;
 }
 
@@ -31,14 +48,21 @@ void CAnimator::update()
     QMap<CBaseObject*,registered_animation>::Iterator it;
     //QMap<CBaseObject*,registered_animation> nmap;
     double pos;
-    CSection* s=0;
+    bool bShouldLayout = false;
+
+
+    if (!m_pSection)
+        return;
 
     for (it=m_Animations.begin();it != m_Animations.end();it++)
     {
         registered_animation regani = it.value();
         //qDebug() << "CAnimator::update()" << m_iTime << regani.m_iStartTime;
-        if (it == m_Animations.begin())
-            s = regani.m_pObject->section();// TODO currect section from document
+        if (regani.m_pObject->section() != m_pSection)
+            continue;
+
+        bShouldLayout = true;
+
         if (m_iTime >= regani.m_iStartTime)
         {
             if (regani.m_iCurFrame > regani.m_iFrames)
@@ -63,17 +87,17 @@ void CAnimator::update()
             //qDebug() << "curframes" << regani.m_iCurFrame << "frames" << regani.m_iFrames;
             //qDebug() << "pos pre-ease" << pos;
 
-            if (regani.m_efEasing == efEase)
+            if (regani.m_efEasing == CSS::efEase)
             {
                 QEasingCurve ec(QEasingCurve::InOutQuad);
                 pos = ec.valueForProgress(pos);
             }
-            else if (regani.m_efEasing == efEaseIn)
+            else if (regani.m_efEasing == CSS::efEaseIn)
             {
                 QEasingCurve ec(QEasingCurve::InQuad);
                 pos = ec.valueForProgress(pos);
             }
-            else if (regani.m_efEasing == efEaseOut)
+            else if (regani.m_efEasing == CSS::efEaseOut)
             {
                 QEasingCurve ec(QEasingCurve::OutQuad);
                 pos = ec.valueForProgress(pos);
@@ -81,8 +105,8 @@ void CAnimator::update()
 
             //qDebug() << "pos post-ease" << pos;
 
-            if (regani.m_dirDirection == dirReverse || (regani.m_dirDirection == dirAlternate && regani.m_bAlternate)
-                    || (regani.m_dirDirection == dirAlternateReverse && !regani.m_bAlternate) )
+            if (regani.m_dirDirection == CSS::dirReverse || (regani.m_dirDirection == CSS::dirAlternate && regani.m_bAlternate)
+                    || (regani.m_dirDirection == CSS::dirAlternateReverse && !regani.m_bAlternate) )
                 pos = 1 - pos;
 
             QStringList props = regani.m_pAnim->properties();
@@ -99,13 +123,13 @@ void CAnimator::update()
 
     //m_Animations = nmap;
 
-    if (s)
-        s->layout();
+    if (bShouldLayout)
+        m_pSection->layout();
 
     m_iTime+=FRAMERATE;
 }
 
-void CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_time, easing_function ef, int ms_delay, int iterations, direction dir)
+void CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction dir)
 {
     qDebug() << "register animation for object" << obj->id();
     registered_animation regani;
@@ -190,4 +214,9 @@ void CAnimator::stylesheetChange(CSS::Stylesheet* css)
         else
             unregisterAnimation(regani.m_pObject);
     }
+}
+
+void CAnimator::setSection(CSection *section)
+{
+    m_pSection = section;
 }

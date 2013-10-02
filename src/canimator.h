@@ -4,14 +4,16 @@
 #include <QObject>
 #include <QMutex>
 #include <QMap>
+#include "css/css_animation.h"
 
 namespace CSS {
     class Stylesheet;
-    class Animation;
 }
 
 class CBaseObject;
 class QTimer;
+class CSection;
+class QThread;
 
 class CAnimator : public QObject
 {
@@ -19,24 +21,7 @@ class CAnimator : public QObject
 public:
     explicit CAnimator(QObject *parent = 0);
 
-    static CAnimator* get();
-
-    enum easing_function
-    {
-        efNone=0,
-        efEase,
-        efEaseIn,
-        efEaseOut
-    };
-
-    enum direction
-    {
-        dirNormal=0,
-        dirReverse,
-        dirAlternate,
-        dirAlternateReverse
-
-    };
+    static CAnimator* get(QThread*);
 
     struct registered_animation
     {
@@ -45,8 +30,8 @@ public:
         int m_iTime;
         int m_iDelay;
         int m_iIterations;
-        easing_function m_efEasing;
-        direction m_dirDirection;
+        CSS::easing_function m_efEasing;
+        CSS::direction m_dirDirection;
 
         CSS::Animation* m_pAnim;
 
@@ -56,11 +41,13 @@ public:
         bool m_bAlternate;
     };
 
-    void registerAnimation(CBaseObject* obj, QString animation, int ms_time, easing_function ef, int ms_delay, int iterations, direction direction);
+    void registerAnimation(CBaseObject* obj, QString animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction direction);
     void unregisterAnimation(CBaseObject* obj);
     bool isRegistered(CBaseObject* obj);
 
     void stylesheetChange(CSS::Stylesheet* css);
+
+    void setSection(CSection* section);
     
 signals:
     
@@ -73,7 +60,7 @@ private:
     QMap<CBaseObject*,registered_animation> m_Animations;
     QTimer* m_pTimer;
     unsigned int m_iTime;
-
+    CSection* m_pSection;
 };
 
 #endif // CANIMATOR_H
