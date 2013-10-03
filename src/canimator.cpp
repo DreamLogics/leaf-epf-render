@@ -9,6 +9,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QList>
+#include "epfevent.h"
 
 #define FRAMERATE 24
 
@@ -45,7 +46,7 @@ CAnimator* CAnimator::get(QThread *th)
 
 void CAnimator::update()
 {
-    QMap<CBaseObject*,registered_animation>::Iterator it;
+    QMap<int,registered_animation>::Iterator it;
     //QMap<CBaseObject*,registered_animation> nmap;
     double pos;
     bool bShouldLayout = false;
@@ -79,7 +80,24 @@ void CAnimator::update()
                     regani.m_bAlternate = !regani.m_bAlternate;
                 }
                 else
-                    continue;
+                {
+                    if (!regani.m_bFinished)
+                    {
+                        if (regani.m_bTransition)
+                        {
+                            //notify transitioner
+                        }
+                        else
+                        {
+                            regani.m_bFinished = true;
+                            EPFComponent* epfc = dynamic_cast<EPFComponent*>(regani.m_pObject);
+                            if (epfc)
+                                epfc->sendEvent("animationFinished",regani.m_sAnimation);
+                        }
+                    }
+                    else
+                        continue;
+                }
             }
 
             pos = (double)regani.m_iCurFrame / (double)regani.m_iFrames;
@@ -129,7 +147,18 @@ void CAnimator::update()
     m_iTime+=FRAMERATE;
 }
 
-void CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction dir)
+int CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction dir, int current_anim)
+{
+    CSS::Stylesheet* css = obj->document()->stylesheet();
+    CSS::Animation* ani;
+
+    ani = css->animation(animation);
+    if (ani)
+        return registerAnimation(obj,ani,ms_time,ef,ms_delay,iterations,dir,false,current_anim);
+    return -1;
+}
+
+int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction direction, bool bTransition, int current_anim)
 {
     qDebug() << "register animation for object" << obj->id();
     registered_animation regani;
@@ -137,16 +166,37 @@ void CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_ti
     CSS::Animation* ani;
     CSS::KeyFrame* kf;
 
-    if (isRegistered(obj))
-        return;
-        //unregisterAnimation(obj);
+    int newid=0;
 
-    ani = css->animation(animation);
+    if (isRegistered(current_anim,obj))
+    {
+        qDebug() << "animation already registered";
+        if (m_Animations[current_anim].m_sAnimation == animation)
+            return current_anim;
+        else
+        {
+            newid = current_anim;
+            unregisterAnimation(current_anim,obj);
+        }
+    }
+    else
+    {
+        for (int i=0;i<=m_Animations.size();i++)
+        {
+            if (!m_Animations.contains(i))
+            {
+                newid = i;
+                break;
+            }
+        }
+    }
+
+    ani = animation;
     if (ani)
     {
 
         if (ms_time == 0)
-            return;
+            return -1;
 
         kf = new CSS::KeyFrame();
         QStringList props = ani->properties();
@@ -171,24 +221,42 @@ void CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_ti
         regani.m_iFrames = ms_time/FRAMERATE;
         regani.m_iCurFrame = 1;
         regani.m_bAlternate = false;
-        m_Animations.insert(obj,regani);
+        regani.m_bFinished = false;
+        regani.m_bTransition = bTransition;
+        m_Animations.insert(newid,regani);
+        return newid;
+    }
+    return -1;
+}
+
+void CAnimator::unregisterAnimation(int ranim, CBaseObject *obj)
+{
+    if (m_Animations.contains(ranim))
+    {
+        if (obj && m_Animations[ranim].m_pObject == obj)
+            m_Animations.remove(ranim);
+        else if (!obj)
+            m_Animations.remove(ranim);
     }
 }
 
-void CAnimator::unregisterAnimation(CBaseObject *obj)
+bool CAnimator::isRegistered(int ranim, CBaseObject *obj)
 {
-    //qDebug() << "unregister animation for object" << obj->id();
-    m_Animations.remove(obj);
-}
-
-bool CAnimator::isRegistered(CBaseObject *obj)
-{
-    return m_Animations.contains(obj);
+    if (m_Animations.contains(ranim))
+    {
+        if (obj && m_Animations[ranim].m_pObject == obj)
+            return true;
+        else if (!obj)
+            return true;
+        else
+            return false;
+    }
+    return false;
 }
 
 void CAnimator::stylesheetChange(CSS::Stylesheet* css)
 {
-    QMap<CBaseObject*,registered_animation>::Iterator it;
+    QMap<int,registered_animation>::Iterator it;
     CSS::Animation* ani;
     CSS::KeyFrame* kf;
 
@@ -204,7 +272,7 @@ void CAnimator::stylesheetChange(CSS::Stylesheet* css)
 
             for (int i=0;i<props.size();i++)
             {
-                kf->addProperty(props[i],css->property(it.key(),props[i]));
+                kf->addProperty(props[i],css->property(regani.m_pObject,props[i]));
             }
 
             ani->generateFrames(kf);
@@ -212,11 +280,22 @@ void CAnimator::stylesheetChange(CSS::Stylesheet* css)
             regani.m_pAnim = ani;
         }
         else
-            unregisterAnimation(regani.m_pObject);
+            unregisterAnimation(it.key());
     }
 }
 
 void CAnimator::setSection(CSection *section)
 {
     m_pSection = section;
+}
+
+void CAnimator::reverseAnimation(int ranim, CBaseObject *obj)
+{
+    if (!isRegistered(ranim,obj))
+        return;
+
+    registered_animation rani = m_Animations[ranim];
+    rani.m_bAlternate = true;
+    rani.m_iCurFrame = rani.m_iFrames - rani.m_iCurFrame - 1;
+    m_Animations[ranim] = rani;
 }

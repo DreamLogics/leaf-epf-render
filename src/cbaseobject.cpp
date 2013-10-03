@@ -21,7 +21,7 @@
 ****************************************************************************/
 
 #include "cbaseobject.h"
-#include "css/css_style.h"
+//#include "css/css_style.h"
 #include "clayer.h"
 #include "csection.h"
 #include "cdocument.h"
@@ -30,7 +30,7 @@
 #include <QGLFramebufferObject>
 #include <QTime>
 #include "canimator.h"
-
+#include "css/css_transition.h"
 
 CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_sID(id), m_pLayer(layer)
@@ -45,6 +45,8 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_bNeedsRedraw = true;
     //m_pBuffer = 0;
     m_bChanged = false;
+    m_iAnimation = -1;
+    m_iTransitionTime = 0;
 
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
@@ -55,7 +57,8 @@ CBaseObject::~CBaseObject()
     //    delete m_pBuffer;
 
     //unregister from animator
-    CAnimator::get(this->thread())->unregisterAnimation(this);
+    if (m_iAnimation != -1)
+        CAnimator::get(this->thread())->unregisterAnimation(m_iAnimation,this);
 }
 
 bool CBaseObject::enabled() const
@@ -267,7 +270,7 @@ void CBaseObject::layout(QRectF relrect)
     //animation
     CSS::Property anim = css->property(this,"animation-name");
 
-    if (!anim.isNull())
+    if (!anim.isNull() && anim.toString() != "")
     {
         CSS::Property anim_duration = css->property(this,"animation-duration");
         CSS::Property anim_timing_function = css->property(this,"animation-timing-function");
@@ -300,11 +303,36 @@ void CBaseObject::layout(QRectF relrect)
         else if (anim_direction.toString() == "alternate-reverse")
             dir = CSS::dirAlternateReverse;
 
-        CAnimator::get(this->thread())->registerAnimation(this,anim.toString(),CSS::stringToMsTime(anim_duration.toString()),ef,CSS::stringToMsTime(anim_delay.toString()),iter,dir);
+        m_iAnimation = CAnimator::get(this->thread())->registerAnimation(this,anim.toString(),CSS::stringToMsTime(anim_duration.toString()),ef,CSS::stringToMsTime(anim_delay.toString()),iter,dir,m_iAnimation);
+    }
+    else if (m_iAnimation != -1)
+        CAnimator::get(this->thread())->unregisterAnimation(m_iAnimation,this);
+
+    //transitions
+    CSS::Property transition = css->property(this,"transition-duration");
+    if (!transition.isNull())
+    {
+        m_iTransitionTime = CSS::stringToMsTime(transition.value());
+        CSS::Property transition_timing_function = css->property(this,"transition-timing-function");
+        CSS::Property transition_delay = css->property(this,"transition-delay");
+        CSS::Property transition_properties = css->property(this,"transition-properties");
+
+        m_iTransitionDelay = CSS::stringToMsTime(transition_delay.value());
+
+        if (transition_timing_function.toString() == "ease-in")
+            m_TransitionEasing = CSS::efEaseIn;
+        else if (transition_timing_function.toString() == "ease-out")
+            m_TransitionEasing = CSS::efEaseOut;
+        else if (transition_timing_function.toString() == "none" || transition_timing_function.toString() == "normal" || transition_timing_function.toString() == "linear")
+            m_TransitionEasing = CSS::efNone;
+        else
+            m_TransitionEasing = CSS::efEase;
+
+        m_TransitionProps.clear();
+        m_TransitionProps = transition_properties.value().split(",");
     }
     else
-        CAnimator::get(this->thread())->unregisterAnimation(this);
-
+        m_iTransitionTime = 0;
 
     //qDebug() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;
 
@@ -558,9 +586,27 @@ void CBaseObject::addStyleClass(QString classname)
     if (m_StyleClasses.contains(classname))
         return;
 
-    m_StyleClasses.append(classname);
-    m_bNeedsRedraw = true;
-    section()->layout();
+    if (m_iTransitionTime > 0)
+    {
+        //create transition
+        CSS::Selector* sel;
+        QList<CSS::Property> deltaprops;
+        sel = document()->stylesheet()->selector("#"+section()->id()+":"+layer()->id()+":"+id()+"."+classname);
+        if (!sel->isEmpty())
+            delta
+            sel = document()->stylesheet()->selector("#"+section()->id()+"::"+id()+"."+classname);
+        if (sel->isEmpty())
+            sel = document()->stylesheet()->selector("."+classname);
+        if (sel->isEmpty())
+            return;
+        CSS::Transitioner::get(thread())->createTransition(this,sel,m_TransitionProps);
+    }
+    else
+    {
+        m_StyleClasses.append(classname);
+        m_bNeedsRedraw = true;
+        section()->layout();
+    }
 }
 void CBaseObject::toggleStyleClass(QString classname)
 {
@@ -569,15 +615,20 @@ void CBaseObject::toggleStyleClass(QString classname)
         removeStyleClass(classname);
         return;
     }
-    m_StyleClasses.append(classname);
-    m_bNeedsRedraw = true;
-    section()->layout();
+    addStyleClass(classname);
 }
 void CBaseObject::removeStyleClass(QString classname)
 {
-    m_StyleClasses.removeAll(classname);
-    m_bNeedsRedraw = true;
-    section()->layout();
+    if (m_iTransitionTime > 0)
+    {
+        //create transition
+    }
+    else
+    {
+        m_StyleClasses.removeAll(classname);
+        m_bNeedsRedraw = true;
+        section()->layout();
+    }
 }
 
 CSection* CBaseObject::section()

@@ -166,6 +166,7 @@ public:
     Property property(QString key);
     void setProperty(QString key, const Property prop);
     QStringList properties();
+    bool isEmpty();
 
 private:
     QMap<QString,Property> m_props;

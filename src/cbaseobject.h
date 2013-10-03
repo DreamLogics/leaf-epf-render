@@ -30,12 +30,8 @@
 #include <QRectF>
 #include <QImage>
 #include <QMutex>
-
-namespace CSS
-{
-    class Stylesheet;
-    class Property;
-}
+#include "css/css_style.h"
+#include "css/css_animation.h"
 
 class QMouseEvent;
 class CLayer;
@@ -204,6 +200,7 @@ private:
     int m_iPaddingBottom;
     int m_iPaddingRight;*/
 
+    int m_iAnimation;
 
     QStringList m_StyleClasses;
     CLayer* m_pLayer;
@@ -214,6 +211,10 @@ private:
     QMutex m_FPMutex;
     QMutex m_RMMutex;
 
+    int m_iTransitionTime;
+    int m_iTransitionDelay;
+    CSS::easing_function m_TransitionEasing;
+    QStringList m_TransitionProps;
 
     bool m_bFixedParent;
 

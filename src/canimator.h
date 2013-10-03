@@ -39,11 +39,16 @@ public:
         int m_iFrames;
         int m_iCurFrame;
         bool m_bAlternate;
+        bool m_bFinished;
+        bool m_bTransition;
     };
 
-    void registerAnimation(CBaseObject* obj, QString animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction direction);
-    void unregisterAnimation(CBaseObject* obj);
-    bool isRegistered(CBaseObject* obj);
+    int registerAnimation(CBaseObject* obj, QString animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction direction, int current_anim=-1);
+    int registerAnimation(CBaseObject *obj, CSS::Animation* animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction direction, bool bTransition, int current_anim);
+    void unregisterAnimation(int ranim, CBaseObject* obj=0);
+    bool isRegistered(int ranim, CBaseObject* obj=0);
+
+    void reverseAnimation(int ranim, CBaseObject* obj=0);
 
     void stylesheetChange(CSS::Stylesheet* css);
 
@@ -57,7 +62,7 @@ public slots:
     
 private:
 
-    QMap<CBaseObject*,registered_animation> m_Animations;
+    QMap<int,registered_animation> m_Animations;
     QTimer* m_pTimer;
     unsigned int m_iTime;
     CSection* m_pSection;

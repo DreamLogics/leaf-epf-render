@@ -1289,3 +1289,8 @@ Animation* Stylesheet::animation(QString animation)
         return m_animations[animation];
     return 0;
 }
+
+bool Selector::isEmpty()
+{
+    return m_props.empty();
+}
