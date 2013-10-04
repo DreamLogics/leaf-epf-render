@@ -317,7 +317,10 @@ void CBaseObject::layout(QRectF relrect)
         CSS::Property transition_delay = css->property(this,"transition-delay");
         CSS::Property transition_properties = css->property(this,"transition-properties");
 
-        m_iTransitionDelay = CSS::stringToMsTime(transition_delay.value());
+        if (transition_delay.isNull())
+            m_iTransitionDelay = 0;
+        else
+            m_iTransitionDelay = CSS::stringToMsTime(transition_delay.value());
 
         if (transition_timing_function.toString() == "ease-in")
             m_TransitionEasing = CSS::efEaseIn;
@@ -591,15 +594,27 @@ void CBaseObject::addStyleClass(QString classname)
         //create transition
         CSS::Selector* sel;
         QList<CSS::Property> deltaprops;
+        QStringList props,props2;
         sel = document()->stylesheet()->selector("#"+section()->id()+":"+layer()->id()+":"+id()+"."+classname);
-        if (!sel->isEmpty())
-            delta
+        if (sel->isEmpty())
             sel = document()->stylesheet()->selector("#"+section()->id()+"::"+id()+"."+classname);
-        if (sel->isEmpty())
-            sel = document()->stylesheet()->selector("."+classname);
-        if (sel->isEmpty())
-            return;
-        CSS::Transitioner::get(thread())->createTransition(this,sel,m_TransitionProps);
+        if (!sel->isEmpty())
+        {
+            props = sel->properties();
+            for (int i=0;i<props.size();i++)
+                deltaprops.append(sel->property(props[i]));
+        }
+        sel = document()->stylesheet()->selector("."+classname);
+        if (!sel->isEmpty())
+        {
+            props2 = sel->properties();
+            for (int i=0;i<props2.size();i++)
+            {
+                if (!props.contains(props2[i]))
+                    deltaprops.append(sel->property(props2[i]));
+            }
+        }
+        CSS::Transitioner::get(thread())->createTransition(id()+"_"+classname,this,deltaprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
     }
     else
     {
@@ -621,7 +636,8 @@ void CBaseObject::removeStyleClass(QString classname)
 {
     if (m_iTransitionTime > 0)
     {
-        //create transition
+        //remove transition
+        CSS::Transitioner::get(thread())->undoTransition(id()+"_"+classname);
     }
     else
     {

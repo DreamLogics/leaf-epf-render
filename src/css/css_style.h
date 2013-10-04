@@ -25,11 +25,13 @@
 
 #include <QMap>
 #include <QString>
-#include "../cbaseobject.h"
-#include "../clayer.h"
-#include "../csection.h"
-#include "../clayout.h"
-#include "../cdocument.h"
+#include <QStringList>
+
+class CBaseObject;
+class CDocument;
+class CSection;
+class CLayer;
+class CLayout;
 
 namespace CSS
 {
@@ -118,7 +120,7 @@ public:
     Property(const Property&);
     Property(QString name, Stylesheet* css);
     Property();
-    ~Property();
+    virtual ~Property();
 
     Property clone() const;
 

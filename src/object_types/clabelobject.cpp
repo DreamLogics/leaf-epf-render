@@ -26,6 +26,7 @@
 #include <QWidget>
 #include "../css/css_painters.h"
 #include <QDebug>
+#include "cdocument.h"
 
 CBaseObject* CLabelObjectFactory::create(QString id, CLayer *layer)
 {

@@ -1,3 +1,25 @@
+/****************************************************************************
+**
+** LEAF EPF Render engine
+** http://leaf.dreamlogics.com/
+**
+** Copyright (C) 2013 DreamLogics
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU Lesser General Public License as published
+** by the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU Lesser General Public License for more details.
+**
+** You should have received a copy of the GNU Lesser General Public License
+** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**
+****************************************************************************/
+
 #ifndef CSS_TRANSITION_H
 #define CSS_TRANSITION_H
 
@@ -15,17 +37,18 @@ namespace CSS
         struct transition
         {
             Animation* m_pAnimation;
-            QString m_sIdentifier;
+            CBaseObject* m_pObj;
             int m_iAnimation;
         };
 
         static Transitioner* get(QThread* th);
 
-        void createTransition(CBaseObject* obj, QString identifier, QList<Property> deltaprops, QStringList transitionable);
-        void undoTransition(CBaseObject* obj, QString identifier);
+        void createTransition(QString identifier,CBaseObject* obj, QList<Property> deltaprops, QStringList transitionable, easing_function easing, int ms_time, int ms_delay);
+        void undoTransition(QString identifier);
+        void transitionAnimDone(int animid);
 
     private:
-        QMap<CBaseObject*,transition> m_Transitions;
+        QMap<QString,transition> m_Transitions;
     };
 
 }

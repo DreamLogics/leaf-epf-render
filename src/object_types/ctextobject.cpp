@@ -38,6 +38,9 @@
 #include <QSvgGenerator>
 #include <QSvgRenderer>
 #include <QDataStream>
+#include "csection.h"
+#include "clayout.h"
+#include "clayer.h"
 
 CBaseObject* CTextObjectFactory::create(QString id, CLayer *layer)
 {

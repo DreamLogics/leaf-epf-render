@@ -1,10 +1,33 @@
+/****************************************************************************
+**
+** LEAF EPF Render engine
+** http://leaf.dreamlogics.com/
+**
+** Copyright (C) 2013 DreamLogics
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU Lesser General Public License as published
+** by the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU Lesser General Public License for more details.
+**
+** You should have received a copy of the GNU Lesser General Public License
+** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**
+****************************************************************************/
+
 #include "css_animation.h"
 #include <qmath.h>
 #include <QDebug>
+#include <QColor>
 
 using namespace CSS;
 
-Animation::Animation()
+Animation::Animation(QString name) : m_sName(name)
 {
 }
 
@@ -15,13 +38,18 @@ Animation::~Animation()
         delete it.value();
 }
 
+QString Animation::name() const
+{
+    return m_sName;
+}
+
 Property Animation::keyedProperty(QString property, double position)
 {
-    position*=100;
-    int startframe = qFloor(position);
-    int endframe = qCeil(position);
+    double percent = position*100;
+    int startframe = qFloor(percent);
+    int endframe = qCeil(percent);
 
-    qDebug() << "creating keyed prop" << property << position << startframe << endframe;
+    //qDebug() << "creating keyed prop" << property << position << startframe << endframe;
 
     if (startframe == endframe)
         return m_keyframes[startframe]->property(property);
@@ -56,6 +84,8 @@ Property Animation::keyedProperty(QString property, double position)
         newprop.setValue(c3,cfRgba);
         break;
     }
+
+    //qDebug() << propstart.toString() << propend.toString() << newprop.toString();
 
     return newprop;
 }
@@ -126,7 +156,7 @@ void Animation::generateFrames(KeyFrame* startframe)
                     Property propstart = lf->property(props[a]);
                     Property propend = nf->property(props[a]);
 
-                    qDebug() << "generating keyframe" << props[a] << propstart.value() << propend.value() << pos;
+                    qDebug() << "generating keyframe" << props[a] << propstart.toString() << propend.toString() << pos;
 
                     if (propend.isNull())
                     {

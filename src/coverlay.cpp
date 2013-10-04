@@ -22,6 +22,7 @@
 
 #include "coverlay.h"
 #include "css/css_style.h"
+#include "cdocument.h"
 #include <QDebug>
 
 COverlay::COverlay(QString id,CDocument* doc,bool visible) : CSection(id,doc,true), m_bVisible(visible)

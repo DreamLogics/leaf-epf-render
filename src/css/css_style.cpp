@@ -24,7 +24,11 @@
 #include <QRegExp>
 #include <QStringList>
 #include "../coverlay.h"
+#include "../cbaseobject.h"
+#include "../clayer.h"
 #include "../csection.h"
+#include "../clayout.h"
+#include "../cdocument.h"
 #include "css_default.h"
 #include "css_animation.h"
 #include <QDebug>
@@ -462,7 +466,7 @@ void Stylesheet::parse(QString css)
 
     QRegExp outerspaces("(^ +| +$)");
 
-    QRegExp propgroupfinder("([^\\{]+)\\{([^\\}]+)\\}");
+    QRegExp propgroupfinder("([^\\{]+)\\{");
     QRegExp varfinder("\\$([a-zA-Z_-0-9]+) *= *([^;]+);");
     QRegExp atrulesfinder("@([a-zA-Z_-0-9]+) *([^;]+) *;");
     QRegExp atrulesblockfinder("@([a-zA-Z_-0-9]+) *([^\\{]+) *\\{");
@@ -492,9 +496,9 @@ void Stylesheet::parse(QString css)
     int ai;
     QString atcss = css;
 
-    ai = atcss.indexOf(atrulesblockfinder,offset);
+    //ai = atcss.indexOf(atrulesblockfinder,offset);
 
-    while (ai != -1)
+    while ((ai = atcss.indexOf(atrulesblockfinder,offset)) != -1)
     {
         ei = 0;
 
@@ -509,13 +513,14 @@ void Stylesheet::parse(QString css)
                 break;
         }
         QString block = atcss.mid(ai+atrulesblockfinder.cap(0).size(),ei - (ai+atrulesblockfinder.cap(0).size()));
+        offset = ei+1;
         if (atrulesblockfinder.cap(1).toLower() == "keyframes")
         {
             //animation
             ao = 0;
             QString animname = atrulesblockfinder.cap(2);
             animname = animname.replace(outerspaces,"");
-            Animation* ani =  new Animation();
+            Animation* ani =  new Animation(animname);
             int ki;
             KeyFrame* keyf;
 
@@ -582,8 +587,8 @@ void Stylesheet::parse(QString css)
         }
 
 
-        offset = ai + atrulesblockfinder.cap(0).size() + ei;
-        ai = atcss.indexOf(atrulesblockfinder,offset);
+
+        //ai = atcss.indexOf(atrulesblockfinder,offset);
     }
 
     offset = 0;
@@ -601,257 +606,278 @@ void Stylesheet::parse(QString css)
 
     offset = 0;
 
-    index = css.indexOf(propgroupfinder,offset);
-    while (index != -1)
+    //index = css.indexOf(propgroupfinder,offset);
+    while ((index = css.indexOf(propgroupfinder,offset)) != -1)
     {
         ss = propgroupfinder.cap(1).replace(outerspaces,"");
-        propdata = propgroupfinder.cap(2);
+        //propdata = propgroupfinder.cap(2);
+        //qDebug() << "found propgrpup" << ss;
 
-        //qDebug() << "selector found: " <<ss;
-
-        if (m_selectors.contains(ss))
-            s = m_selectors[ss];
-        else
+        fc=1;
+        for (ei=index+propgroupfinder.cap(0).size();ei<css.size();ei++)
         {
-            s = new Selector(this);
-            m_selectors.insert(ss,s);
+            if (css[ei] == '{')
+                fc++;
+            else if (css[ei] == '}')
+                fc--;
+            if (fc==0)
+                break;
         }
 
-        proplist = propdata.split(";");
+        propdata = css.mid(index+propgroupfinder.cap(0).size(),ei - (index + propgroupfinder.cap(0).size()));
+        offset = ei+1;
 
-        for (int i=0;i<proplist.size();i++)
+        //qDebug() << propdata;
+
+        if (ss.left(1) != "@")
         {
-            proper = proplist[i].split(":");
-            if (proper.size() == 2)
+
+
+            //qDebug() << "selector found: " <<ss;
+
+            if (m_selectors.contains(ss))
+                s = m_selectors[ss];
+            else
             {
-                propkey = proper[0].replace(outerspaces,"");
-                propvalue = proper[1].replace(outerspaces,"");
+                s = new Selector(this);
+                m_selectors.insert(ss,s);
+            }
 
-                //qDebug() << "prop found: " << propkey << propvalue;
+            proplist = propdata.split(";");
 
-                f = propvalue.indexOf("!");
-                if (f != -1)
+            for (int i=0;i<proplist.size();i++)
+            {
+                proper = proplist[i].split(":");
+                if (proper.size() == 2)
                 {
-                    proprules = propvalue.mid(f).toLower();
-                    propvalue = propvalue.left(f).toLower();
-                    propvalue = propvalue.replace(outerspaces,"");
+                    propkey = proper[0].replace(outerspaces,"");
+                    propvalue = proper[1].replace(outerspaces,"");
 
-                    //bScale = false;
-                    scale = smNone;
-                    bHeightProp = false;
+                    //qDebug() << "prop found: " << propkey << propvalue;
 
-                    if (height_props.contains(propkey))
-                        bHeightProp = true;
-
-                    /*if (proprules.indexOf("!scale") != -1)
-                        bScale = true;*/
-
-                    if (proprules.indexOf("!scale") != -1)
-                        scale = smScale;
-
-                    if (proprules.indexOf("!scale-width") != -1)
-                        scale = smScaleWidth;
-
-                    if (proprules.indexOf("!scale-height") != -1)
-                        scale = smScaleHeight;
-
-
-                }
-                else
-                {
-                    bHeightProp = false;
-
-                    if (height_props.contains(propkey))
-                        bHeightProp = true;
-
-                    //bScale = false;
-                    scale = smNone;
-                }
-
-                if (propkey == "margin")
-                {
-                    QStringList marginprops = propvalue.split(QRegExp(" +"));
-                    if (marginprops.size() == 4)
+                    f = propvalue.indexOf("!");
+                    if (f != -1)
                     {
-                        prop = Property("margin-top",marginprops[0],this,scale,true);
-                        s->setProperty("margin-top",prop);
+                        proprules = propvalue.mid(f).toLower();
+                        propvalue = propvalue.left(f).toLower();
+                        propvalue = propvalue.replace(outerspaces,"");
 
-                        prop = Property("margin-right",marginprops[1],this,scale,false);
-                        s->setProperty("margin-right",prop);
+                        //bScale = false;
+                        scale = smNone;
+                        bHeightProp = false;
 
-                        prop = Property("margin-bottom",marginprops[2],this,scale,true);
-                        s->setProperty("margin-bottom",prop);
+                        if (height_props.contains(propkey))
+                            bHeightProp = true;
 
-                        prop = Property("margin-left",marginprops[3],this,scale,false);
-                        s->setProperty("margin-left",prop);
-                    }
-                    else if (marginprops.size() == 3)
-                    {
-                        prop = Property("margin-top",marginprops[0],this,scale,true);
-                        s->setProperty("margin-top",prop);
+                        /*if (proprules.indexOf("!scale") != -1)
+                            bScale = true;*/
 
-                        prop = Property("margin-right",marginprops[1],this,scale,false);
-                        s->setProperty("margin-right",prop);
+                        if (proprules.indexOf("!scale") != -1)
+                            scale = smScale;
 
-                        prop = Property("margin-bottom",marginprops[2],this,scale,true);
-                        s->setProperty("margin-bottom",prop);
+                        if (proprules.indexOf("!scale-width") != -1)
+                            scale = smScaleWidth;
 
-                        prop = Property("margin-left",marginprops[1],this,scale,false);
-                        s->setProperty("margin-left",prop);
-                    }
-                    else if (marginprops.size() == 2)
-                    {
-                        prop = Property("margin-top",marginprops[0],this,scale,true);
-                        s->setProperty("margin-top",prop);
+                        if (proprules.indexOf("!scale-height") != -1)
+                            scale = smScaleHeight;
 
-                        prop = Property("margin-right",marginprops[1],this,scale,false);
-                        s->setProperty("margin-right",prop);
 
-                        prop = Property("margin-bottom",marginprops[0],this,scale,true);
-                        s->setProperty("margin-bottom",prop);
-
-                        prop = Property("margin-left",marginprops[1],this,scale,false);
-                        s->setProperty("margin-left",prop);
                     }
                     else
                     {
-                        prop = Property("margin-top",propvalue,this,scale,true);
-                        s->setProperty("margin-top",prop);
+                        bHeightProp = false;
 
-                        prop = Property("margin-right",propvalue,this,scale,false);
-                        s->setProperty("margin-right",prop);
+                        if (height_props.contains(propkey))
+                            bHeightProp = true;
 
-                        prop = Property("margin-bottom",propvalue,this,scale,true);
-                        s->setProperty("margin-bottom",prop);
-
-                        prop = Property("margin-left",propvalue,this,scale,false);
-                        s->setProperty("margin-left",prop);
+                        //bScale = false;
+                        scale = smNone;
                     }
-                }
-                else if (propkey == "padding")
-                {
-                    QStringList paddingprops = propvalue.split(QRegExp(" +"));
-                    if (paddingprops.size() == 4)
+
+                    if (propkey == "margin")
                     {
-                        prop = Property("padding-top",paddingprops[0],this,scale,true);
-                        s->setProperty("padding-top",prop);
+                        QStringList marginprops = propvalue.split(QRegExp(" +"));
+                        if (marginprops.size() == 4)
+                        {
+                            prop = Property("margin-top",marginprops[0],this,scale,true);
+                            s->setProperty("margin-top",prop);
 
-                        prop = Property("padding-right",paddingprops[1],this,scale,false);
-                        s->setProperty("padding-right",prop);
+                            prop = Property("margin-right",marginprops[1],this,scale,false);
+                            s->setProperty("margin-right",prop);
 
-                        prop = Property("padding-bottom",paddingprops[2],this,scale,true);
-                        s->setProperty("padding-bottom",prop);
+                            prop = Property("margin-bottom",marginprops[2],this,scale,true);
+                            s->setProperty("margin-bottom",prop);
 
-                        prop = Property("padding-left",paddingprops[3],this,scale,false);
-                        s->setProperty("padding-left",prop);
+                            prop = Property("margin-left",marginprops[3],this,scale,false);
+                            s->setProperty("margin-left",prop);
+                        }
+                        else if (marginprops.size() == 3)
+                        {
+                            prop = Property("margin-top",marginprops[0],this,scale,true);
+                            s->setProperty("margin-top",prop);
+
+                            prop = Property("margin-right",marginprops[1],this,scale,false);
+                            s->setProperty("margin-right",prop);
+
+                            prop = Property("margin-bottom",marginprops[2],this,scale,true);
+                            s->setProperty("margin-bottom",prop);
+
+                            prop = Property("margin-left",marginprops[1],this,scale,false);
+                            s->setProperty("margin-left",prop);
+                        }
+                        else if (marginprops.size() == 2)
+                        {
+                            prop = Property("margin-top",marginprops[0],this,scale,true);
+                            s->setProperty("margin-top",prop);
+
+                            prop = Property("margin-right",marginprops[1],this,scale,false);
+                            s->setProperty("margin-right",prop);
+
+                            prop = Property("margin-bottom",marginprops[0],this,scale,true);
+                            s->setProperty("margin-bottom",prop);
+
+                            prop = Property("margin-left",marginprops[1],this,scale,false);
+                            s->setProperty("margin-left",prop);
+                        }
+                        else
+                        {
+                            prop = Property("margin-top",propvalue,this,scale,true);
+                            s->setProperty("margin-top",prop);
+
+                            prop = Property("margin-right",propvalue,this,scale,false);
+                            s->setProperty("margin-right",prop);
+
+                            prop = Property("margin-bottom",propvalue,this,scale,true);
+                            s->setProperty("margin-bottom",prop);
+
+                            prop = Property("margin-left",propvalue,this,scale,false);
+                            s->setProperty("margin-left",prop);
+                        }
                     }
-                    else if (paddingprops.size() == 3)
+                    else if (propkey == "padding")
                     {
-                        prop = Property("padding-top",paddingprops[0],this,scale,true);
-                        s->setProperty("padding-top",prop);
+                        QStringList paddingprops = propvalue.split(QRegExp(" +"));
+                        if (paddingprops.size() == 4)
+                        {
+                            prop = Property("padding-top",paddingprops[0],this,scale,true);
+                            s->setProperty("padding-top",prop);
 
-                        prop = Property("padding-right",paddingprops[1],this,scale,false);
-                        s->setProperty("padding-right",prop);
+                            prop = Property("padding-right",paddingprops[1],this,scale,false);
+                            s->setProperty("padding-right",prop);
 
-                        prop = Property("padding-bottom",paddingprops[2],this,scale,true);
-                        s->setProperty("padding-bottom",prop);
+                            prop = Property("padding-bottom",paddingprops[2],this,scale,true);
+                            s->setProperty("padding-bottom",prop);
 
-                        prop = Property("padding-left",paddingprops[1],this,scale,false);
-                        s->setProperty("padding-left",prop);
+                            prop = Property("padding-left",paddingprops[3],this,scale,false);
+                            s->setProperty("padding-left",prop);
+                        }
+                        else if (paddingprops.size() == 3)
+                        {
+                            prop = Property("padding-top",paddingprops[0],this,scale,true);
+                            s->setProperty("padding-top",prop);
+
+                            prop = Property("padding-right",paddingprops[1],this,scale,false);
+                            s->setProperty("padding-right",prop);
+
+                            prop = Property("padding-bottom",paddingprops[2],this,scale,true);
+                            s->setProperty("padding-bottom",prop);
+
+                            prop = Property("padding-left",paddingprops[1],this,scale,false);
+                            s->setProperty("padding-left",prop);
+                        }
+                        else if (paddingprops.size() == 2)
+                        {
+                            prop = Property("padding-top",paddingprops[0],this,scale,true);
+                            s->setProperty("padding-top",prop);
+
+                            prop = Property("padding-right",paddingprops[1],this,scale,false);
+                            s->setProperty("padding-right",prop);
+
+                            prop = Property("padding-bottom",paddingprops[0],this,scale,true);
+                            s->setProperty("padding-bottom",prop);
+
+                            prop = Property("padding-left",paddingprops[1],this,scale,false);
+                            s->setProperty("padding-left",prop);
+                        }
+                        else
+                        {
+                            prop = Property("padding-top",propvalue,this,scale,true);
+                            s->setProperty("padding-top",prop);
+
+                            prop = Property("padding-right",propvalue,this,scale,false);
+                            s->setProperty("padding-right",prop);
+
+                            prop = Property("padding-bottom",propvalue,this,scale,true);
+                            s->setProperty("padding-bottom",prop);
+
+                            prop = Property("padding-left",propvalue,this,scale,false);
+                            s->setProperty("padding-left",prop);
+                        }
                     }
-                    else if (paddingprops.size() == 2)
+                    else if (propkey == "border")
                     {
-                        prop = Property("padding-top",paddingprops[0],this,scale,true);
-                        s->setProperty("padding-top",prop);
+                        prop = Property("border-top",propvalue,this,scale,false);
+                        s->setProperty("border-top",prop);
 
-                        prop = Property("padding-right",paddingprops[1],this,scale,false);
-                        s->setProperty("padding-right",prop);
+                        prop = Property("border-right",propvalue,this,scale,false);
+                        s->setProperty("border-right",prop);
 
-                        prop = Property("padding-bottom",paddingprops[0],this,scale,true);
-                        s->setProperty("padding-bottom",prop);
+                        prop = Property("border-bottom",propvalue,this,scale,false);
+                        s->setProperty("border-bottom",prop);
 
-                        prop = Property("padding-left",paddingprops[1],this,scale,false);
-                        s->setProperty("padding-left",prop);
+                        prop = Property("border-left",propvalue,this,scale,false);
+                        s->setProperty("border-left",prop);
+                    }
+                    else if (propkey == "animation")
+                    {
+                        QStringList animprops = propvalue.split(QRegExp(" +"));
+
+                        if (animprops.size() >= 1)
+                        {
+                            prop = Property("animation-name",animprops[0],this,scale,false);
+                            s->setProperty("animation-name",prop);
+
+                            if (animprops.size() >= 2)
+                                prop = Property("animation-duration",stringToMsTimeString(animprops[1]),this,scale,false);
+                            else
+                                prop = Property("animation-duration","1000ms",this,scale,false);
+                            s->setProperty("animation-duration",prop);
+
+                            if (animprops.size() >= 3)
+                                prop = Property("animation-timing-function",animprops[2],this,scale,false);
+                            else
+                                prop = Property("animation-timing-function","ease",this,scale,false);
+                            s->setProperty("animation-timing-function",prop);
+
+                            if (animprops.size() >= 4)
+                                prop = Property("animation-delay",animprops[3],this,scale,false);
+                            else
+                                prop = Property("animation-delay","0ms",this,scale,false);
+                            s->setProperty("animation-delay",prop);
+
+                            if (animprops.size() >= 5)
+                                prop = Property("animation-iteration-count",animprops[4],this,scale,false);
+                            else
+                                prop = Property("animation-iteration-count","1",this,scale,false);
+                            s->setProperty("animation-iteration-count",prop);
+
+                            if (animprops.size() >= 6)
+                                prop = Property("animation-direction",animprops[5],this,scale,false);
+                            else
+                                prop = Property("animation-direction","normal",this,scale,false);
+                            s->setProperty("animation-direction",prop);
+                        }
                     }
                     else
                     {
-                        prop = Property("padding-top",propvalue,this,scale,true);
-                        s->setProperty("padding-top",prop);
-
-                        prop = Property("padding-right",propvalue,this,scale,false);
-                        s->setProperty("padding-right",prop);
-
-                        prop = Property("padding-bottom",propvalue,this,scale,true);
-                        s->setProperty("padding-bottom",prop);
-
-                        prop = Property("padding-left",propvalue,this,scale,false);
-                        s->setProperty("padding-left",prop);
+                        prop = Property(propkey,propvalue,this,scale,bHeightProp);
+                        s->setProperty(propkey,prop);
                     }
-                }
-                else if (propkey == "border")
-                {
-                    prop = Property("border-top",propvalue,this,scale,false);
-                    s->setProperty("border-top",prop);
-
-                    prop = Property("border-right",propvalue,this,scale,false);
-                    s->setProperty("border-right",prop);
-
-                    prop = Property("border-bottom",propvalue,this,scale,false);
-                    s->setProperty("border-bottom",prop);
-
-                    prop = Property("border-left",propvalue,this,scale,false);
-                    s->setProperty("border-left",prop);
-                }
-                else if (propkey == "animation")
-                {
-                    QStringList animprops = propvalue.split(QRegExp(" +"));
-
-                    if (animprops.size() >= 1)
-                    {
-                        prop = Property("animation-name",animprops[0],this,scale,false);
-                        s->setProperty("animation-name",prop);
-
-                        if (animprops.size() >= 2)
-                            prop = Property("animation-duration",stringToMsTimeString(animprops[1]),this,scale,false);
-                        else
-                            prop = Property("animation-duration","1000ms",this,scale,false);
-                        s->setProperty("animation-duration",prop);
-
-                        if (animprops.size() >= 3)
-                            prop = Property("animation-timing-function",animprops[2],this,scale,false);
-                        else
-                            prop = Property("animation-timing-function","ease",this,scale,false);
-                        s->setProperty("animation-timing-function",prop);
-
-                        if (animprops.size() >= 4)
-                            prop = Property("animation-delay",animprops[3],this,scale,false);
-                        else
-                            prop = Property("animation-delay","0ms",this,scale,false);
-                        s->setProperty("animation-delay",prop);
-
-                        if (animprops.size() >= 5)
-                            prop = Property("animation-iteration-count",animprops[4],this,scale,false);
-                        else
-                            prop = Property("animation-iteration-count","1",this,scale,false);
-                        s->setProperty("animation-iteration-count",prop);
-
-                        if (animprops.size() >= 6)
-                            prop = Property("animation-direction",animprops[5],this,scale,false);
-                        else
-                            prop = Property("animation-direction","normal",this,scale,false);
-                        s->setProperty("animation-direction",prop);
-                    }
-                }
-                else
-                {
-                    prop = Property(propkey,propvalue,this,scale,bHeightProp);
-                    s->setProperty(propkey,prop);
                 }
             }
         }
 
-        offset = index + propgroupfinder.cap(0).size();
-        index = css.indexOf(propgroupfinder,offset);
+        //index = css.indexOf(propgroupfinder,offset);
     }
 
     //propagate properties

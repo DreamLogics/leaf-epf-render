@@ -23,6 +23,7 @@
 #include "cvideoobject.h"
 #include "cavdecoder.h"
 #include <css/css_style.h>
+#include <cdocument.h>
 #include <QPainter>
 #include <QDebug>
 

@@ -1,7 +1,30 @@
+/****************************************************************************
+**
+** LEAF EPF Render engine
+** http://leaf.dreamlogics.com/
+**
+** Copyright (C) 2013 DreamLogics
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU Lesser General Public License as published
+** by the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU Lesser General Public License for more details.
+**
+** You should have received a copy of the GNU Lesser General Public License
+** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**
+****************************************************************************/
+
 #include "canimator.h"
 #include "cbaseobject.h"
 #include "css/css_style.h"
 #include "css/css_animation.h"
+#include "css/css_transition.h"
 #include <QTimer>
 #include <QEasingCurve>
 #include <QDebug>
@@ -10,6 +33,8 @@
 #include <QMutex>
 #include <QList>
 #include "epfevent.h"
+#include "csection.h"
+#include "cdocument.h"
 
 #define FRAMERATE 24
 
@@ -50,6 +75,7 @@ void CAnimator::update()
     //QMap<CBaseObject*,registered_animation> nmap;
     double pos;
     bool bShouldLayout = false;
+    QList<int> toremove;
 
 
     if (!m_pSection)
@@ -61,6 +87,8 @@ void CAnimator::update()
         //qDebug() << "CAnimator::update()" << m_iTime << regani.m_iStartTime;
         if (regani.m_pObject->section() != m_pSection)
             continue;
+
+        //TODO clear css overrides
 
         bShouldLayout = true;
 
@@ -86,18 +114,28 @@ void CAnimator::update()
                         if (regani.m_bTransition)
                         {
                             //notify transitioner
+                            CSS::Transitioner::get(regani.m_pObject->thread())->transitionAnimDone(it.key());
+                            toremove.append(it.key());
+                            continue;
                         }
                         else
                         {
                             regani.m_bFinished = true;
                             EPFComponent* epfc = dynamic_cast<EPFComponent*>(regani.m_pObject);
                             if (epfc)
-                                epfc->sendEvent("animationFinished",regani.m_sAnimation);
+                                epfc->sendEvent("animationFinished",QStringList() << regani.m_sAnimation);
+                            continue;
                         }
                     }
                     else
                         continue;
                 }
+            }
+            else if (regani.m_iCurFrame <= 1 && regani.m_bTransition && regani.m_bAlternate)
+            {
+                CSS::Transitioner::get(regani.m_pObject->thread())->transitionAnimDone(it.key());
+                toremove.append(it.key());
+                continue;
             }
 
             pos = (double)regani.m_iCurFrame / (double)regani.m_iFrames;
@@ -141,6 +179,9 @@ void CAnimator::update()
 
     //m_Animations = nmap;
 
+    for (int i=0;i<toremove.size();i++)
+        m_Animations.remove(toremove[i]);
+
     if (bShouldLayout)
         m_pSection->layout();
 
@@ -171,7 +212,7 @@ int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, in
     if (isRegistered(current_anim,obj))
     {
         qDebug() << "animation already registered";
-        if (m_Animations[current_anim].m_sAnimation == animation)
+        if (m_Animations[current_anim].m_sAnimation == animation->name())
             return current_anim;
         else
         {
@@ -209,7 +250,7 @@ int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, in
         ani->generateFrames(kf);
         delete kf;
 
-        regani.m_dirDirection = dir;
+        regani.m_dirDirection = direction;
         regani.m_efEasing = ef;
         regani.m_iDelay = ms_delay;
         regani.m_iIterations = iterations;
@@ -217,7 +258,7 @@ int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, in
         regani.m_iTime = ms_time;
         regani.m_pAnim = ani;
         regani.m_pObject = obj;
-        regani.m_sAnimation = animation;
+        regani.m_sAnimation = animation->name();
         regani.m_iFrames = ms_time/FRAMERATE;
         regani.m_iCurFrame = 1;
         regani.m_bAlternate = false;
