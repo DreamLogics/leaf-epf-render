@@ -114,7 +114,7 @@ QString Stylesheet::variable(QString key)
     return QString();
 }
 
-Property Stylesheet::property(CBaseObject *obj, QString key)
+Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrides)
 {
     Property prop;
     //QString selector;
@@ -124,62 +124,66 @@ Property Stylesheet::property(CBaseObject *obj, QString key)
     //cascade from overrides > style class > object
 
     //overrides
-
-    prop = obj->cssOverrideProp(key);
-    if (!prop.isNull())
+    if (!bIgnoreOverrides)
     {
-        //qDebug() << "CSS: got override for prop:" << key << "object" <<obj->id();
-        return prop;
-    }
-
-    //class selectors
-
-    for (int i=0;i<classes.size();i++)
-    {
-        it=m_selectors.find("#"+obj->section()->id()+"::"+obj->id()+"."+classes[i]);
-        if (it != m_selectors.end())
+        prop = obj->cssOverrideProp(key);
+        if (!prop.isNull())
         {
-            prop = property(it.key(),key);
+            //qDebug() << "CSS: got override for prop:" << key << "object" <<obj->id();
+            return prop;
         }
-        else
+
+
+        //class selectors
+
+        for (int i=0;i<classes.size();i++)
         {
-            it=m_selectors.find("."+classes[i]);
+            it=m_selectors.find("#"+obj->section()->id()+"::"+obj->id()+"."+classes[i]);
             if (it != m_selectors.end())
             {
                 prop = property(it.key(),key);
             }
-        }
-        /*for (it=m_selectors.begin();it != m_selectors.end();it++)
-        {
-            selector = it.key();
-            if (selector == "#"+obj->id()+"."+classes[i] || selector == classes[i]
-                    || selector == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
-                    || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
+            else
             {
-                prop = property(selector,key);
+                it=m_selectors.find("."+classes[i]);
+                if (it != m_selectors.end())
+                {
+                    prop = property(it.key(),key);
+                }
             }
-        }*/
-    }
+            /*for (it=m_selectors.begin();it != m_selectors.end();it++)
+            {
+                selector = it.key();
+                if (selector == "#"+obj->id()+"."+classes[i] || selector == classes[i]
+                        || selector == "#" + obj->layer()->id() + " #"+obj->id()+"."+classes[i]
+                        || selector == "#" + obj->layer()->section()->id() + " #" + obj->layer()->id() + " #"+obj->id()+"."+classes[i])
+                {
+                    prop = property(selector,key);
+                }
+            }*/
+        }
 
-    if (!prop.isNull())
-    {
-        //indirect selector, make read only
-        //qDebug() << "CSS: got class style for prop:" << key << "object" <<obj->id();
-        prop.m_pPrivate->m_bReadOnly = true;
-        return prop;
+        if (!prop.isNull())
+        {
+            //indirect selector, make read only
+            //qDebug() << "CSS: got class style for prop:" << key << "object" <<obj->id();
+            prop.m_pPrivate->m_bReadOnly = true;
+            return prop;
+        }
     }
 
     //object id selectors
-    it=m_selectors.find("#"+obj->section()->id()+"::"+obj->id());
+    /*it=m_selectors.find("#"+obj->section()->id()+"::"+obj->id());
     if (it != m_selectors.end())
     {
         prop = property(it.key(),key);
         prop.m_pPrivate->m_bReadOnly = false;
         return prop;
-    }
+    }*/
+    Selector* sel = selector(obj);
 
-
-    return property("#"+obj->section()->id()+"::"+obj->id(),key);
+    return sel->property(key);
+    //return property("#"+obj->section()->id()+"::"+obj->id(),key);
 }
 
 Property Stylesheet::property(CLayer *l, QString key)
@@ -1164,7 +1168,10 @@ Selector* Stylesheet::selector(QString selector)
 
 Selector* Stylesheet::selector(CBaseObject *obj)
 {
-    return selector("#"+obj->section()->id()+"::"+obj->id());
+    Selector* s = selector("#"+obj->section()->id()+":"+obj->layer()->id()+":"+obj->id());
+    if (s->isEmpty())
+        s = selector("#"+obj->section()->id()+"::"+obj->id());
+    return s;
 }
 
 QStringList Selector::properties()

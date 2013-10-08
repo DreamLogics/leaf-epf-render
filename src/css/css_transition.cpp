@@ -24,6 +24,7 @@
 #include "../canimator.h"
 #include "../cbaseobject.h"
 #include "../cdocument.h"
+#include <QDebug>
 
 using namespace CSS;
 
@@ -39,10 +40,12 @@ Transitioner* Transitioner::get(QThread* th)
 
 void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<Property> deltaprops, QStringList transitionable, easing_function easing, int ms_time, int ms_delay)
 {
+    qDebug() << "create transition" << identifier << ms_time << ms_delay;
     if (m_Transitions.contains(identifier))
     {
         //already got one
         //re-reverse
+        qDebug() << "re-reverse transition" << identifier;
         CAnimator::get(obj->thread())->reverseAnimation(m_Transitions[identifier].m_iAnimation,obj);
         return;
     }
@@ -59,8 +62,12 @@ void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<
     Property startprop;
     KeyFrame* kfs = new KeyFrame();
     KeyFrame* kfe = new KeyFrame();
+
+    qDebug() << transitionable;
+
     for (int i=0;i<deltaprops.size();i++)
     {
+        qDebug() << "deltaprop" << deltaprops[i].name() << deltaprops[i].toString();
         if (transitionable[0] == "all" || transitionable.contains(deltaprops[i].name()))
         {
             startprop = css->property(obj,deltaprops[i].name());
@@ -74,25 +81,31 @@ void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<
     t.m_pAnimation->addKeyFrame(kfs,0);
     t.m_pAnimation->addKeyFrame(kfe,100);
 
-    t.m_pAnimation->generateFrames(0);
+    //t.m_pAnimation->generateFrames(0);
 
     t.m_iAnimation = CAnimator::get(obj->thread())->registerAnimation(obj,t.m_pAnimation,ms_time,easing,ms_delay,1,dirAlternate,true,-1);
 
     m_Transitions.insert(identifier,t);
 }
 
-void Transitioner::undoTransition(QString identifier)
+bool Transitioner::undoTransition(QString identifier)
 {
     if (m_Transitions.contains(identifier))
     {
         //reverse
+        qDebug() << "reverse transition" << identifier;
         CAnimator::get(m_Transitions[identifier].m_pObj->thread())->reverseAnimation(m_Transitions[identifier].m_iAnimation,m_Transitions[identifier].m_pObj);
+        return true;
     }
+    //we already finished, create a reversed transition
+    return false;
 }
 
 void Transitioner::transitionAnimDone(int animid)
 {
     QMap<QString,transition>::iterator it;
+
+    qDebug() << "transition done" << animid;
 
     for (it=m_Transitions.begin();it!=m_Transitions.end();it++)
     {

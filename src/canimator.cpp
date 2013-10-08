@@ -96,7 +96,7 @@ void CAnimator::update()
         {
             if (regani.m_iCurFrame > regani.m_iFrames)
             {
-                if (regani.m_iIterations > 0)
+                if (regani.m_iIterations > 1)
                 {
                     regani.m_iCurFrame = 1;
                     regani.m_iIterations--;

@@ -315,7 +315,7 @@ void CBaseObject::layout(QRectF relrect)
         m_iTransitionTime = CSS::stringToMsTime(transition.value());
         CSS::Property transition_timing_function = css->property(this,"transition-timing-function");
         CSS::Property transition_delay = css->property(this,"transition-delay");
-        CSS::Property transition_properties = css->property(this,"transition-properties");
+        CSS::Property transition_properties = css->property(this,"transition-property");
 
         if (transition_delay.isNull())
             m_iTransitionDelay = 0;
@@ -443,18 +443,22 @@ void CBaseObject::setCSSOverride(QString ss)
 
 CSS::Property CBaseObject::cssOverrideProp(QString prop)
 {
+    //qDebug() << "requested css override" << prop;
     QMap<QString,CSS::Property>::Iterator it;
     it=m_CSSOverrideProps.find(prop);
     if (it==m_CSSOverrideProps.end())
         return CSS::Property();
     //CSS::Property cprop = it.value();
     //QString t = cprop.toString();
-    //qDebug() << "override prop" <<  prop  << t;
+    //qDebug() << "override prop" <<  prop  << it.value().toString();
     return it.value();
 }
 
 void CBaseObject::setCSSOverrideProp(QString key, CSS::Property value)
 {
+    qDebug() << "override prop for object" << id() << "prop" << key << "value" << value.toString();
+    if (!value.isNull())
+        m_bNeedsRedraw = true;
     if (m_CSSOverrideProps.contains(key))
     {
         if (value.isNull())
@@ -602,7 +606,10 @@ void CBaseObject::addStyleClass(QString classname)
         {
             props = sel->properties();
             for (int i=0;i<props.size();i++)
-                deltaprops.append(sel->property(props[i]));
+            {
+                if (!sel->property(props[i]).isNull())
+                    deltaprops.append(sel->property(props[i]));
+            }
         }
         sel = document()->stylesheet()->selector("."+classname);
         if (!sel->isEmpty())
@@ -610,11 +617,12 @@ void CBaseObject::addStyleClass(QString classname)
             props2 = sel->properties();
             for (int i=0;i<props2.size();i++)
             {
-                if (!props.contains(props2[i]))
+                if (!props.contains(props2[i]) && !sel->property(props2[i]).isNull())
                     deltaprops.append(sel->property(props2[i]));
             }
         }
         CSS::Transitioner::get(thread())->createTransition(id()+"_"+classname,this,deltaprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
+        m_StyleClasses.append(classname);
     }
     else
     {
@@ -634,10 +642,46 @@ void CBaseObject::toggleStyleClass(QString classname)
 }
 void CBaseObject::removeStyleClass(QString classname)
 {
+    if (!m_StyleClasses.contains(classname))
+        return;
     if (m_iTransitionTime > 0)
     {
         //remove transition
-        CSS::Transitioner::get(thread())->undoTransition(id()+"_"+classname);
+        if (!CSS::Transitioner::get(thread())->undoTransition(id()+"_"+classname))
+        {
+            //create transition
+            qDebug() << "create reversed transition";
+            CSS::Selector* sel;
+            QList<CSS::Property> deltaprops;
+            QStringList props,props2;
+            sel = document()->stylesheet()->selector("#"+section()->id()+":"+layer()->id()+":"+id()+"."+classname);
+            if (sel->isEmpty())
+                sel = document()->stylesheet()->selector("#"+section()->id()+"::"+id()+"."+classname);
+            if (!sel->isEmpty())
+            {
+                props = sel->properties();
+                for (int i=0;i<props.size();i++)
+                {
+                    if (!sel->property(props[i]).isNull())
+                    {
+                        deltaprops.append(document()->stylesheet()->property(this,props[i],true));
+                        //qDebug() << props[i];
+                    }
+                }
+            }
+            sel = document()->stylesheet()->selector("."+classname);
+            if (!sel->isEmpty())
+            {
+                props2 = sel->properties();
+                for (int i=0;i<props2.size();i++)
+                {
+                    if (!props.contains(props2[i]) && !sel->property(props2[i]).isNull())
+                        deltaprops.append(document()->stylesheet()->property(this,props2[i],true));
+                }
+            }
+            CSS::Transitioner::get(thread())->createTransition(id()+"_"+classname,this,deltaprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
+        }
+        m_StyleClasses.removeAll(classname);
     }
     else
     {

@@ -184,7 +184,7 @@ public:
     ~Stylesheet();
 
     Property property(QString selector, QString key);
-    Property property(CBaseObject* obj, QString key);
+    Property property(CBaseObject* obj, QString key, bool bIgnoreOverrides=false);
     Property property(CLayer* l, QString key);
     Property property(CSection* s, QString key);
 

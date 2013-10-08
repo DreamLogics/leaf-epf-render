@@ -44,7 +44,7 @@ namespace CSS
         static Transitioner* get(QThread* th);
 
         void createTransition(QString identifier,CBaseObject* obj, QList<Property> deltaprops, QStringList transitionable, easing_function easing, int ms_time, int ms_delay);
-        void undoTransition(QString identifier);
+        bool undoTransition(QString identifier);
         void transitionAnimDone(int animid);
 
     private:

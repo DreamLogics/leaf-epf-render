@@ -150,6 +150,7 @@ void Animation::generateFrames(KeyFrame* startframe)
                 props = lf->properties();
                 props += nf->properties();
                 props.removeDuplicates();
+
                 pos = (double)(i - lastrealframe) / (double)(nextframe - lastrealframe);
                 for (int a=0;a<props.size();a++)
                 {
@@ -161,7 +162,8 @@ void Animation::generateFrames(KeyFrame* startframe)
                     if (propend.isNull())
                     {
                         kf->addProperty(props[a],propstart);
-                        break;
+                        qDebug() << "empty value";
+                        continue;
                     }
 
                     ValueType vts = valueTypeFromString(propstart.toString());
@@ -170,7 +172,8 @@ void Animation::generateFrames(KeyFrame* startframe)
                     if (vts != vte)
                     {
                         kf->addProperty(props[a],propstart);
-                        break;
+                        qDebug() << "value type mismatch";
+                        continue;
                     }
 
                     Property newprop = propstart.clone();
