@@ -132,7 +132,7 @@ public:
     QColor toColor() const;
     bool toBool() const;
 
-    QString value() const; //unscaled
+    QString value() const; //raw
 
     bool isNull() const;
 
@@ -188,6 +188,8 @@ public:
     Property property(CLayer* l, QString key);
     Property property(CSection* s, QString key);
 
+    QList<Property> properties(CBaseObject* obj, bool bIgnoreOverrides=false);
+
     Selector* selector(QString selector);
     Selector* selector(CBaseObject* obj);
 
@@ -202,6 +204,8 @@ public:
     void setVariable(QString,QString);
     QString variable(QString);
 
+    void oldState(bool b);
+
 private:
 
     void parse(QString css);
@@ -212,7 +216,9 @@ private:
     double m_dWSF;
     CDocument* m_pDocument;
     QMap<QString,QString> m_variables;
+    QMap<QString,QString> m_prevariables;
     QMap<QString,Animation*> m_animations;
+    bool m_bOldState;
 };
 
 }

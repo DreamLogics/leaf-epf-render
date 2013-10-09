@@ -36,14 +36,14 @@
 
 using namespace CSS;
 
-Stylesheet::Stylesheet(QString css,CDocument* doc) : m_pDocument(doc)
+Stylesheet::Stylesheet(QString css,CDocument* doc) : m_pDocument(doc), m_bOldState(false)
 {
     //parse default css first
     parse(pszDefaultCSS);
     parse(css);
 }
 
-Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width, CDocument* doc) : m_pDocument(doc)
+Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width, CDocument* doc) : m_pDocument(doc), m_bOldState(false)
 {
     double w,h;
     w = layout->width();
@@ -102,15 +102,26 @@ Property Stylesheet::property(QString selector, QString key)
 void Stylesheet::setVariable(QString key, QString val)
 {
     if (m_variables.contains(key))
+    {
+        m_prevariables[key] = m_variables[key];
         m_variables[key] = val;
+    }
     else
         m_variables.insert(key,val);
 }
 
-QString Stylesheet::variable(QString key)
+QString Stylesheet::variable(QString key,bool bOld)
 {
-    if (m_variables.contains(key))
-        return m_variables[key];
+    if (m_bOldState)
+    {
+        if (m_prevariables.contains(key))
+            return m_m_prevariables[key];
+    }
+    else
+    {
+        if (m_variables.contains(key))
+            return m_variables[key];
+    }
     return QString();
 }
 
@@ -184,6 +195,52 @@ Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrid
 
     return sel->property(key);
     //return property("#"+obj->section()->id()+"::"+obj->id(),key);
+}
+
+QList<Property> Stylesheet::properties(CBaseObject *obj, bool bIgnoreOverrides)
+{
+    QList<Property> retprops;
+    Selector* sel;
+    QStringList classes = obj->styleClasses();
+    QStringList props;
+
+    //cascade from overrides > style class > object
+
+    //overrides
+    if (!bIgnoreOverrides)
+    {
+        //TODO override props
+
+
+        //class selectors
+
+        for (int i=0;i<classes.size();i++)
+        {
+            sel = selector("#"+obj->section()->id()+":"+obj->layer()->id()+":"+obj->id()+"."+classes[i]);
+            if (sel->isEmpty())
+                sel = selector("#"+obj->section()->id()+"::"+obj->id()+"."+classes[i]);
+            if (!sel->isEmpty())
+            {
+                props += sel->properties();
+
+            }
+            sel = document()->stylesheet()->selector("."+classes[i]);
+            if (!sel->isEmpty())
+            {
+                props += sel->properties();
+
+            }
+        }
+    }
+
+    sel = selector(obj);
+    props += sel->properties();
+    props.removeDuplicates();
+
+    for (int i=0;i<props.size();i++)
+        retprops.append(property(obj,props[i],bIgnoreOverrides));
+
+    return retprops;
 }
 
 Property Stylesheet::property(CLayer *l, QString key)
@@ -363,12 +420,27 @@ QString Property::value() const
         return QString();
     QRegExp varreg("\\$([a-zA-Z_-0-9]+)");
     int offset=0;
+    int i;
+    QString cval = m_pPrivate->m_sValue;
     QString val = m_pPrivate->m_sValue;
+    QString varval;
 
-    while (varreg.indexIn(m_pPrivate->m_sValue,offset) != -1)
+    replacevars:
+
+    while ((i=varreg.indexIn(cval,offset)) != -1)
     {
-        val = val.replace(varreg.cap(0),m_pPrivate->m_pCSS->variable(varreg.cap(1)));
-        offset += varreg.cap(0).size();
+        varval = m_pPrivate->m_pCSS->variable(varreg.cap(1));
+        if (varval != varreg.cap(1))
+            val = val.replace(varreg.cap(0),varval);
+        else
+            val = val.replace(varreg.cap(0),"");//to prevent endless loop
+        offset = i + varreg.cap(0).size();
+    }
+
+    if (varreg.indexIn(val) != -1)
+    {
+        cval = val;
+        goto replacevars;
     }
 
     return val;
@@ -607,6 +679,8 @@ void Stylesheet::parse(QString css)
         index = css.indexOf(varfinder,offset);
         qDebug() << "css var added" << varfinder.cap(1) << ss;
     }
+
+    m_prevariables = m_variables;
 
     offset = 0;
 

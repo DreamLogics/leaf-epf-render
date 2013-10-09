@@ -203,6 +203,16 @@ void Animation::generateFrames(KeyFrame* startframe)
     }
 }
 
+void Animation::removePropertiesFromKeyFrames(QStringList props)
+{
+    QMap<int,KeyFrame*>::Iterator it;
+    for (it=m_keyframes.begin();it!=m_keyframes.end();it++)
+    {
+        for (int i=0;i<props.size();i++)
+            it.value()->removeProperty(props[i]);
+    }
+}
+
 KeyFrame::~KeyFrame()
 {
 

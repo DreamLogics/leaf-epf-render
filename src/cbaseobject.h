@@ -147,6 +147,7 @@ public slots:
 
     virtual QStringList styleClasses() const;
     virtual void addStyleClass(QString classname);
+    virtual void setStyleClass(QString classname);
     virtual void toggleStyleClass(QString classname);
     virtual void removeStyleClass(QString classname);
 

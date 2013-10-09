@@ -598,7 +598,7 @@ void CBaseObject::addStyleClass(QString classname)
         //create transition
         CSS::Selector* sel;
         QList<CSS::Property> deltaprops;
-        QStringList props,props2;
+        QStringList props,props2,props3;
         sel = document()->stylesheet()->selector("#"+section()->id()+":"+layer()->id()+":"+id()+"."+classname);
         if (sel->isEmpty())
             sel = document()->stylesheet()->selector("#"+section()->id()+"::"+id()+"."+classname);
@@ -608,7 +608,10 @@ void CBaseObject::addStyleClass(QString classname)
             for (int i=0;i<props.size();i++)
             {
                 if (!sel->property(props[i]).isNull())
+                {
                     deltaprops.append(sel->property(props[i]));
+                    props3.append(props[i]);
+                }
             }
         }
         sel = document()->stylesheet()->selector("."+classname);
@@ -618,9 +621,13 @@ void CBaseObject::addStyleClass(QString classname)
             for (int i=0;i<props2.size();i++)
             {
                 if (!props.contains(props2[i]) && !sel->property(props2[i]).isNull())
+                {
                     deltaprops.append(sel->property(props2[i]));
+                    props3.append(props2[i]);
+                }
             }
         }
+        CSS::Transitioner::get(thread())->removeTransitioningProps(this,props3);
         CSS::Transitioner::get(thread())->createTransition(id()+"_"+classname,this,deltaprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
         m_StyleClasses.append(classname);
     }
@@ -691,6 +698,12 @@ void CBaseObject::removeStyleClass(QString classname)
     }
 }
 
+void CBaseObject::setStyleClass(QString classname)
+{
+    m_StyleClasses.clear();
+    addStyleClass(classname);
+}
+
 CSection* CBaseObject::section()
 {
     return m_pLayer->section();
@@ -721,11 +734,45 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
         if (ev->parameter(0) != "")
             removeStyleClass(ev->parameter(0));
     }
+    else if (ev->event() == "setStyleClass")
+    {
+        if (ev->parameter(0) != "")
+            setStyleClass(ev->parameter(0));
+    }
     else if (ev->event() == "toggleStyleClass")
     {
         //qDebug() << "toggleStyleClass" << ev->parameter(0);
         if (ev->parameter(0) != "")
             toggleStyleClass(ev->parameter(0));
+    }
+    else if (ev->event() == "onStylesheetVariableChange")
+    {
+        //a variable has changes, update and possibly create a transition
+        if (m_iTransitionTime > 0)
+        {
+            QList<CSS::Property> propsold,props,dprops;
+            //QStringList propnames;
+            document()->stylesheet()->oldState(true);
+            propsold = document()->stylesheet()->properties(this);
+            document()->stylesheet()->oldState(false);
+            props = document()->stylesheet()->properties(this);
+            if (propsold.size() == props.size())
+            {
+                for (int i=0;i<propsold.size();i++)
+                {
+                    if (propsold[i].value() != props[i].value())
+                    {
+                        dprops.append(propsold[i]);
+                    }
+                }
+            }
+            else
+                dprops = propsold;
+            CSS::Transitioner::get(thread())->removeTransitions(this);
+            CSS::Transitioner::get(thread())->createTransition(id()+"_varchange",this,dprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
+        }
+        else
+            m_bNeedsRedraw = true;
     }
 }
 /*

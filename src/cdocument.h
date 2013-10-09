@@ -158,6 +158,8 @@ public slots:
 
     void playAnimation(QString animation, bool loop=false);
 
+    void setStylesheetVariable(QString key, QString val);
+
     //void setActiveOverlay(QString overlay_id);
 
 private slots:

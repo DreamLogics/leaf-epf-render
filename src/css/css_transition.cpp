@@ -117,3 +117,36 @@ void Transitioner::transitionAnimDone(int animid)
         }
     }
 }
+
+void Transitioner::removeTransitions(CBaseObject *obj)
+{
+    QMap<QString,transition>::iterator it;
+
+    for (it=m_Transitions.begin();it!=m_Transitions.end();it++)
+    {
+        transition t = it.value();
+        if (t.m_pObj == obj)
+        {
+            CAnimator::get(obj->thread())->unregisterAnimation(t.m_iAnimation);
+            m_Transitions.remove(it.key());
+            return;
+        }
+    }
+}
+
+void Transitioner::removeTransitioningProps(QStringList props)
+{
+    QMap<QString,transition>::iterator it;
+
+    for (it=m_Transitions.begin();it!=m_Transitions.end();it++)
+    {
+        transition t = it.value();
+        if (t.m_pObj == obj)
+        {
+            //CAnimator::get(obj->thread())->unregisterAnimation(t.m_iAnimation);
+            //m_Transitions.remove(it.key());
+            t.m_pAnimation->removePropertiesFromKeyFrames(props);
+            return;
+        }
+    }
+}

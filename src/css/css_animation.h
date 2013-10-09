@@ -56,6 +56,7 @@ public:
     QStringList properties();
 
     void addProperty(QString key, Property value);
+    void removeProperty(QString key);
 
 private:
 
@@ -72,6 +73,7 @@ public:
     Property keyedProperty(QString property, double position);
     void generateFrames(KeyFrame* startframe);
     QStringList properties();
+    void removePropertiesFromKeyFrames(QStringList props);
 
 private:
     void addKeyFrame(KeyFrame* kf, int key);
