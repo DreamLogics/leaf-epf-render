@@ -46,7 +46,7 @@ namespace CSS
         void createTransition(QString identifier,CBaseObject* obj, QList<Property> deltaprops, QStringList transitionable, easing_function easing, int ms_time, int ms_delay);
         bool undoTransition(QString identifier);
         void removeTransitions(CBaseObject* obj);
-        void overrideDeltaProps(QStringList props);
+        void removeTransitioningProps(CBaseObject* obj, QStringList props);
         void transitionAnimDone(int animid);
 
     private:
