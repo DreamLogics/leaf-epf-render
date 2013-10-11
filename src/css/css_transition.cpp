@@ -38,7 +38,7 @@ Transitioner* Transitioner::get(QThread* th)
     return p;
 }
 
-void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<Property> deltaprops, QStringList transitionable, easing_function easing, int ms_time, int ms_delay)
+void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<Property> deltaprops, QStringList transitionable, easing_function easing, int ms_time, int ms_delay, bool reversed)
 {
     qDebug() << "create transition" << identifier << ms_time << ms_delay;
     if (m_Transitions.contains(identifier))
@@ -78,8 +78,17 @@ void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<
         kfe->addProperty(deltaprops[i].name(),deltaprops[i]);
     }
 
-    t.m_pAnimation->addKeyFrame(kfs,0);
-    t.m_pAnimation->addKeyFrame(kfe,100);
+    if (reversed)
+    {
+        t.m_pAnimation->addKeyFrame(kfs,100);
+        t.m_pAnimation->addKeyFrame(kfe,0);
+    }
+    else
+    {
+        t.m_pAnimation->addKeyFrame(kfs,0);
+        t.m_pAnimation->addKeyFrame(kfe,100);
+    }
+
 
     //t.m_pAnimation->generateFrames(0);
 
@@ -87,7 +96,18 @@ void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<
 
     m_Transitions.insert(identifier,t);
 }
+/*
+bool Transitioner::updateTransition(QString identifier, QList<Property> deltaprops, QStringList transitionable)
+{
+    if (!m_Transitions.contains(identifier))
+        return false;
 
+    transition t = m_Transitions[identifier];
+
+    KeyFrame* kfs = t.m_pAnimation->keyFrame(0);
+    KeyFrame* kfe = t.m_pAnimation->keyFrame(100);
+}
+*/
 bool Transitioner::undoTransition(QString identifier)
 {
     if (m_Transitions.contains(identifier))
@@ -134,7 +154,16 @@ void Transitioner::removeTransitions(CBaseObject *obj)
     }
 }
 
-void Transitioner::removeTransitioningProps(QStringList props)
+void Transitioner::removeTransition(QString identifier)
+{
+    if (!m_Transitions.contains(identifier))
+        return;
+    transition t = m_Transitions[identifier];
+    CAnimator::get(t.m_pObj->thread())->unregisterAnimation(t.m_iAnimation);
+    m_Transitions.remove(identifier);
+}
+
+void Transitioner::removeTransitioningProps(CBaseObject* obj, QStringList props)
 {
     QMap<QString,transition>::iterator it;
 
@@ -149,4 +178,17 @@ void Transitioner::removeTransitioningProps(QStringList props)
             return;
         }
     }
+}
+
+bool Transitioner::hasTransitions(CBaseObject *obj)
+{
+    QMap<QString,transition>::iterator it;
+
+    for (it=m_Transitions.begin();it!=m_Transitions.end();it++)
+    {
+        transition t = it.value();
+        if (t.m_pObj == obj)
+            return true;
+    }
+    return false;
 }

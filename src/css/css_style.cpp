@@ -110,12 +110,12 @@ void Stylesheet::setVariable(QString key, QString val)
         m_variables.insert(key,val);
 }
 
-QString Stylesheet::variable(QString key,bool bOld)
+QString Stylesheet::variable(QString key)
 {
     if (m_bOldState)
     {
         if (m_prevariables.contains(key))
-            return m_m_prevariables[key];
+            return m_prevariables[key];
     }
     else
     {
@@ -224,7 +224,7 @@ QList<Property> Stylesheet::properties(CBaseObject *obj, bool bIgnoreOverrides)
                 props += sel->properties();
 
             }
-            sel = document()->stylesheet()->selector("."+classes[i]);
+            sel = selector("."+classes[i]);
             if (!sel->isEmpty())
             {
                 props += sel->properties();
@@ -419,28 +419,31 @@ QString Property::value() const
     if (m_pPrivate->m_bNull)
         return QString();
     QRegExp varreg("\\$([a-zA-Z_-0-9]+)");
-    int offset=0;
+    int offset;
     int i;
     QString cval = m_pPrivate->m_sValue;
     QString val = m_pPrivate->m_sValue;
     QString varval;
 
-    replacevars:
-
-    while ((i=varreg.indexIn(cval,offset)) != -1)
+    while (true)
     {
-        varval = m_pPrivate->m_pCSS->variable(varreg.cap(1));
-        if (varval != varreg.cap(1))
-            val = val.replace(varreg.cap(0),varval);
+        offset = 0;
+        while ((i=varreg.indexIn(cval,offset)) != -1)
+        {
+            varval = m_pPrivate->m_pCSS->variable(varreg.cap(1));
+            if (varval != varreg.cap(1))
+                val = val.replace(varreg.cap(0),varval);
+            else
+                val = val.replace(varreg.cap(0),"");//to prevent endless loop
+            offset = i + varreg.cap(0).size();
+        }
+
+        if (varreg.indexIn(val) != -1)
+        {
+            cval = val;
+        }
         else
-            val = val.replace(varreg.cap(0),"");//to prevent endless loop
-        offset = i + varreg.cap(0).size();
-    }
-
-    if (varreg.indexIn(val) != -1)
-    {
-        cval = val;
-        goto replacevars;
+            break;
     }
 
     return val;
@@ -1327,6 +1330,7 @@ namespace CSS
         if (clrreg.indexIn(str) != -1)
             return vtColor;
 
+        return vtUndefined;
     }
 
     QString stringToMsTimeString(QString timestr)
@@ -1400,4 +1404,9 @@ Animation* Stylesheet::animation(QString animation)
 bool Selector::isEmpty()
 {
     return m_props.empty();
+}
+
+void Stylesheet::oldState(bool b)
+{
+    m_bOldState = b;
 }

@@ -135,6 +135,9 @@ void CBaseObject::layout(QRectF relrect)
 
     CSS::Stylesheet* css = document()->stylesheet();
 
+    //if (CSS::Transitioner::get(thread())->hasTransitions(this))
+    //    css->oldState(true);
+
     m_RenderPropsMutex.lock();
 
     m_dOpacity = css->property(this,"opacity").toDouble();
@@ -267,6 +270,8 @@ void CBaseObject::layout(QRectF relrect)
 
     m_FPMutex.unlock();
 
+    //css->oldState(false);
+
     //animation
     CSS::Property anim = css->property(this,"animation-name");
 
@@ -336,6 +341,7 @@ void CBaseObject::layout(QRectF relrect)
     }
     else
         m_iTransitionTime = 0;
+
 
     //qDebug() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;
 
@@ -750,26 +756,33 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
         //a variable has changes, update and possibly create a transition
         if (m_iTransitionTime > 0)
         {
-            QList<CSS::Property> propsold,props,dprops;
+            QList<CSS::Property> propsold,dprops;
+            QString oldval;
             //QStringList propnames;
-            document()->stylesheet()->oldState(true);
             propsold = document()->stylesheet()->properties(this);
-            document()->stylesheet()->oldState(false);
-            props = document()->stylesheet()->properties(this);
-            if (propsold.size() == props.size())
+            for (int i=0;i<propsold.size();i++)
             {
-                for (int i=0;i<propsold.size();i++)
+                document()->stylesheet()->oldState(true);
+                oldval = propsold[i].value();
+                document()->stylesheet()->oldState(false);
+                CSS::Property prop = document()->stylesheet()->property(this,propsold[i].name());
+                if (oldval != prop.value())
                 {
-                    if (propsold[i].value() != props[i].value())
-                    {
-                        dprops.append(propsold[i]);
-                    }
+                    qDebug() << "prop changed" << propsold[i].name() << oldval << prop.value();
+                    document()->stylesheet()->oldState(true);
+                    dprops.append(propsold[i].clone());
+                    document()->stylesheet()->oldState(false);
                 }
             }
-            else
-                dprops = propsold;
-            CSS::Transitioner::get(thread())->removeTransitions(this);
-            CSS::Transitioner::get(thread())->createTransition(id()+"_varchange",this,dprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
+
+
+            if (dprops.size() == 0)
+                return;
+            //CSS::Transitioner::get(thread())->removeTransitions(this);
+            qDebug() << "onStylesheetVariableChange" << ev->parameter(0) << ev->parameter(1);
+            CSS::Transitioner::get(thread())->removeTransition(id()+"_"+ev->parameter(0));
+            CSS::Transitioner::get(thread())->createTransition(id()+"_"+ev->parameter(0),this,dprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay,true);
+            //m_bNeedsRedraw = true;
         }
         else
             m_bNeedsRedraw = true;

@@ -76,7 +76,8 @@ enum ValueType
     vtString=0,
     vtInt,
     vtDouble,
-    vtColor
+    vtColor,
+    vtUndefined
 };
 
 RenderMode renderModeFromString(QString str);

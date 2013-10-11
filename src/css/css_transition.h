@@ -43,11 +43,14 @@ namespace CSS
 
         static Transitioner* get(QThread* th);
 
-        void createTransition(QString identifier,CBaseObject* obj, QList<Property> deltaprops, QStringList transitionable, easing_function easing, int ms_time, int ms_delay);
+        void createTransition(QString identifier,CBaseObject* obj, QList<Property> deltaprops, QStringList transitionable, easing_function easing, int ms_time, int ms_delay, bool reversed=false);
+        //void updateTransition(QString identifier, QList<Property> deltaprops, QStringList transitionable);
         bool undoTransition(QString identifier);
         void removeTransitions(CBaseObject* obj);
+        void removeTransition(QString identifier);
         void removeTransitioningProps(CBaseObject* obj, QStringList props);
         void transitionAnimDone(int animid);
+        bool hasTransitions(CBaseObject* obj);
 
     private:
         QMap<QString,transition> m_Transitions;

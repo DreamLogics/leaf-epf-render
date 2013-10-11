@@ -177,24 +177,77 @@ void Animation::generateFrames(KeyFrame* startframe)
                     }
 
                     Property newprop = propstart.clone();
+                    QColor c1,c2,c3;
 
-                    switch (vts)
+                    if (vts == vtUndefined)
                     {
-                        case vtInt:
-                            newprop.setValue(propstart.toInt(false) * (1-pos) + propend.toInt(false) * pos,propstart.scaleMode());
-                            break;
-                        case vtDouble:
-                            newprop.setValue(propstart.toDouble(false) * (1-pos) + propend.toDouble(false) * pos,propstart.scaleMode());
-                            break;
-                        case vtColor:
-                            QColor c1 = propstart.toColor();
-                            QColor c2 = propend.toColor();
-                            QColor c3(c1.red() * (1-pos) + c2.red() * pos,c1.green() * (1-pos) + c2.green() * pos,
-                                      c1.blue() * (1-pos) + c2.blue() * pos,c1.alpha() * (1-pos) + c2.alpha() * pos);
-                            newprop.setValue(c3,cfRgba);
-                            break;
-                     }
-                     kf->addProperty(props[a],newprop);
+                        //check if we are a mixed prop
+                        //qDebug() << "undefined mixprop" << propstart.name() << propstart.value() << propend.value();
+                        QStringList mixedstart = propstart.value().split(QRegExp("[ ]+"));
+                        QStringList mixedend = propend.value().split(QRegExp("[ ]+"));
+                        QString newpropval = "";
+
+
+                        if (mixedstart.size() == mixedend.size())
+                        {
+                            for (int t=0;t<mixedstart.size();t++)
+                            {
+                                vts = valueTypeFromString(mixedstart[t]);
+                                vte = valueTypeFromString(mixedend[t]);
+
+                                if (vts != vte)
+                                    break;
+
+                                //qDebug() << "in da mix" << mixedstart[t] << vts;
+
+                                switch (vts)
+                                {
+                                    case vtInt:
+                                        newpropval += QString::number(mixedstart[t].toInt() * (1-pos) + mixedend[t].toInt() * pos) + " ";
+                                        break;
+                                    case vtDouble:
+                                        newpropval += QString::number(mixedstart[t].toDouble() * (1-pos) + mixedend[t].toDouble() * pos) + " ";
+                                        break;
+                                    case vtColor:
+                                        c1 = stringToColor(mixedstart[t]);
+                                        c2 = stringToColor(mixedend[t]);
+                                        c3 = QColor(c1.red() * (1-pos) + c2.red() * pos,c1.green() * (1-pos) + c2.green() * pos,
+                                                  c1.blue() * (1-pos) + c2.blue() * pos,c1.alpha() * (1-pos) + c2.alpha() * pos);
+                                        newpropval += colorToString(c3,cfRgba) + " ";
+                                        break;
+                                    case vtString:
+                                    case vtUndefined:
+                                        newpropval += mixedend[t] + " ";
+                                        break;
+                                 }
+
+                            }
+
+                            newpropval = newpropval.left(newpropval.size()-1);
+                            //qDebug() << "new val" << newpropval;
+                            newprop.setValue(newpropval,propstart.scaleMode());
+                        }
+                    }
+                    else
+                    {
+                        switch (vts)
+                        {
+                            case vtInt:
+                                newprop.setValue(propstart.toInt(false) * (1-pos) + propend.toInt(false) * pos,propstart.scaleMode());
+                                break;
+                            case vtDouble:
+                                newprop.setValue(propstart.toDouble(false) * (1-pos) + propend.toDouble(false) * pos,propstart.scaleMode());
+                                break;
+                            case vtColor:
+                                c1 = propstart.toColor();
+                                c2 = propend.toColor();
+                                c3 = QColor(c1.red() * (1-pos) + c2.red() * pos,c1.green() * (1-pos) + c2.green() * pos,
+                                          c1.blue() * (1-pos) + c2.blue() * pos,c1.alpha() * (1-pos) + c2.alpha() * pos);
+                                newprop.setValue(c3,cfRgba);
+                                break;
+                         }
+                    }
+                    kf->addProperty(props[a],newprop);
 
                 }
                 m_keyframes.insert(i,kf);
@@ -213,6 +266,13 @@ void Animation::removePropertiesFromKeyFrames(QStringList props)
     }
 }
 
+KeyFrame* Animation::keyFrame(int key)
+{
+    if (!m_keyframes_def.contains(key))
+        return 0;
+    return m_keyframes_def[key];
+}
+
 KeyFrame::~KeyFrame()
 {
 
@@ -228,6 +288,11 @@ Property KeyFrame::property(QString prop)
 void KeyFrame::addProperty(QString key, Property value)
 {
     m_properties.insert(key,value);
+}
+
+void KeyFrame::removeProperty(QString key)
+{
+    m_properties.remove(key);
 }
 
 QStringList KeyFrame::properties()

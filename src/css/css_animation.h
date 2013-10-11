@@ -77,6 +77,7 @@ public:
 
 private:
     void addKeyFrame(KeyFrame* kf, int key);
+    KeyFrame* keyFrame(int key);
 
     QMap<int,KeyFrame*> m_keyframes;
     QMap<int,KeyFrame*> m_keyframes_def;

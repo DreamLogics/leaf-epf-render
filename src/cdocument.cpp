@@ -86,6 +86,58 @@ CDocument::~CDocument()
 
 }
 
+void CDocument::setStylesheetVariable(QString key, QString val)
+{
+    if (!m_pStylesheet)
+        return;
+    m_pStylesheet->setVariable(key,val);
+    CSection* s;
+    COverlay* o;
+    CLayer* l;
+    CBaseObject* obj;
+    EPFEvent* ev = new EPFEvent("onStylesheetVariableChange");
+
+    ev->setParameters(QStringList() << key << val);
+
+    for (int i = 0;i<sectionCount();i++)
+    {
+        s = section(i);
+        for (int n=0;n<s->layerCount();n++)
+        {
+            l = s->layer(n);
+            for (int t=0;t<l->objectCount();t++)
+            {
+                obj = l->object(t);
+                obj->onEPFEvent(ev);
+            }
+        }
+        s->layout();
+    }
+
+    for (int i = 0;i<overlayCount();i++)
+    {
+        o = overlay(i);
+        for (int n=0;n<o->layerCount();n++)
+        {
+            l = o->layer(n);
+            for (int t=0;t<l->objectCount();t++)
+            {
+                obj = l->object(t);
+                obj->onEPFEvent(ev);
+            }
+        }
+        o->layout();
+    }
+    delete ev;
+}
+
+QString CDocument::stylesheetVariable(QString key)
+{
+    if (!m_pStylesheet)
+        return QString();
+    return m_pStylesheet->variable(key);
+}
+
 int CDocument::sectionCount()
 {
     return m_Sections.size();
