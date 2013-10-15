@@ -90,6 +90,7 @@ void CDocument::setStylesheetVariable(QString key, QString val)
 {
     if (!m_pStylesheet)
         return;
+    QString oldval = stylesheetVariable(key);
     m_pStylesheet->setVariable(key,val);
     CSection* s;
     COverlay* o;
@@ -97,7 +98,7 @@ void CDocument::setStylesheetVariable(QString key, QString val)
     CBaseObject* obj;
     EPFEvent* ev = new EPFEvent("onStylesheetVariableChange");
 
-    ev->setParameters(QStringList() << key << val);
+    ev->setParameters(QStringList() << key << val << oldval);
 
     for (int i = 0;i<sectionCount();i++)
     {

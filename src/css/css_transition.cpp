@@ -132,6 +132,8 @@ void Transitioner::transitionAnimDone(int animid)
         transition t = it.value();
         if (t.m_iAnimation == animid)
         {
+            t.m_pObj->transitionDone(it.key());
+            delete t.m_pAnimation;
             m_Transitions.remove(it.key());
             return;
         }
@@ -148,6 +150,7 @@ void Transitioner::removeTransitions(CBaseObject *obj)
         if (t.m_pObj == obj)
         {
             CAnimator::get(obj->thread())->unregisterAnimation(t.m_iAnimation);
+            delete t.m_pAnimation;
             m_Transitions.remove(it.key());
             return;
         }
@@ -160,6 +163,7 @@ void Transitioner::removeTransition(QString identifier)
         return;
     transition t = m_Transitions[identifier];
     CAnimator::get(t.m_pObj->thread())->unregisterAnimation(t.m_iAnimation);
+    delete t.m_pAnimation;
     m_Transitions.remove(identifier);
 }
 

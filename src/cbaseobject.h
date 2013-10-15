@@ -32,6 +32,7 @@
 #include <QMutex>
 #include "css/css_style.h"
 #include "css/css_animation.h"
+#include <QPair>
 
 class QMouseEvent;
 class CLayer;
@@ -139,6 +140,8 @@ public:
     StyleState styleState();
     void setStyleState(StyleState ss);
 
+    void transitionDone(QString transition);
+
 protected:
 
     //virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -216,6 +219,8 @@ private:
     int m_iTransitionDelay;
     CSS::easing_function m_TransitionEasing;
     QStringList m_TransitionProps;
+
+    QMap<QString,QPair<QString,QString> > m_CSSVariableSetter;
 
     bool m_bFixedParent;
 

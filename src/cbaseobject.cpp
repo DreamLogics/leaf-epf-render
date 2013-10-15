@@ -32,6 +32,7 @@
 #include "canimator.h"
 #include "css/css_transition.h"
 
+
 CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_sID(id), m_pLayer(layer)
 {
@@ -451,9 +452,11 @@ CSS::Property CBaseObject::cssOverrideProp(QString prop)
 {
     //qDebug() << "requested css override" << prop;
     QMap<QString,CSS::Property>::Iterator it;
+
     it=m_CSSOverrideProps.find(prop);
     if (it==m_CSSOverrideProps.end())
         return CSS::Property();
+
     //CSS::Property cprop = it.value();
     //QString t = cprop.toString();
     //qDebug() << "override prop" <<  prop  << it.value().toString();
@@ -778,10 +781,18 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
 
             if (dprops.size() == 0)
                 return;
+
             //CSS::Transitioner::get(thread())->removeTransitions(this);
             qDebug() << "onStylesheetVariableChange" << ev->parameter(0) << ev->parameter(1);
             CSS::Transitioner::get(thread())->removeTransition(id()+"_"+ev->parameter(0));
             CSS::Transitioner::get(thread())->createTransition(id()+"_"+ev->parameter(0),this,dprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay,true);
+
+            //revert css var
+            /*if (m_CSSVariableSetter.contains(id()+"_"+ev->parameter(0)))
+                m_CSSVariableSetter[id()+"_"+ev->parameter(0)] = QPair<QString,QString>(ev->parameter(0),ev->parameter(1));
+            else
+                m_CSSVariableSetter.insert(id()+"_"+ev->parameter(0),QPair<QString,QString>(ev->parameter(0),ev->parameter(1)) );
+            document()->stylesheet()->setVariable(ev->parameter(0),ev->parameter(2));*/
             //m_bNeedsRedraw = true;
         }
         else
@@ -961,4 +972,13 @@ void CBaseObject::updateRenderMode()
     m_RMMutex.lock();
     m_iRenderMode = CSS::renderModeFromString(document()->stylesheet()->property(this,"render-mode").toString());
     m_RMMutex.unlock();
+}
+
+void CBaseObject::transitionDone(QString transition)
+{
+    qDebug() << "transition done" << transition;
+    if (m_CSSVariableSetter.contains(transition))
+    {
+        document()->stylesheet()->setVariable(m_CSSVariableSetter[transition].first,m_CSSVariableSetter[transition].second);
+    }
 }
