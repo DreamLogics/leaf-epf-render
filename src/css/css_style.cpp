@@ -137,12 +137,19 @@ Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrid
     //overrides
     if (!bIgnoreOverrides)
     {
-        prop = obj->cssOverrideProp(key);
+        if (m_cachedProperty.contains(obj))
+        {
+            if (m_cachedProperty[obj].contains(key))
+                return m_cachedProperty[obj][key];
+        }
+
+
+        /*prop = obj->cssOverrideProp(key);
         if (!prop.isNull())
         {
             //qDebug() << "CSS: got override for prop:" << key << "object" <<obj->id();
             return prop;
-        }
+        }*/
 
 
         //class selectors
@@ -182,6 +189,11 @@ Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrid
             return prop;
         }
     }
+    else if (m_cachedPropertyIgnOv.contains(obj))
+    {
+        if (m_cachedPropertyIgnOv[obj].contains(key))
+            return m_cachedPropertyIgnOv[obj][key];
+    }
 
     //object id selectors
     /*it=m_selectors.find("#"+obj->section()->id()+"::"+obj->id());
@@ -192,6 +204,27 @@ Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrid
         return prop;
     }*/
     Selector* sel = selector(obj);
+
+    if (bIgnoreOverrides)
+    {
+        if (m_cachedPropertyIgnOv.contains(obj))
+            m_cachedPropertyIgnOv[obj].insert(key,sel->property(key));
+        else
+        {
+            m_cachedPropertyIgnOv.insert(obj,QMap<QString,Property>());
+            m_cachedPropertyIgnOv[obj].insert(key,sel->property(key));
+        }
+    }
+    else
+    {
+        if (m_cachedProperty.contains(obj))
+            m_cachedProperty[obj].insert(key,sel->property(key));
+        else
+        {
+            m_cachedProperty.insert(obj,QMap<QString,Property>());
+            m_cachedProperty[obj].insert(key,sel->property(key));
+        }
+    }
 
     return sel->property(key);
     //return property("#"+obj->section()->id()+"::"+obj->id(),key);
@@ -209,6 +242,11 @@ QList<Property> Stylesheet::properties(CBaseObject *obj, bool bIgnoreOverrides)
     //overrides
     if (!bIgnoreOverrides)
     {
+        if (m_cachedProplist.contains(obj))
+        {
+            return m_cachedProplist[obj];
+        }
+
         //TODO override props
 
 
@@ -232,6 +270,8 @@ QList<Property> Stylesheet::properties(CBaseObject *obj, bool bIgnoreOverrides)
             }
         }
     }
+    else if (m_cachedProplistIgnOv.contains(obj))
+        return m_cachedProplistIgnOv[obj];
 
     sel = selector(obj);
     props += sel->properties();
@@ -240,7 +280,34 @@ QList<Property> Stylesheet::properties(CBaseObject *obj, bool bIgnoreOverrides)
     for (int i=0;i<props.size();i++)
         retprops.append(property(obj,props[i],bIgnoreOverrides));
 
+    if (bIgnoreOverrides)
+        m_cachedProplistIgnOv.insert(obj,retprops);
+    else
+        m_cachedProplist.insert(obj,retprops);
+
     return retprops;
+}
+
+void Stylesheet::invalidateCache(CBaseObject *obj)
+{
+    if (obj)
+    {
+        if (m_cachedProperty.contains(obj))
+            m_cachedProperty.remove(obj);
+        if (m_cachedPropertyIgnOv.contains(obj))
+            m_cachedPropertyIgnOv.remove(obj);
+        if (m_cachedProplist.contains(obj))
+            m_cachedProplist.remove(obj);
+        if (m_cachedProplistIgnOv.contains(obj))
+            m_cachedProplistIgnOv.remove(obj);
+    }
+    else
+    {
+        m_cachedProperty.clear();
+        m_cachedPropertyIgnOv.clear();
+        m_cachedProplist.clear();
+        m_cachedProplistIgnOv.clear();
+    }
 }
 
 Property Stylesheet::property(CLayer *l, QString key)
@@ -380,6 +447,14 @@ bool Property::isNull() const
     return m_pPrivate->m_bNull;
 }
 
+bool Property::hasVariable() const
+{
+    QRegExp varreg("\\$([a-zA-Z_-0-9]+)");
+    if (varreg.indexIn(m_pPrivate->m_sValue) != -1)
+        return true;
+    return false;
+}
+
 QString Property::toString(bool scale) const
 {
     if (m_pPrivate->m_eScale != smNone && scale)
@@ -517,6 +592,12 @@ void Property::setValue(QString val, ScaleMode scale) const
 {
     m_pPrivate->m_bNull = false;
     m_pPrivate->m_eScale = scale;
+    m_pPrivate->m_sValue = val;
+}
+
+void Property::setValue(QString val) const
+{
+    m_pPrivate->m_bNull = false;
     m_pPrivate->m_sValue = val;
 }
 

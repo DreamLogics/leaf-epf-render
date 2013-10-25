@@ -37,6 +37,7 @@
 #include "idevice.h"
 #include "cepfjs.h"
 #include "canimator.h"
+#include <QElapsedTimer>
 
 CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
 {
@@ -90,46 +91,57 @@ void CDocument::setStylesheetVariable(QString key, QString val)
 {
     if (!m_pStylesheet)
         return;
+    QElapsedTimer t,tt;
+    t.start();
     QString oldval = stylesheetVariable(key);
     m_pStylesheet->setVariable(key,val);
     CSection* s;
     COverlay* o;
     CLayer* l;
     CBaseObject* obj;
-    EPFEvent* ev = new EPFEvent("onStylesheetVariableChange");
-
-    ev->setParameters(QStringList() << key << val << oldval);
+    QList<CBaseObject*> filter;
 
     for (int i = 0;i<sectionCount();i++)
     {
+        filter.clear();
         s = section(i);
         for (int n=0;n<s->layerCount();n++)
         {
             l = s->layer(n);
             for (int t=0;t<l->objectCount();t++)
             {
+                //tt.start();
                 obj = l->object(t);
-                obj->onEPFEvent(ev);
+                if (obj->onStylesheetVariableChange(key,val,oldval))
+                    filter.append(obj);
+                //qDebug() << "on css var" << obj->id() << tt.nsecsElapsed();
             }
         }
-        s->layout();
+        if (filter.size() > 0)
+            s->layout(filter);
     }
-
+    qDebug() << "set css var (sections) took" <<  t.nsecsElapsed();
     for (int i = 0;i<overlayCount();i++)
     {
+        filter.clear();
         o = overlay(i);
         for (int n=0;n<o->layerCount();n++)
         {
             l = o->layer(n);
             for (int t=0;t<l->objectCount();t++)
             {
+                //tt.start();
                 obj = l->object(t);
-                obj->onEPFEvent(ev);
+                if (obj->onStylesheetVariableChange(key,val,oldval))
+                    filter.append(obj);
+                //qDebug() << "on css var" << obj->id() << tt.nsecsElapsed();
             }
         }
-        o->layout();
+        if (filter.size() > 0)
+            o->layout(filter);
     }
-    delete ev;
+    //delete ev;
+    qDebug() << "set css var took" <<  t.nsecsElapsed();
 }
 
 QString CDocument::stylesheetVariable(QString key)

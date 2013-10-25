@@ -33,6 +33,7 @@
 #include "css/css_style.h"
 #include "css/css_animation.h"
 #include <QPair>
+#include <QElapsedTimer>
 
 class QMouseEvent;
 class CLayer;
@@ -70,7 +71,7 @@ public:
     virtual void paintBuffered(QPainter* p);
     virtual void buffer();
 
-    virtual void layout(QRectF relativeTo);
+    virtual void layout(QRectF relativeTo, QList<CBaseObject*> updatelist = QList<CBaseObject*>());
     /*virtual CBaseObject* relative();
     virtual QString relativeID();*/
 
@@ -141,6 +142,10 @@ public:
     void setStyleState(StyleState ss);
 
     void transitionDone(QString transition);
+
+    CSS::Property styleProperty(QString key);
+
+    bool onStylesheetVariableChange(QString key, QString val, QString oldval);
 
 protected:
 
@@ -219,6 +224,7 @@ private:
     int m_iTransitionDelay;
     CSS::easing_function m_TransitionEasing;
     QStringList m_TransitionProps;
+    int m_iInTransition;
 
     QMap<QString,QPair<QString,QString> > m_CSSVariableSetter;
 
@@ -226,6 +232,7 @@ private:
 
     bool m_bChanged;
     QMutex m_mChangedMutex;
+
 };
 
 #endif // CBASEOBJECT_H

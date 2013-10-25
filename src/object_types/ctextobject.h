@@ -44,7 +44,7 @@ public:
     virtual void paint(QPainter *painter);
     //virtual void paintBuffered(QPainter* p);
     //virtual void buffer();
-    virtual void layout(QRectF relativeTo);
+    virtual void layout(QRectF relativeTo,QList<CBaseObject*> updatelist = QList<CBaseObject*>());
     QString overflow();
 
     virtual void clearBuffers();

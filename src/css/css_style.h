@@ -136,11 +136,13 @@ public:
     QString value() const; //raw
 
     bool isNull() const;
+    bool hasVariable() const;
 
     /*void setValue(QString val, bool scale=false);
     void setValue(int val, bool scale=false);
     void setValue(double val, bool scale=false);*/
-    void setValue(QString val, ScaleMode scale=smNone) const;
+    void setValue(QString val, ScaleMode scale) const;
+    void setValue(QString val) const;
     void setValue(int val, ScaleMode scale=smNone) const;
     void setValue(double val, ScaleMode scale=smNone) const;
     void setValue(QColor val, ColorFormat format=cfHex) const;
@@ -207,9 +209,12 @@ public:
 
     void oldState(bool b);
 
+    void invalidateCache(CBaseObject* obj=0);
+
 private:
 
     void parse(QString css);
+
 
 private:
     QMap<QString,Selector*> m_selectors;
@@ -219,6 +224,13 @@ private:
     QMap<QString,QString> m_variables;
     QMap<QString,QString> m_prevariables;
     QMap<QString,Animation*> m_animations;
+
+    QMap<CBaseObject*,QList<Property> > m_cachedProplist;
+    QMap<CBaseObject*,QList<Property> > m_cachedProplistIgnOv;
+
+    QMap<CBaseObject*, QMap<QString,Property> > m_cachedProperty;
+    QMap<CBaseObject*, QMap<QString,Property> > m_cachedPropertyIgnOv;
+
     bool m_bOldState;
 };
 

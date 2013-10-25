@@ -82,8 +82,8 @@ public:
 
     //void rendered(QPainter* p);
 
-    virtual void layout(int height, int width);
-    virtual void layout();
+    virtual void layout(int height, int width, QList<CBaseObject*> updatelist = QList<CBaseObject*>());
+    virtual void layout(QList<CBaseObject*> updatelist = QList<CBaseObject*>());
     CViewportItem* viewportItem();
 
     virtual void render(QPainter* p, QRectF region);

@@ -48,6 +48,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_bChanged = false;
     m_iAnimation = -1;
     m_iTransitionTime = 0;
+    m_iInTransition = 0;
 
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
@@ -116,7 +117,7 @@ const char* CBaseObject::objectType() const
     return "base";
 }
 
-void CBaseObject::layout(QRectF relrect)
+void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 {
     /*QGraphicsItem* r = parentItem();
 
@@ -126,223 +127,232 @@ void CBaseObject::layout(QRectF relrect)
     CBaseObject* obj = dynamic_cast<CBaseObject*>(r);
     if (obj)
         qDebug() << "child of:" << obj->id();*/
-
-
-
-
-    QRectF oldrect = m_rRect;
-    QRectF newrect = m_rRect;
-    //QRectF relrect = r->boundingRect();
-
+    QString pos;
     CSS::Stylesheet* css = document()->stylesheet();
 
-    //if (CSS::Transitioner::get(thread())->hasTransitions(this))
-    //    css->oldState(true);
-
-    m_RenderPropsMutex.lock();
-
-    m_dOpacity = css->property(this,"opacity").toDouble();
-
-    m_RenderPropsMutex.unlock();
-
-    setMargin(css->property(this,"margin-top").toInt(),css->property(this,"margin-left").toInt(),css->property(this,"margin-bottom").toInt(),css->property(this,"margin-right").toInt());
-    //setPadding(css->property(this,"padding-top").toInt(),css->property(this,"padding-left").toInt(),css->property(this,"padding-bottom").toInt(),css->property(this,"padding-right").toInt());
-
-    newrect.setHeight(css->property(this,"height").toInt()+css->property(this,"mod-height").toInt());
-    newrect.setWidth(css->property(this,"width").toInt()+css->property(this,"mod-width").toInt());
-
-    //qDebug() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << css->property(this,"height").toString();
-
-    /*if (css->property(this,"relative-to").toString() == "")
+    if ((updatelist.size() > 0 && updatelist.contains(this)) || updatelist.size() == 0)
     {
-        m_rRect.setTop(relrect.top() + r->outerHeight() + marginTop());
-        m_rRect.setLeft(css->property(this,"left").toInt() + marginLeft());
-
-        //top/left/bottom/right negeren
-    }
-    else*/
-    QString pos = css->property(this,"position").toString();
+        qDebug() << "layout" << id();
+        QRectF oldrect = m_rRect;
+        QRectF newrect = m_rRect;
+        //QRectF relrect = r->boundingRect();
 
 
-    if (pos != "static" && pos != "relative")
-    {
-        newrect.moveTop(relrect.top() + css->property(this,"top").toInt());
-        newrect.moveLeft(relrect.left() + css->property(this,"left").toInt());
 
-        //qDebug() << "CBaseObject::layout" << newrect << "#"+section()->id()+"::"+id() << css->property(this,"top").toInt();
+        //if (CSS::Transitioner::get(thread())->hasTransitions(this))
+        //    css->oldState(true);
 
-        //m_rRect.setHeight(css->property(this,"height").toInt());
-        //m_rRect.setWidth(css->property(this,"width").toInt());
+        m_RenderPropsMutex.lock();
 
-        if (!css->property(this,"bottom").isNull() && !css->property(this,"top").isNull())
+        m_dOpacity = styleProperty("opacity").toDouble();
+
+        m_RenderPropsMutex.unlock();
+
+        //qDebug() << "test ret val" << styleProperty("opacity").value();
+
+        setMargin(styleProperty("margin-top").toInt(),styleProperty("margin-left").toInt(),styleProperty("margin-bottom").toInt(),styleProperty("margin-right").toInt());
+        //setPadding(styleProperty("padding-top").toInt(),styleProperty("padding-left").toInt(),styleProperty("padding-bottom").toInt(),styleProperty("padding-right").toInt());
+
+        newrect.setHeight(styleProperty("height").toInt()+styleProperty("mod-height").toInt());
+        newrect.setWidth(styleProperty("width").toInt()+styleProperty("mod-width").toInt());
+
+        //qDebug() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << styleProperty("height").toString();
+
+        /*if (styleProperty("relative-to").toString() == "")
         {
-            newrect.setBottom(relrect.bottom() - css->property(this,"bottom").toInt());
-            newrect.setTop(newrect.bottom() - css->property(this,"height").toInt());
+            m_rRect.setTop(relrect.top() + r->outerHeight() + marginTop());
+            m_rRect.setLeft(styleProperty("left").toInt() + marginLeft());
+
+            //top/left/bottom/right negeren
         }
-        else if (!css->property(this,"bottom").isNull())
-            newrect.moveBottom(relrect.bottom() - css->property(this,"bottom").toInt());
+        else*/
+        pos = styleProperty("position").toString();
 
-        if (!css->property(this,"right").isNull() && !css->property(this,"left").isNull())
+
+        if (pos != "static" && pos != "relative")
         {
-            newrect.setRight(relrect.right() - css->property(this,"right").toInt());
-            newrect.setLeft(newrect.left() - css->property(this,"width").toInt());
+            newrect.moveTop(relrect.top() + styleProperty("top").toInt());
+            newrect.moveLeft(relrect.left() + styleProperty("left").toInt());
+
+            //qDebug() << "CBaseObject::layout" << newrect << "#"+section()->id()+"::"+id() << styleProperty("top").toInt();
+
+            //m_rRect.setHeight(styleProperty("height").toInt());
+            //m_rRect.setWidth(styleProperty("width").toInt());
+
+            if (!styleProperty("bottom").isNull() && !styleProperty("top").isNull())
+            {
+                newrect.setBottom(relrect.bottom() - styleProperty("bottom").toInt());
+                newrect.setTop(newrect.bottom() - styleProperty("height").toInt());
+            }
+            else if (!styleProperty("bottom").isNull())
+                newrect.moveBottom(relrect.bottom() - styleProperty("bottom").toInt());
+
+            if (!styleProperty("right").isNull() && !styleProperty("left").isNull())
+            {
+                newrect.setRight(relrect.right() - styleProperty("right").toInt());
+                newrect.setLeft(newrect.left() - styleProperty("width").toInt());
+            }
+            else if (!styleProperty("right").isNull())
+                newrect.moveRight(relrect.right() - styleProperty("right").toInt());
         }
-        else if (!css->property(this,"right").isNull())
-            newrect.moveRight(relrect.right() - css->property(this,"right").toInt());
-    }
-    else
-    {
-        newrect.moveTop(relrect.top()+marginTop());
-        newrect.moveLeft(marginLeft());
-    }
-
-    //mod position
-    CSS::Property modtop = css->property(this,"mod-top");
-    CSS::Property modbot = css->property(this,"mod-bottom");
-    CSS::Property modleft = css->property(this,"mod-left");
-    CSS::Property modright = css->property(this,"mod-right");
-
-    if (!modtop.isNull() && !modbot.isNull())
-    {
-        newrect.setTop(newrect.top()+modtop.toInt());
-        newrect.setBottom(newrect.bottom()+modbot.toInt());
-    }
-    else if (!modbot.isNull())
-        newrect.moveBottom(newrect.bottom()+modbot.toInt());
-    else if (!modtop.isNull())
-        newrect.moveTop(newrect.top()+modtop.toInt());
-
-
-
-    if (!modleft.isNull() && !modright.isNull())
-    {
-        newrect.setLeft(newrect.left()+modleft.toInt());
-        newrect.setRight(newrect.right()+modright.toInt());
-    }
-    else if (!modright.isNull())
-        newrect.moveRight(newrect.right()+modright.toInt());
-    else if (!modleft.isNull())
-        newrect.moveLeft(newrect.left()+modleft.toInt());
-
-
-
-    //min/max height/width
-    if (!css->property(this,"min-height").isNull() && newrect.height() < css->property(this,"min-height").toInt())
-        newrect.setHeight(css->property(this,"min-height").toInt());
-
-    if (!css->property(this,"min-width").isNull() && newrect.width() < css->property(this,"min-width").toInt())
-        newrect.setHeight(css->property(this,"min-width").toInt());
-
-    if (!css->property(this,"max-height").isNull() && newrect.height() > css->property(this,"max-height").toInt())
-        newrect.setHeight(css->property(this,"max-height").toInt());
-
-    if (!css->property(this,"max-width").isNull() && newrect.width() > css->property(this,"max-width").toInt())
-        newrect.setHeight(css->property(this,"max-width").toInt());
-
-
-    if (oldrect != newrect)
-    {
-        //prepareGeometryChange();
-        m_rRect = newrect;
-
-        m_mChangedMutex.lock();
-        m_bChanged = true;
-        m_mChangedMutex.unlock();
-
-        if (oldrect.size() != newrect.size())
+        else
         {
-            //m_bNeedsRedraw = true;
-            buffer();
+            newrect.moveTop(relrect.top()+marginTop());
+            newrect.moveLeft(marginLeft());
+        }
+
+        //mod position
+        CSS::Property modtop = styleProperty("mod-top");
+        CSS::Property modbot = styleProperty("mod-bottom");
+        CSS::Property modleft = styleProperty("mod-left");
+        CSS::Property modright = styleProperty("mod-right");
+
+        if (!modtop.isNull() && !modbot.isNull())
+        {
+            newrect.setTop(newrect.top()+modtop.toInt());
+            newrect.setBottom(newrect.bottom()+modbot.toInt());
+        }
+        else if (!modbot.isNull())
+            newrect.moveBottom(newrect.bottom()+modbot.toInt());
+        else if (!modtop.isNull())
+            newrect.moveTop(newrect.top()+modtop.toInt());
+
+
+
+        if (!modleft.isNull() && !modright.isNull())
+        {
+            newrect.setLeft(newrect.left()+modleft.toInt());
+            newrect.setRight(newrect.right()+modright.toInt());
+        }
+        else if (!modright.isNull())
+            newrect.moveRight(newrect.right()+modright.toInt());
+        else if (!modleft.isNull())
+            newrect.moveLeft(newrect.left()+modleft.toInt());
+
+
+
+        //min/max height/width
+        if (!styleProperty("min-height").isNull() && newrect.height() < styleProperty("min-height").toInt())
+            newrect.setHeight(styleProperty("min-height").toInt());
+
+        if (!styleProperty("min-width").isNull() && newrect.width() < styleProperty("min-width").toInt())
+            newrect.setHeight(styleProperty("min-width").toInt());
+
+        if (!styleProperty("max-height").isNull() && newrect.height() > styleProperty("max-height").toInt())
+            newrect.setHeight(styleProperty("max-height").toInt());
+
+        if (!styleProperty("max-width").isNull() && newrect.width() > styleProperty("max-width").toInt())
+            newrect.setHeight(styleProperty("max-width").toInt());
+
+
+        if (oldrect != newrect)
+        {
+            //prepareGeometryChange();
+            m_rRect = newrect;
+
+            m_mChangedMutex.lock();
+            m_bChanged = true;
+            m_mChangedMutex.unlock();
+
+            if (oldrect.size() != newrect.size())
+            {
+                //m_bNeedsRedraw = true;
+                buffer();
+            }
+            else if (m_bNeedsRedraw)
+                buffer();
         }
         else if (m_bNeedsRedraw)
             buffer();
+
+        m_FPMutex.lock();
+
+        CBaseObject* obj = dynamic_cast<CBaseObject*>(parent());
+        if (obj)
+        {
+            if (css->property(obj,"position").toString() == "fixed" || obj->fixedParent())
+                m_bFixedParent = true;
+        }
+
+        m_FPMutex.unlock();
+
+        //css->oldState(false);
+
+        if (m_iInTransition == 0)
+        {
+
+            //animation
+            CSS::Property anim = styleProperty("animation-name");
+
+            if (!anim.isNull() && anim.toString() != "")
+            {
+                CSS::Property anim_duration = styleProperty("animation-duration");
+                CSS::Property anim_timing_function = styleProperty("animation-timing-function");
+                CSS::Property anim_delay = styleProperty("animation-delay");
+                CSS::Property anim_iteration_count = styleProperty("animation-iteration-count");
+                CSS::Property anim_direction = styleProperty("animation-direction");
+
+                int iter = 1;
+
+                if (anim_iteration_count.toString() == "infinite")
+                    iter = -1;
+                else
+                    iter = anim_iteration_count.toInt();
+
+                CSS::easing_function ef;
+                if (anim_timing_function.toString() == "ease-in")
+                    ef = CSS::efEaseIn;
+                else if (anim_timing_function.toString() == "ease-out")
+                    ef = CSS::efEaseOut;
+                else if (anim_timing_function.toString() == "none" || anim_timing_function.toString() == "normal" || anim_timing_function.toString() == "linear")
+                    ef = CSS::efNone;
+                else
+                    ef = CSS::efEase;
+
+                CSS::direction dir = CSS::dirNormal;
+                if (anim_direction.toString() == "reverse")
+                    dir = CSS::dirReverse;
+                else if (anim_direction.toString() == "alternate")
+                    dir = CSS::dirAlternate;
+                else if (anim_direction.toString() == "alternate-reverse")
+                    dir = CSS::dirAlternateReverse;
+
+                m_iAnimation = CAnimator::get(this->thread())->registerAnimation(this,anim.toString(),CSS::stringToMsTime(anim_duration.toString()),ef,CSS::stringToMsTime(anim_delay.toString()),iter,dir,m_iAnimation);
+            }
+            else if (m_iAnimation != -1)
+                CAnimator::get(this->thread())->unregisterAnimation(m_iAnimation,this);
+
+            //transitions
+            CSS::Property transition = css->property(this,"transition-duration");
+            if (!transition.isNull())
+            {
+                m_iTransitionTime = CSS::stringToMsTime(transition.value());
+                CSS::Property transition_timing_function = css->property(this,"transition-timing-function");
+                CSS::Property transition_delay = css->property(this,"transition-delay");
+                CSS::Property transition_properties = css->property(this,"transition-property");
+
+                if (transition_delay.isNull())
+                    m_iTransitionDelay = 0;
+                else
+                    m_iTransitionDelay = CSS::stringToMsTime(transition_delay.value());
+
+                if (transition_timing_function.toString() == "ease-in")
+                    m_TransitionEasing = CSS::efEaseIn;
+                else if (transition_timing_function.toString() == "ease-out")
+                    m_TransitionEasing = CSS::efEaseOut;
+                else if (transition_timing_function.toString() == "none" || transition_timing_function.toString() == "normal" || transition_timing_function.toString() == "linear")
+                    m_TransitionEasing = CSS::efNone;
+                else
+                    m_TransitionEasing = CSS::efEase;
+
+                m_TransitionProps.clear();
+                m_TransitionProps = transition_properties.value().split(",");
+            }
+            else
+                m_iTransitionTime = 0;
+
+        }
     }
-    else if (m_bNeedsRedraw)
-        buffer();
-
-    m_FPMutex.lock();
-
-    CBaseObject* obj = dynamic_cast<CBaseObject*>(parent());
-    if (obj)
-    {
-        if (css->property(obj,"position").toString() == "fixed" || obj->fixedParent())
-            m_bFixedParent = true;
-    }
-
-    m_FPMutex.unlock();
-
-    //css->oldState(false);
-
-    //animation
-    CSS::Property anim = css->property(this,"animation-name");
-
-    if (!anim.isNull() && anim.toString() != "")
-    {
-        CSS::Property anim_duration = css->property(this,"animation-duration");
-        CSS::Property anim_timing_function = css->property(this,"animation-timing-function");
-        CSS::Property anim_delay = css->property(this,"animation-delay");
-        CSS::Property anim_iteration_count = css->property(this,"animation-iteration-count");
-        CSS::Property anim_direction = css->property(this,"animation-direction");
-
-        int iter = 1;
-
-        if (anim_iteration_count.toString() == "infinite")
-            iter = -1;
-        else
-            iter = anim_iteration_count.toInt();
-
-        CSS::easing_function ef;
-        if (anim_timing_function.toString() == "ease-in")
-            ef = CSS::efEaseIn;
-        else if (anim_timing_function.toString() == "ease-out")
-            ef = CSS::efEaseOut;
-        else if (anim_timing_function.toString() == "none" || anim_timing_function.toString() == "normal" || anim_timing_function.toString() == "linear")
-            ef = CSS::efNone;
-        else
-            ef = CSS::efEase;
-
-        CSS::direction dir = CSS::dirNormal;
-        if (anim_direction.toString() == "reverse")
-            dir = CSS::dirReverse;
-        else if (anim_direction.toString() == "alternate")
-            dir = CSS::dirAlternate;
-        else if (anim_direction.toString() == "alternate-reverse")
-            dir = CSS::dirAlternateReverse;
-
-        m_iAnimation = CAnimator::get(this->thread())->registerAnimation(this,anim.toString(),CSS::stringToMsTime(anim_duration.toString()),ef,CSS::stringToMsTime(anim_delay.toString()),iter,dir,m_iAnimation);
-    }
-    else if (m_iAnimation != -1)
-        CAnimator::get(this->thread())->unregisterAnimation(m_iAnimation,this);
-
-    //transitions
-    CSS::Property transition = css->property(this,"transition-duration");
-    if (!transition.isNull())
-    {
-        m_iTransitionTime = CSS::stringToMsTime(transition.value());
-        CSS::Property transition_timing_function = css->property(this,"transition-timing-function");
-        CSS::Property transition_delay = css->property(this,"transition-delay");
-        CSS::Property transition_properties = css->property(this,"transition-property");
-
-        if (transition_delay.isNull())
-            m_iTransitionDelay = 0;
-        else
-            m_iTransitionDelay = CSS::stringToMsTime(transition_delay.value());
-
-        if (transition_timing_function.toString() == "ease-in")
-            m_TransitionEasing = CSS::efEaseIn;
-        else if (transition_timing_function.toString() == "ease-out")
-            m_TransitionEasing = CSS::efEaseOut;
-        else if (transition_timing_function.toString() == "none" || transition_timing_function.toString() == "normal" || transition_timing_function.toString() == "linear")
-            m_TransitionEasing = CSS::efNone;
-        else
-            m_TransitionEasing = CSS::efEase;
-
-        m_TransitionProps.clear();
-        m_TransitionProps = transition_properties.value().split(",");
-    }
-    else
-        m_iTransitionTime = 0;
-
 
     //qDebug() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;
 
@@ -360,10 +370,10 @@ void CBaseObject::layout(QRectF relrect)
             //qDebug() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
             if (pos == "absolute")
-                cobj->layout(m_rRect);
+                cobj->layout(m_rRect,updatelist);
             else
             {
-                cobj->layout(relr);
+                cobj->layout(relr,updatelist);
                 relr.setTop(cobj->boundingRect().bottom());
             }
         }
@@ -465,7 +475,7 @@ CSS::Property CBaseObject::cssOverrideProp(QString prop)
 
 void CBaseObject::setCSSOverrideProp(QString key, CSS::Property value)
 {
-    qDebug() << "override prop for object" << id() << "prop" << key << "value" << value.toString();
+    //qDebug() << "override prop for object" << id() << "prop" << key << "value" << value.toString();
     if (!value.isNull())
         m_bNeedsRedraw = true;
     if (m_CSSOverrideProps.contains(key))
@@ -602,6 +612,10 @@ void CBaseObject::addStyleClass(QString classname)
     if (m_StyleClasses.contains(classname))
         return;
 
+    //invalidate css cache for this object
+    if (document()->stylesheet())
+        document()->stylesheet()->invalidateCache(this);
+
     if (m_iTransitionTime > 0)
     {
         //create transition
@@ -637,6 +651,7 @@ void CBaseObject::addStyleClass(QString classname)
             }
         }
         CSS::Transitioner::get(thread())->removeTransitioningProps(this,props3);
+        m_iInTransition++;
         CSS::Transitioner::get(thread())->createTransition(id()+"_"+classname,this,deltaprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
         m_StyleClasses.append(classname);
     }
@@ -660,6 +675,9 @@ void CBaseObject::removeStyleClass(QString classname)
 {
     if (!m_StyleClasses.contains(classname))
         return;
+    //invalidate css cache for this object
+    if (document()->stylesheet())
+        document()->stylesheet()->invalidateCache(this);
     if (m_iTransitionTime > 0)
     {
         //remove transition
@@ -695,6 +713,7 @@ void CBaseObject::removeStyleClass(QString classname)
                         deltaprops.append(document()->stylesheet()->property(this,props2[i],true));
                 }
             }
+            m_iInTransition++;
             CSS::Transitioner::get(thread())->createTransition(id()+"_"+classname,this,deltaprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
         }
         m_StyleClasses.removeAll(classname);
@@ -754,51 +773,63 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
         if (ev->parameter(0) != "")
             toggleStyleClass(ev->parameter(0));
     }
-    else if (ev->event() == "onStylesheetVariableChange")
-    {
-        //a variable has changes, update and possibly create a transition
-        if (m_iTransitionTime > 0)
-        {
-            QList<CSS::Property> propsold,dprops;
-            QString oldval;
-            //QStringList propnames;
-            propsold = document()->stylesheet()->properties(this);
-            for (int i=0;i<propsold.size();i++)
-            {
-                document()->stylesheet()->oldState(true);
-                oldval = propsold[i].value();
-                document()->stylesheet()->oldState(false);
-                CSS::Property prop = document()->stylesheet()->property(this,propsold[i].name());
-                if (oldval != prop.value())
-                {
-                    qDebug() << "prop changed" << propsold[i].name() << oldval << prop.value();
-                    document()->stylesheet()->oldState(true);
-                    dprops.append(propsold[i].clone());
-                    document()->stylesheet()->oldState(false);
-                }
-            }
-
-
-            if (dprops.size() == 0)
-                return;
-
-            //CSS::Transitioner::get(thread())->removeTransitions(this);
-            qDebug() << "onStylesheetVariableChange" << ev->parameter(0) << ev->parameter(1);
-            CSS::Transitioner::get(thread())->removeTransition(id()+"_"+ev->parameter(0));
-            CSS::Transitioner::get(thread())->createTransition(id()+"_"+ev->parameter(0),this,dprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay,true);
-
-            //revert css var
-            /*if (m_CSSVariableSetter.contains(id()+"_"+ev->parameter(0)))
-                m_CSSVariableSetter[id()+"_"+ev->parameter(0)] = QPair<QString,QString>(ev->parameter(0),ev->parameter(1));
-            else
-                m_CSSVariableSetter.insert(id()+"_"+ev->parameter(0),QPair<QString,QString>(ev->parameter(0),ev->parameter(1)) );
-            document()->stylesheet()->setVariable(ev->parameter(0),ev->parameter(2));*/
-            //m_bNeedsRedraw = true;
-        }
-        else
-            m_bNeedsRedraw = true;
-    }
 }
+
+bool CBaseObject::onStylesheetVariableChange(QString key, QString val, QString oval)
+{
+    QList<CSS::Property> propsold,dprops;
+    QString oldval;
+    //QStringList propnames;
+    QElapsedTimer t;
+    t.start();
+    propsold = document()->stylesheet()->properties(this);
+    qDebug() << "document()->stylesheet()->properties(this);" << t.nsecsElapsed();
+    for (int i=0;i<propsold.size();i++)
+    {
+        if (!propsold[i].hasVariable())
+            continue;
+        document()->stylesheet()->oldState(true);
+        oldval = propsold[i].value();
+        document()->stylesheet()->oldState(false);
+        CSS::Property prop = document()->stylesheet()->property(this,propsold[i].name());
+        if (oldval != prop.value())
+        {
+            //qDebug() << "prop changed" << propsold[i].name() << oldval << prop.value();
+            document()->stylesheet()->oldState(true);
+            dprops.append(propsold[i].clone());
+            document()->stylesheet()->oldState(false);
+        }
+    }
+
+    qDebug() << "onStylesheetVariableChange time" << t.nsecsElapsed();
+    if (dprops.size() == 0)
+        return false;
+    //a variable has changes, update and possibly create a transition
+    if (m_iTransitionTime > 0)
+    {
+        //CSS::Transitioner::get(thread())->removeTransitions(this);
+        //static int count=0;
+        //count++;
+        //qDebug() << "onStylesheetVariableChange" << id() << ev->parameter(0) << ev->parameter(1) << count;
+        CSS::Transitioner::get(thread())->removeTransition(id()+"_"+key);
+        m_iInTransition++;
+        CSS::Transitioner::get(thread())->createTransition(id()+"_"+key,this,dprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay,true);
+
+        //revert css var
+        /*if (m_CSSVariableSetter.contains(id()+"_"+ev->parameter(0)))
+            m_CSSVariableSetter[id()+"_"+ev->parameter(0)] = QPair<QString,QString>(ev->parameter(0),ev->parameter(1));
+        else
+            m_CSSVariableSetter.insert(id()+"_"+ev->parameter(0),QPair<QString,QString>(ev->parameter(0),ev->parameter(1)) );
+        document()->stylesheet()->setVariable(ev->parameter(0),ev->parameter(2));*/
+        //m_bNeedsRedraw = true;
+        return false;
+    }
+    else
+        m_bNeedsRedraw = true;
+
+    return true;
+}
+
 /*
 void CBaseObject::sheduleRepaint()
 {
@@ -845,8 +876,8 @@ void CBaseObject::paintBuffered(QPainter *p)
 
     //draw in chunks
     //int chunksize = 512;
-    qDebug() << "drawing" << id();
-    QTime t = QTime::currentTime();
+    //qDebug() << "drawing" << id();
+    //QTime t = QTime::currentTime();
 
     if (m_qiRenderBuffer.width() <= dw && m_qiRenderBuffer.height() <= dh)
         p->drawImage(0,0,m_qiRenderBuffer);
@@ -882,7 +913,7 @@ void CBaseObject::paintBuffered(QPainter *p)
 
     //p->drawText(2,20,id());
 
-    qDebug() << "rendertime:" << t.msecsTo(QTime::currentTime());
+    //qDebug() << "rendertime:" << t.msecsTo(QTime::currentTime());
 
     m_RenderMutex.unlock();
 }
@@ -915,7 +946,7 @@ void CBaseObject::buffer()
     CSS::Stylesheet* css = document()->stylesheet();
 
 
-    m_iRotation = css->property(this,"rotation").toInt();
+    m_iRotation = styleProperty("rotation").toInt();
 
     //m_qiRenderBuffer = fbo.toImage();
     m_RenderMutex.unlock();
@@ -976,9 +1007,29 @@ void CBaseObject::updateRenderMode()
 
 void CBaseObject::transitionDone(QString transition)
 {
-    qDebug() << "transition done" << transition;
-    if (m_CSSVariableSetter.contains(transition))
+    //qDebug() << "transition done" << transition;
+    m_iInTransition--;
+    /*if (m_CSSVariableSetter.contains(transition))
     {
         document()->stylesheet()->setVariable(m_CSSVariableSetter[transition].first,m_CSSVariableSetter[transition].second);
+    }*/
+}
+
+CSS::Property CBaseObject::styleProperty(QString key)
+{
+    CSS::Stylesheet* css = document()->stylesheet();
+    CSS::Property prop = cssOverrideProp(key);
+    if (prop.isNull())
+        prop = css->property(this,key);
+    if (m_iTransitionTime > 0)
+    {
+        CSS::Property nprop = prop.clone();
+        //css->oldState(true);
+        //qDebug() << "style prop a" << prop.toColor() << nprop.toColor() << key;
+        //nprop.setValue(prop.value());
+        //css->oldState(false);
+
+        return nprop;
     }
+    return prop;
 }

@@ -157,7 +157,7 @@ void Animation::generateFrames(KeyFrame* startframe)
                     Property propstart = lf->property(props[a]);
                     Property propend = nf->property(props[a]);
 
-                    qDebug() << "generating keyframe" << props[a] << propstart.toString() << propend.toString() << pos;
+                    //qDebug() << "generating keyframe" << props[a] << propstart.toString() << propend.toString() << pos;
 
                     if (propend.isNull())
                     {

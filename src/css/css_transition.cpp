@@ -45,7 +45,7 @@ void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<
     {
         //already got one
         //re-reverse
-        qDebug() << "re-reverse transition" << identifier;
+        //qDebug() << "re-reverse transition" << identifier;
         CAnimator::get(obj->thread())->reverseAnimation(m_Transitions[identifier].m_iAnimation,obj);
         return;
     }
@@ -63,11 +63,11 @@ void Transitioner::createTransition(QString identifier, CBaseObject *obj, QList<
     KeyFrame* kfs = new KeyFrame();
     KeyFrame* kfe = new KeyFrame();
 
-    qDebug() << transitionable;
+    //qDebug() << transitionable;
 
     for (int i=0;i<deltaprops.size();i++)
     {
-        qDebug() << "deltaprop" << deltaprops[i].name() << deltaprops[i].toString();
+        //qDebug() << "deltaprop" << deltaprops[i].name() << deltaprops[i].toString();
         if (transitionable[0] == "all" || transitionable.contains(deltaprops[i].name()))
         {
             startprop = css->property(obj,deltaprops[i].name());
@@ -125,7 +125,7 @@ void Transitioner::transitionAnimDone(int animid)
 {
     QMap<QString,transition>::iterator it;
 
-    qDebug() << "transition done" << animid;
+    //qDebug() << "transition done" << animid;
 
     for (it=m_Transitions.begin();it!=m_Transitions.end();it++)
     {

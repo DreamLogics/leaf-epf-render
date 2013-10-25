@@ -35,12 +35,12 @@
 #include <QTextDocumentFragment>
 #include <QApplication>
 #include <QDesktopWidget>
-#include <QSvgGenerator>
-#include <QSvgRenderer>
+//#include <QSvgGenerator>
+//#include <QSvgRenderer>
 #include <QDataStream>
-#include "csection.h"
-#include "clayout.h"
-#include "clayer.h"
+#include "../csection.h"
+#include "../clayout.h"
+#include "../clayer.h"
 
 CBaseObject* CTextObjectFactory::create(QString id, CLayer *layer)
 {
@@ -108,241 +108,246 @@ void CTextObject::paint(QPainter *painter)
 
 }
 
-void CTextObject::layout(QRectF relrect)
+void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 {
+
     QRectF oldrect = boundingRect();
-    CBaseObject::layout(relrect);
+    CBaseObject::layout(relrect,updatelist);
 
-    if (!m_pTextDoc)
+    if ((updatelist.size() > 0 && updatelist.contains(this)) || updatelist.size() == 0)
     {
-        qDebug() << "QTextDocument not initialized.";
-        return;
-    }
 
-    if (oldrect.size() == boundingRect().size() && !m_bTextChanged)
-        return;
-
-    m_bTextChanged = false;
-    //QFont font("Sans",14);
-    //m_pTextDoc->setDefaultFont(font);
-
-    QString html;
-
-    if (!m_sOverrideHTML.isNull())
-    {
-        html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
-        html += "</head><body id=\""+id()+"\">";
-        html += m_sOverrideHTML;
-        html += "</body></html>";
-    }
-    else
-    {
-        //html maken
-        QString src = document()->stylesheet()->property(this,"text-source").toString();//property("src");
-        src = src.replace(QRegExp("[\"']+"),"");
-
-        if (src != "") //als we geen src hebben nemen we de overflow
+        if (!m_pTextDoc)
         {
-            QByteArray htmldata = document()->resource(src);
-            QString body = QString::fromUtf8(htmldata.constData(),htmldata.size());;
-            QRegExp bodyfinder("< *(body|BODY)[^>]*>");
-            QRegExp bodyendfinder("< */ *(body|BODY)[^>]*>");
+            qDebug() << "QTextDocument not initialized.";
+            return;
+        }
 
-            int bodystart = body.indexOf(bodyfinder);
-            if (bodystart != -1)
-                body = body.mid(bodystart + bodyfinder.cap(0).size());
+        if (oldrect.size() == boundingRect().size() && !m_bTextChanged)
+            return;
 
-            int bodyend = body.indexOf(bodyendfinder);
-            if (bodyend != -1)
-                body = body.left(bodyend);
+        m_bTextChanged = false;
+        //QFont font("Sans",14);
+        //m_pTextDoc->setDefaultFont(font);
 
+        QString html;
 
+        if (!m_sOverrideHTML.isNull())
+        {
             html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
             html += "</head><body id=\""+id()+"\">";
-            html += body;
+            html += m_sOverrideHTML;
             html += "</body></html>";
-
-            //qDebug() << html;
         }
         else
         {
-            //overflow van de parent nemen
-            QString parent = property("parent");
-            if (parent != "")
+            //html maken
+            QString src = document()->stylesheet()->property(this,"text-source").toString();//property("src");
+            src = src.replace(QRegExp("[\"']+"),"");
+
+            if (src != "") //als we geen src hebben nemen we de overflow
             {
-                CTextObject* tpar = dynamic_cast<CTextObject*>(section()->objectByID(parent));
-                if (tpar)
+                QByteArray htmldata = document()->resource(src);
+                QString body = QString::fromUtf8(htmldata.constData(),htmldata.size());;
+                QRegExp bodyfinder("< *(body|BODY)[^>]*>");
+                QRegExp bodyendfinder("< */ *(body|BODY)[^>]*>");
+
+                int bodystart = body.indexOf(bodyfinder);
+                if (bodystart != -1)
+                    body = body.mid(bodystart + bodyfinder.cap(0).size());
+
+                int bodyend = body.indexOf(bodyendfinder);
+                if (bodyend != -1)
+                    body = body.left(bodyend);
+
+
+                html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
+                html += "</head><body id=\""+id()+"\">";
+                html += body;
+                html += "</body></html>";
+
+                //qDebug() << html;
+            }
+            else
+            {
+                //overflow van de parent nemen
+                QString parent = property("parent");
+                if (parent != "")
                 {
-                    html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
-                    html += "</head><body id=\""+id()+"\">";
-                    html += tpar->overflow();
-                    html += "</body></html>";
-                    //qDebug() << html;
+                    CTextObject* tpar = dynamic_cast<CTextObject*>(section()->objectByID(parent));
+                    if (tpar)
+                    {
+                        html = "<html><head><link rel='stylesheet' type='text/css' href='format.css'>";
+                        html += "</head><body id=\""+id()+"\">";
+                        html += tpar->overflow();
+                        html += "</body></html>";
+                        //qDebug() << html;
+                    }
+                    else
+                        return;
                 }
                 else
                     return;
+
             }
-            else
-                return;
-
         }
-    }
 
-    QRectF r = boundingRect();
-    m_pTextDoc->addResource(QTextDocument::StyleSheetResource, QUrl( "format.css" ), css());
-    //qDebug() << html << css;
+        QRectF r = boundingRect();
+        m_pTextDoc->addResource(QTextDocument::StyleSheetResource, QUrl( "format.css" ), css());
+        //qDebug() << html << css;
 
-    //hebben we geen hoogte? Dan gewoon vullen
-    int height = r.height();
-    int width = r.width();
+        //hebben we geen hoogte? Dan gewoon vullen
+        int height = r.height();
+        int width = r.width();
 
-    m_iRenderOffset = 0;
+        m_iRenderOffset = 0;
 
-    //qDebug() << "text object width" << width << container_width;
+        //qDebug() << "text object width" << width << container_width;
 
-    if (width == 0)
-    {
-        qDebug() << "text object with no width";
-        return;
-    }
-
-    if (height == 0)
-    {
-        if (html.size() > 0)
+        if (width == 0)
         {
-            m_pTextDoc->setTextWidth(width);
-            m_pTextDoc->setHtml(html);
-            //qDebug() << "hooooogg text" << m_pTextDoc->size().height() << r.height();
-            r.setHeight(m_pTextDoc->size().height());
-            setBoundingRect(r);
+            qDebug() << "text object with no width";
+            return;
         }
-        /*else
-        {
-            r.setHeight(0);
-            setRect(r);
-        }*/
-    }
-    else
-    {
-        QSize s(width,height);
-        m_pTextDoc->setPageSize(s);
-        m_pTextDoc->setHtml(html);
 
-        if (m_pTextDoc->pageCount() > 1)
+        if (height == 0)
         {
-            //we hebben meer content, zet dit in de overflow zodat het gelinkte text object deze kan inladen
-            QTextCursor tc(m_pTextDoc);
-            QPoint pp(0,height);
-            int pos = m_pTextDoc->documentLayout()->hitTest(pp,Qt::FuzzyHit);
-            //qDebug() << pos;
-            tc.setPosition(pos);
-            tc.setPosition(m_pTextDoc->characterCount()-1,QTextCursor::KeepAnchor);
-            QTextDocumentFragment tdf = tc.selection();
-            m_sOverflow = tdf.toHtml();
-
-            //strip de troep
-            int fb,fe;
-            fb = m_sOverflow.indexOf("<body>");
-            if (fb != -1)
+            if (html.size() > 0)
             {
-                fb += 6;
-                fe = m_sOverflow.indexOf("</body>");
-                m_sOverflow = m_sOverflow.mid(fb,fe-fb);
-                m_sOverflow = m_sOverflow.replace(QRegExp("style *= *\"[^\"]*\""),"");
-                m_sOverflow = m_sOverflow.replace(QRegExp("<[ \\/]*span *>"),"");
-                m_sOverflow = m_sOverflow.replace("<!--StartFragment-->","");
-                m_sOverflow = m_sOverflow.replace("<!--EndFragment-->","");
+                m_pTextDoc->setTextWidth(width);
+                m_pTextDoc->setHtml(html);
+                //qDebug() << "hooooogg text" << m_pTextDoc->size().height() << r.height();
+                r.setHeight(m_pTextDoc->size().height());
+                setBoundingRect(r);
             }
+            /*else
+            {
+                r.setHeight(0);
+                setRect(r);
+            }*/
         }
         else
         {
-            //check v-align style
-            CSS::Property vap = document()->stylesheet()->property(this,"v-align");
-            if (!vap.isNull())
+            QSize s(width,height);
+            m_pTextDoc->setPageSize(s);
+            m_pTextDoc->setHtml(html);
+
+            if (m_pTextDoc->pageCount() > 1)
             {
-                QString valign = vap.toString();
-                if (valign != "top")
+                //we hebben meer content, zet dit in de overflow zodat het gelinkte text object deze kan inladen
+                QTextCursor tc(m_pTextDoc);
+                QPoint pp(0,height);
+                int pos = m_pTextDoc->documentLayout()->hitTest(pp,Qt::FuzzyHit);
+                //qDebug() << pos;
+                tc.setPosition(pos);
+                tc.setPosition(m_pTextDoc->characterCount()-1,QTextCursor::KeepAnchor);
+                QTextDocumentFragment tdf = tc.selection();
+                m_sOverflow = tdf.toHtml();
+
+                //strip de troep
+                int fb,fe;
+                fb = m_sOverflow.indexOf("<body>");
+                if (fb != -1)
                 {
-                    m_pTextDoc->setTextWidth(width);
-                    int dh = height - m_pTextDoc->size().height();
-                    if (valign == "center")
-                        m_iRenderOffset = dh/2;
-                    else
-                        m_iRenderOffset = dh;
+                    fb += 6;
+                    fe = m_sOverflow.indexOf("</body>");
+                    m_sOverflow = m_sOverflow.mid(fb,fe-fb);
+                    m_sOverflow = m_sOverflow.replace(QRegExp("style *= *\"[^\"]*\""),"");
+                    m_sOverflow = m_sOverflow.replace(QRegExp("<[ \\/]*span *>"),"");
+                    m_sOverflow = m_sOverflow.replace("<!--StartFragment-->","");
+                    m_sOverflow = m_sOverflow.replace("<!--EndFragment-->","");
                 }
             }
+            else
+            {
+                //check v-align style
+                CSS::Property vap = document()->stylesheet()->property(this,"v-align");
+                if (!vap.isNull())
+                {
+                    QString valign = vap.toString();
+                    if (valign != "top")
+                    {
+                        m_pTextDoc->setTextWidth(width);
+                        int dh = height - m_pTextDoc->size().height();
+                        if (valign == "center")
+                            m_iRenderOffset = dh/2;
+                        else
+                            m_iRenderOffset = dh;
+                    }
+                }
 
-            m_sOverflow = "";
+                m_sOverflow = "";
+            }
+
         }
 
-    }
+        int f=-1;
+        QRegExp imgfinder("< *img[^>]*>");
+        QRegExp srcfinder("src *= *\"([^\"]+)\"");
+        QByteArray data;
+        QString fn,rn;
+        QStringList sl;
 
-    int f=-1;
-    QRegExp imgfinder("< *img[^>]*>");
-    QRegExp srcfinder("src *= *\"([^\"]+)\"");
-    QByteArray data;
-    QString fn,rn;
-    QStringList sl;
-
-    while (1)
-    {
-        f = html.indexOf(imgfinder,f+1);
-        if (f == -1)
-            break;
-        srcfinder.indexIn(imgfinder.cap());
-        fn = srcfinder.cap(1);
-        fn = QUrl::fromPercentEncoding(fn.toUtf8());
-
-        sl = fn.split("/");
-        if (sl.size() > 1)
-            rn = sl[sl.size()-1];
-        else
-            rn = fn;
-
-        data = document()->resource(rn);
-        if (data.size() > 0)
+        while (1)
         {
-            m_pTextDoc->addResource(QTextDocument::ImageResource, QUrl( fn ), data);
+            f = html.indexOf(imgfinder,f+1);
+            if (f == -1)
+                break;
+            srcfinder.indexIn(imgfinder.cap());
+            fn = srcfinder.cap(1);
+            fn = QUrl::fromPercentEncoding(fn.toUtf8());
+
+            sl = fn.split("/");
+            if (sl.size() > 1)
+                rn = sl[sl.size()-1];
+            else
+                rn = fn;
+
+            data = document()->resource(rn);
+            if (data.size() > 0)
+            {
+                m_pTextDoc->addResource(QTextDocument::ImageResource, QUrl( fn ), data);
+            }
         }
-    }
 
-    //TODO: dit moet beter kunnen toch?
+        //TODO: dit moet beter kunnen toch?
 
-    /*m_AnchorIndex.clear();
+        /*m_AnchorIndex.clear();
 
-    QTextCursor c(m_pTextDoc);
-    QStringList an;
-    //QRegExp idfind("id *= *\"([^\"]+)\"");
-    for (int i=0;i<m_pTextDoc->characterCount();i++)
-    {
-        c.setPosition(i);
-        c.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor);
-
-        an = c.charFormat().anchorNames();
-
-        if (an.size() > 0 && !m_AnchorIndex.contains(an[an.size()-1]))
+        QTextCursor c(m_pTextDoc);
+        QStringList an;
+        //QRegExp idfind("id *= *\"([^\"]+)\"");
+        for (int i=0;i<m_pTextDoc->characterCount();i++)
         {
-            m_AnchorIndex.insert(an[an.size()-1],i);
-        }
-    }*/
+            c.setPosition(i);
+            c.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor);
 
-    //buffer
+            an = c.charFormat().anchorNames();
 
-    //if (m_pmRendered)
-    //    delete m_pmRendered;
+            if (an.size() > 0 && !m_AnchorIndex.contains(an[an.size()-1]))
+            {
+                m_AnchorIndex.insert(an[an.size()-1],i);
+            }
+        }*/
 
-    //m_pmRendered = new QPixmap(m_pTextDoc->size());
-    /*m_pmRendered = QPixmap(m_pTextDoc->size().toSize());
+        //buffer
 
-    m_pmRendered.fill(Qt::transparent);
+        //if (m_pmRendered)
+        //    delete m_pmRendered;
 
-    QPainter p;
-    p.begin(&m_pmRendered);
-    m_pTextDoc->drawContents(&p);
-    p.end();*/
-    //qDebug() << m_pTextDoc->toHtml();
+        //m_pmRendered = new QPixmap(m_pTextDoc->size());
+        /*m_pmRendered = QPixmap(m_pTextDoc->size().toSize());
 
-    buffer();
+        m_pmRendered.fill(Qt::transparent);
+
+        QPainter p;
+        p.begin(&m_pmRendered);
+        m_pTextDoc->drawContents(&p);
+        p.end();*/
+        //qDebug() << m_pTextDoc->toHtml();
+
+        buffer();
+    }
 }
 
 

@@ -74,8 +74,9 @@ void CAnimator::update()
     QMap<int,registered_animation>::Iterator it;
     //QMap<CBaseObject*,registered_animation> nmap;
     double pos;
-    bool bShouldLayout = false;
+    //bool bShouldLayout = false;
     QList<int> toremove;
+    QList<CBaseObject*> updatelist;
 
 
     if (!m_pSection)
@@ -90,7 +91,8 @@ void CAnimator::update()
 
         //TODO clear css overrides
 
-        bShouldLayout = true;
+        //bShouldLayout = true;
+        updatelist.append(regani.m_pObject);
 
         if (m_iTime >= regani.m_iStartTime)
         {
@@ -182,8 +184,8 @@ void CAnimator::update()
     for (int i=0;i<toremove.size();i++)
         m_Animations.remove(toremove[i]);
 
-    if (bShouldLayout)
-        m_pSection->layout();
+    if (updatelist.size() > 0)
+        m_pSection->layout(updatelist);
 
     m_iTime+=FRAMERATE;
 }
@@ -201,7 +203,7 @@ int CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_tim
 
 int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction direction, bool bTransition, int current_anim)
 {
-    qDebug() << "register animation for object" << obj->id();
+    //qDebug() << "register animation for object" << obj->id();
     registered_animation regani;
     CSS::Stylesheet* css = obj->document()->stylesheet();
     CSS::Animation* ani;
@@ -211,7 +213,7 @@ int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, in
 
     if (isRegistered(current_anim,obj))
     {
-        qDebug() << "animation already registered";
+        //qDebug() << "animation already registered";
         if (m_Animations[current_anim].m_sAnimation == animation->name())
             return current_anim;
         else

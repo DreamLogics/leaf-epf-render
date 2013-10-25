@@ -30,7 +30,7 @@
 #include <QDebug>
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsItem>
-#include <QTime>
+#include <QElapsedTimer>
 
 
 CViewportItem::CViewportItem()
@@ -209,7 +209,7 @@ void CSection::updateRendered()
     updateRendered(m_rView);
 }
 */
-void CSection::layout(int height, int width)
+void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
 {
     m_iLayoutWidth = width;
     m_iLayoutHeight = height;
@@ -219,7 +219,9 @@ void CSection::layout(int height, int width)
 
     qDebug() << "CSection::layout" << width << height;
 
-    QTime t = QTime::currentTime();
+    QElapsedTimer t;
+    t.start();
+    QElapsedTimer objt;
 
     int docheight=0;
     int docwidth=0;
@@ -229,6 +231,11 @@ void CSection::layout(int height, int width)
     CBaseObject* obj,*lobj;
     QRectF relrect;
     QString pos;
+    const QRectF docbound(0,0,docwidth,docheight);
+    //QList<CBaseObject*> ignore;
+    QMap<CBaseObject*,QString> objpos;
+    QMap<CBaseObject*,QString>::iterator it;
+
     for (i=0;i<layerCount();i++) //first layout all static and relative objects which are relative to the document
     {
         l = layer(i);
@@ -239,15 +246,26 @@ void CSection::layout(int height, int width)
         {
             if (document()->shouldStopLayout())
                 return;
+            objt.start();
             obj = l->object(n);
-            pos = css->property(obj,"position").toString();
-            //qDebug() << "position" << pos;
-            if ((pos == "static" || pos == "relative") && dynamic_cast<CLayer*/*CLayer*/>(obj->parent()))
+            obj->updateRenderMode();
+            if (obj->renderMode() == CSS::rmNone)
+                continue;
+            if (dynamic_cast<CLayer*>(obj->parent()))
             {
-                obj->layout(relrect);
-                relrect.setTop(obj->boundingRect().bottom());
-                lobj = obj;
+                pos = css->property(obj,"position").toString();
+                //qDebug() << "position" << pos;
+                if (pos == "static" || pos == "relative")
+                {
+                    obj->layout(relrect,updatelist);
+                    relrect.setTop(obj->boundingRect().bottom());
+                    lobj = obj;
+                    //ignore.append(obj);
+                }
+                else
+                    objpos.insert(obj,pos);
             }
+            qDebug() << "layout time for object" << obj->id() << objt.nsecsElapsed();
         }
         if (lobj)
         {
@@ -260,32 +278,34 @@ void CSection::layout(int height, int width)
         }
     }
 
-    const QRectF docbound(0,0,docwidth,docheight);
+    //needs 2 loops, we need to know the docheight first
 
-    for (i=0;i<layerCount();i++) //now layout all objects relative to the document but not static
+    //now layout all objects relative to the document but not static
+
+
+    for (it=objpos.begin();it != objpos.end();it++)
     {
-        l = layer(i);
-        for (n=0;n<l->objectCount();n++)
+        if (document()->shouldStopLayout())
+            return;
+        objt.start();
+        obj = it.key();
+        if (obj->renderMode() == CSS::rmNone)
+            continue;
+        if (dynamic_cast<CLayer*>(obj->parent()))
         {
-            if (document()->shouldStopLayout())
-                return;
-            obj = l->object(n);
-            obj->updateRenderMode();
-            if (obj->renderMode() == CSS::rmNone)
-                continue;
-            pos = css->property(obj,"position").toString();
-            if (pos != "static" && pos != "relative" && dynamic_cast<CLayer*/*CLayer*/>(obj->parent()))
+            pos = it.value();
+            if (pos != "static" && pos != "relative")
             {
                 if (pos == "fixed")
                 {
                     //obj->setParent(m_pViewportItem);
                     relrect = QRectF(0,0,width,height);
-                    obj->layout(relrect);
+                    obj->layout(relrect,updatelist);
                 }
                 else
                 {
                     relrect = docbound;
-                    obj->layout(relrect);
+                    obj->layout(relrect,updatelist);
                     h=obj->boundingRect().bottom() + obj->marginBottom();
                     if (h>docheight)
                         docheight = h;
@@ -293,7 +313,9 @@ void CSection::layout(int height, int width)
 
             }
         }
+        qDebug() << "layout time for object" << obj->id() << objt.nsecsElapsed();
     }
+
 /*
     m_gRenderMutex.lock();
     //qDebug() << "layout lock";
@@ -323,17 +345,17 @@ void CSection::layout(int height, int width)
     //qDebug() << "scrollmax" << docheight - height;
     setScrollYMax(docheight - height);
 
-    qDebug() << "time elapsed: " << t.msecsTo(QTime::currentTime());
+    qDebug() << "time elapsed: " << t.nsecsElapsed();
 
     document()->updateRenderView();
 }
 
-void CSection::layout()
+void CSection::layout(QList<CBaseObject*> updatelist)
 {
     if (m_iLayoutHeight == -1 || m_iLayoutWidth == -1)
         return;
 
-    layout(m_iLayoutHeight,m_iLayoutWidth);
+    layout(m_iLayoutHeight,m_iLayoutWidth,updatelist);
 }
 
 int CSection::x()
@@ -365,7 +387,8 @@ void CSection::render(QPainter *p,QRectF region)
 {
     //m_mRenderMutex.lock();
     QRectF sectionrect;
-    QTime t = QTime::currentTime();
+    QElapsedTimer t;
+    t.start();
 
     m_mRectMutex.lock();
     if (!region.intersects(m_rRect))
@@ -449,7 +472,7 @@ void CSection::render(QPainter *p,QRectF region)
 
     drawScrollbar(p);
 
-    qDebug() << "Section render time elapsed: " << t.msecsTo(QTime::currentTime());
+    qDebug() << "Section render time elapsed: " << t.nsecsElapsed();
 
     //m_mRenderMutex.unlock();
 }

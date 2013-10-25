@@ -331,7 +331,7 @@ void paintBorder(QPainter* pPainter, CBaseObject* pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    paintBorder(pPainter,r,css->property(pObj,"border-top"),css->property(pObj,"border-bottom"),css->property(pObj,"border-left"),css->property(pObj,"border-right"));
+    paintBorder(pPainter,r,pObj->styleProperty("border-top"),pObj->styleProperty("border-bottom"),pObj->styleProperty("border-left"),pObj->styleProperty("border-right"));
 }
 
 void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj)
@@ -341,9 +341,9 @@ void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    if (!css->property(pObj,"background-color").isNull())
+    if (!pObj->styleProperty("background-color").isNull())
     {
-        CSS::paintBackgroundColor(pPainter,r,css->property(pObj,"background-color").toColor());
+        CSS::paintBackgroundColor(pPainter,r,pObj->styleProperty("background-color").toColor());
     }
 }
 
@@ -354,16 +354,16 @@ void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    if (!css->property(pObj,"background-image").isNull())
+    if (!pObj->styleProperty("background-image").isNull())
     {
         QString size;
 
-        if (!css->property(pObj,"background-size").isNull())
-            size = css->property(pObj,"background-size").toString();
-        else if (!css->property(pObj,"background-image-size").isNull())
-            size = css->property(pObj,"background-image-size").toString();
+        if (!pObj->styleProperty("background-size").isNull())
+            size = pObj->styleProperty("background-size").toString();
+        else if (!pObj->styleProperty("background-image-size").isNull())
+            size = pObj->styleProperty("background-image-size").toString();
 
-        CSS::paintBackgroundImage(pPainter,r,size,css->property(pObj,"background-image").toString(),pObj->document());
+        CSS::paintBackgroundImage(pPainter,r,size,pObj->styleProperty("background-image").toString(),pObj->document());
     }
 
 }
@@ -375,7 +375,7 @@ void paintBackgroundGradient(QPainter *pPainter, CBaseObject *pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    paintBackgroundGradient(pPainter, r, css->property(pObj,"background-gradient"),css->property(pObj,"background-gradient-type"),css->property(pObj,"background-gradient-spread"),css->property(pObj,"background-gradient-angle"),css->property(pObj,"background-gradient-center"),css->property(pObj,"background-gradient-focal"));
+    paintBackgroundGradient(pPainter, r, pObj->styleProperty("background-gradient"),pObj->styleProperty("background-gradient-type"),pObj->styleProperty("background-gradient-spread"),pObj->styleProperty("background-gradient-angle"),pObj->styleProperty("background-gradient-center"),pObj->styleProperty("background-gradient-focal"));
 }
 
 void paintBackgroundGradient(QPainter *pPainter, QRectF r, CSS::Property bggrad, CSS::Property gradtypeprop, CSS::Property gradspreadprop, CSS::Property anglegrad, CSS::Property gradcenter, CSS::Property gradfocal)
@@ -558,10 +558,10 @@ void paintColorOverlay(QPainter* pPainter, CBaseObject* pObj)
     r.moveTop(0);
     r.moveLeft(0);
 
-    if (!css->property(pObj,"color-overlay").isNull())
+    if (!pObj->styleProperty("color-overlay").isNull())
     {
         QRegExp cov("(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)) +([a-zA-Z]+)");
-        if (cov.indexIn(css->property(pObj,"color-overlay").toString()) != -1)
+        if (cov.indexIn(pObj->styleProperty("color-overlay").toString()) != -1)
         {
             //qDebug() << "color overlay" << cov.cap(1) << cov.cap(cov.captureCount());
             CSS::paintColorOverlay(pPainter,r,stringToColor(cov.cap(1)),CSS::renderModeFromString(cov.cap(cov.captureCount())));
