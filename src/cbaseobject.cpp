@@ -49,6 +49,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_iAnimation = -1;
     m_iTransitionTime = 0;
     m_iInTransition = 0;
+    m_iTransitionStarted = 0;
 
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
@@ -275,6 +276,8 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         }
 
         m_FPMutex.unlock();
+
+        //m_bCSSOldState = false;
 
         //css->oldState(false);
 
@@ -652,6 +655,7 @@ void CBaseObject::addStyleClass(QString classname)
         }
         CSS::Transitioner::get(thread())->removeTransitioningProps(this,props3);
         m_iInTransition++;
+        m_iTransitionStarted++;
         CSS::Transitioner::get(thread())->createTransition(id()+"_"+classname,this,deltaprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
         m_StyleClasses.append(classname);
     }
@@ -714,6 +718,7 @@ void CBaseObject::removeStyleClass(QString classname)
                 }
             }
             m_iInTransition++;
+            m_iTransitionStarted++;
             CSS::Transitioner::get(thread())->createTransition(id()+"_"+classname,this,deltaprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay);
         }
         m_StyleClasses.removeAll(classname);
@@ -813,6 +818,7 @@ bool CBaseObject::onStylesheetVariableChange(QString key, QString val, QString o
         //qDebug() << "onStylesheetVariableChange" << id() << ev->parameter(0) << ev->parameter(1) << count;
         CSS::Transitioner::get(thread())->removeTransition(id()+"_"+key);
         m_iInTransition++;
+        m_iTransitionStarted++;
         CSS::Transitioner::get(thread())->createTransition(id()+"_"+key,this,dprops,m_TransitionProps,m_TransitionEasing,m_iTransitionTime,m_iTransitionDelay,true);
 
         //revert css var
@@ -1021,15 +1027,21 @@ CSS::Property CBaseObject::styleProperty(QString key)
     CSS::Property prop = cssOverrideProp(key);
     if (prop.isNull())
         prop = css->property(this,key);
-    if (m_iTransitionTime > 0)
+    if (prop.isNull())
+        return prop;
+    if (m_iTransitionStarted > 0)
     {
         CSS::Property nprop = prop.clone();
-        //css->oldState(true);
-        //qDebug() << "style prop a" << prop.toColor() << nprop.toColor() << key;
-        //nprop.setValue(prop.value());
-        //css->oldState(false);
+        css->oldState(true);
+        nprop.setValue(prop.value());
+        css->oldState(false);
 
         return nprop;
     }
     return prop;
+}
+
+void CBaseObject::transitionStarted()
+{
+    m_iTransitionStarted--;
 }

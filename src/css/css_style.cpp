@@ -500,6 +500,9 @@ QString Property::value() const
     QString val = m_pPrivate->m_sValue;
     QString varval;
 
+    if (!m_pPrivate->m_pCSS)
+        return val;
+
     while (true)
     {
         offset = 0;

@@ -30,8 +30,10 @@
 #include <QDebug>
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsItem>
-#include <QElapsedTimer>
-
+//#include <QElapsedTimer>
+#include <QEasingCurve>
+#include <QTimer>
+#include "idevice.h"
 
 CViewportItem::CViewportItem()
 {
@@ -78,12 +80,30 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
     m_iLayoutHeight = -1;
     m_iLayoutWidth = -1;
 
+    m_iMomentumPos = -1;
+    m_iMomentumDistance = 0;
+    m_iMomentumStart = 0;
+
+
+    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
+    {
+        m_MomentumTimer = new QTimer();
+
+        connect(m_MomentumTimer,SIGNAL(timeout()),this,SLOT(momentum()));
+
+        m_MomentumTimer->start(10);
+    }
+    else
+        m_MomentumTimer = 0;
+
     m_pViewportItem = new CViewportItem();
 }
 
 CSection::~CSection()
 {
     delete m_pViewportItem;
+    if (m_MomentumTimer)
+        delete m_MomentumTimer;
 
     /*for (int i=0;i<m_Layers.size();i++)
         delete m_Layers[i];*/
@@ -343,7 +363,8 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
     m_mTransitionFxMutex.unlock();
 
     //qDebug() << "scrollmax" << docheight - height;
-    setScrollYMax(docheight - height);
+    if (updatelist.size() == 0)
+        setScrollYMax(docheight - height);
 
     qDebug() << "time elapsed: " << t.nsecsElapsed();
 
@@ -543,20 +564,31 @@ void CSection::mousePressEvent( int x, int y )
     x += scrollX();
     y += scrollY();
 
-    if (scrollYMax() > 0 && m_rVertScroller.contains(m_ClickStartPoint))
+    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
+
+        m_iMomentumPos = -1;
+        m_SwipeTimer.start();
         m_iScrollYStart = scrollY();
         return;
     }
-    else if (scrollYMax() > 0 && m_rVertScrollerBar.contains(m_ClickStartPoint))
-    {
-        m_iScrollYStart = -2;
-        return;
-    }
     else
-        m_iScrollYStart = -1;
+    {
+        if (scrollYMax() > 0 && m_rVertScroller.contains(m_ClickStartPoint))
+        {
+            m_iScrollYStart = scrollY();
+            return;
+        }
+        else if (scrollYMax() > 0 && m_rVertScrollerBar.contains(m_ClickStartPoint))
+        {
+            m_iScrollYStart = -2;
+            return;
+        }
+        else
+            m_iScrollYStart = -1;
 
-    //m_iScrollXStart = scrollX();
+        //m_iScrollXStart = scrollX();
+    }
 
     if (m_pControlObj)
     {
@@ -576,20 +608,48 @@ void CSection::mousePressEvent( int x, int y )
 
 void CSection::mouseReleaseEvent( int x, int y )
 {
+    QPoint endpoint(x,y);
+
+    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
+    {
+
+        if (endpoint != m_ClickStartPoint)
+        {
+            int swipetime = m_SwipeTimer.elapsed();
+            //1 second momentum
+            int dist = m_ClickStartPoint.y() - y;
+            double speed = ((double)dist / swipetime)*0.1;
+            m_iMomentumDistance = speed * 1000;
+            /*if (m_iMomentumDistance < 10)
+                return;*/
+            m_iMomentumPos = 0;
+            m_iMomentumStart = scrollY();
+            return;
+        }
+
+        if (m_SwipeTimer.elapsed() > 500)
+            return;
+
+    }
+    else
+    {
+        if (m_iScrollYStart == -2)
+        {
+            if (m_ClickStartPoint.y() < m_rVertScroller.top())
+                setScrollY(scrollY() - m_rRect.height()/5);
+            else
+                setScrollY(scrollY() + m_rRect.height()/5);
+            document()->updateRenderView();
+            return;
+        }
+        else if (m_iScrollYStart >= 0)
+            return;
+    }
+
     x += scrollX();
     y += scrollY();
 
-    if (m_iScrollYStart == -2)
-    {
-        if (m_ClickStartPoint.y() < m_rVertScroller.top())
-            setScrollY(scrollY() - m_rRect.height()/5);
-        else
-            setScrollY(scrollY() + m_rRect.height()/5);
-        document()->updateRenderView();
-        return;
-    }
-    else if (m_iScrollYStart >= 0)
-        return;
+
 
     m_ClickStartPoint.setX(0);
     m_ClickStartPoint.setY(0);
@@ -618,13 +678,27 @@ void CSection::mouseReleaseEvent( int x, int y )
 
 void CSection::mouseMoveEvent( int x, int y )
 {
-    if (scrollYMax() > 0 && m_iScrollYStart >= 0)
+    QPoint endpoint(x,y);
+
+    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
-        int delta = y - m_ClickStartPoint.y();//scrollYMax() * (y - m_ClickStartPoint.y()) / m_rRect.height();
-        //qDebug() << m_iScrollYStart << y << m_ClickStartPoint.y() << delta;
-        setScrollY(m_iScrollYStart + delta);
-        document()->updateRenderView();
-        return;
+        if (m_ClickStartPoint != endpoint)
+        {
+            int delta = y - m_ClickStartPoint.y();
+            setScrollY(m_iScrollYStart - delta);
+            document()->updateRenderView();
+            return;
+        }
+    }
+    else
+    {
+        if (scrollYMax() > 0 && m_iScrollYStart >= 0)
+        {
+            int delta = y - m_ClickStartPoint.y();
+            setScrollY(m_iScrollYStart + delta);
+            document()->updateRenderView();
+            return;
+        }
     }
 
     x += scrollX();
@@ -849,4 +923,38 @@ void CSection::releaseControl(CBaseObject *obj)
 void CSection::onEPFEvent(EPFEvent *ev)
 {
 
+}
+
+void CSection::momentum()
+{
+    if (m_iMomentumPos != -1)
+    {
+        if (m_iMomentumPos > 100)
+        {
+            m_iMomentumPos = -1;
+            return;
+        }
+        double pos = (double)m_iMomentumPos / 100;
+        QEasingCurve ec(QEasingCurve::OutQuad);
+        pos = ec.valueForProgress(pos);
+        int delta = m_iMomentumStart + (m_iMomentumDistance * pos);
+        //delta *= -1;
+
+        if (delta < 0)
+        {
+            m_iMomentumPos = -1;
+            return;
+        }
+
+        if (delta > scrollYMax())
+        {
+            m_iMomentumPos = -1;
+            return;
+        }
+
+        setScrollY(delta);
+        document()->updateRenderView();
+        qDebug() << m_iMomentumPos << m_iMomentumDistance << delta << m_iMomentumStart;
+        m_iMomentumPos++;
+    }
 }

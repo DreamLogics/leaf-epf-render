@@ -172,6 +172,14 @@ void CAnimator::update()
             {
                 regani.m_pObject->setCSSOverrideProp(props[i],regani.m_pAnim->keyedProperty(props[i],pos));
             }
+
+            if (!regani.m_bStarted)
+            {
+                regani.m_bStarted = true;
+                if (regani.m_bTransition)
+                    regani.m_pObject->transitionStarted();
+            }
+
             regani.m_iCurFrame++;
             m_Animations[it.key()] = regani;
             //m_Animations.insert(it,it.key(),regani);
@@ -266,6 +274,7 @@ int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, in
         regani.m_bAlternate = false;
         regani.m_bFinished = false;
         regani.m_bTransition = bTransition;
+        regani.m_bStarted = false;
         m_Animations.insert(newid,regani);
         return newid;
     }

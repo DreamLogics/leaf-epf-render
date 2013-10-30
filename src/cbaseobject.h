@@ -142,6 +142,7 @@ public:
     void setStyleState(StyleState ss);
 
     void transitionDone(QString transition);
+    void transitionStarted();
 
     CSS::Property styleProperty(QString key);
 
@@ -225,6 +226,7 @@ private:
     CSS::easing_function m_TransitionEasing;
     QStringList m_TransitionProps;
     int m_iInTransition;
+    int m_iTransitionStarted;
 
     QMap<QString,QPair<QString,QString> > m_CSSVariableSetter;
 

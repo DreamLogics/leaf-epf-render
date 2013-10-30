@@ -32,10 +32,13 @@
 #include <QMutex>
 #include "epfevent.h"
 #include <QColor>
+#include <QElapsedTimer>
+
 
 class CDocument;
 class CLayer;
 class CBaseObject;
+class QTimer;
 
 class CViewportItem
 {
@@ -137,6 +140,10 @@ public slots:
 
     void keyEvent(int key, QString val);
 
+private slots:
+
+    void momentum();
+
 private:
 
     CBaseObject* objectOnPos(int x, int y);
@@ -170,6 +177,13 @@ private:
     int m_iScrollY;
     int m_iScrollXMax;
     int m_iScrollYMax;
+
+    int m_iMomentumDistance;
+    int m_iMomentumStart;
+    int m_iMomentumPos;
+
+    QElapsedTimer m_SwipeTimer;
+    QTimer* m_MomentumTimer;
 
     int m_iLayoutHeight;
     int m_iLayoutWidth;

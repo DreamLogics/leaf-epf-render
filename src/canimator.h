@@ -63,6 +63,7 @@ public:
         bool m_bAlternate;
         bool m_bFinished;
         bool m_bTransition;
+        bool m_bStarted;
     };
 
     int registerAnimation(CBaseObject* obj, QString animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction direction, int current_anim=-1);
