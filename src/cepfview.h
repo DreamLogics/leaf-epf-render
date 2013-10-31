@@ -45,6 +45,7 @@ public:
 
 
     void setDocument(CDocument* doc);
+    void unload();
     int currentSection();
 
     void clearDocBuffers();

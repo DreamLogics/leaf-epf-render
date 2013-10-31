@@ -612,13 +612,17 @@ void CSection::mouseReleaseEvent( int x, int y )
 
     if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
-
-        if (endpoint != m_ClickStartPoint)
+        if (m_SwipeTimer.elapsed() > 500)
+            return;
+        int pdist = endpoint.y() - m_ClickStartPoint.y();
+        if (pdist < 0)
+            pdist *= -1;
+        if (pdist > 10)
         {
             int swipetime = m_SwipeTimer.elapsed();
             //1 second momentum
             int dist = m_ClickStartPoint.y() - y;
-            double speed = ((double)dist / swipetime)*0.1;
+            double speed = ((double)dist / swipetime)/**0.1*/;
             m_iMomentumDistance = speed * 1000;
             /*if (m_iMomentumDistance < 10)
                 return;*/
@@ -626,9 +630,6 @@ void CSection::mouseReleaseEvent( int x, int y )
             m_iMomentumStart = scrollY();
             return;
         }
-
-        if (m_SwipeTimer.elapsed() > 500)
-            return;
 
     }
     else
@@ -682,7 +683,10 @@ void CSection::mouseMoveEvent( int x, int y )
 
     if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
-        if (m_ClickStartPoint != endpoint)
+        int pdist = endpoint.y() - m_ClickStartPoint.y();
+        if (pdist < 0)
+            pdist *= -1;
+        if (pdist > 10)
         {
             int delta = y - m_ClickStartPoint.y();
             setScrollY(m_iScrollYStart - delta);
@@ -934,6 +938,11 @@ void CSection::momentum()
             m_iMomentumPos = -1;
             return;
         }
+        if (m_iMomentumDistance < 10 && m_iMomentumDistance > -10)
+        {
+            m_iMomentumPos = -1;
+            return;
+        }
         double pos = (double)m_iMomentumPos / 100;
         QEasingCurve ec(QEasingCurve::OutQuad);
         pos = ec.valueForProgress(pos);
@@ -943,18 +952,19 @@ void CSection::momentum()
         if (delta < 0)
         {
             m_iMomentumPos = -1;
-            return;
+            delta = 0;
         }
-
-        if (delta > scrollYMax())
+        else if (delta > scrollYMax())
         {
             m_iMomentumPos = -1;
-            return;
+            delta = scrollYMax();
         }
+        else
+            m_iMomentumPos++;
 
         setScrollY(delta);
         document()->updateRenderView();
-        qDebug() << m_iMomentumPos << m_iMomentumDistance << delta << m_iMomentumStart;
-        m_iMomentumPos++;
+        //qDebug() << m_iMomentumPos << m_iMomentumDistance << delta << m_iMomentumStart;
+
     }
 }

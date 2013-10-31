@@ -118,9 +118,9 @@ void CEPFView::setDocument(CDocument *doc)
     m_bIsLoading = true;
     QTimer::singleShot(300,this,SLOT(updateDot()));
 
-    disconnect(this,SIGNAL(loadDocument()),0,0);
+    /*disconnect(this,SIGNAL(loadDocument()),0,0);
     disconnect(this,SIGNAL(layout(int,int)),0,0);
-    disconnect(this,SIGNAL(sectionChange(QString)),0,0);
+    disconnect(this,SIGNAL(sectionChange(QString)),0,0);*/
     connect(this,SIGNAL(loadDocument(int,int,int)),doc,SLOT(load(int,int,int)));
     connect(this,SIGNAL(layout(int,int,int,bool)),doc,SLOT(layout(int,int,int,bool)));
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
@@ -130,6 +130,14 @@ void CEPFView::setDocument(CDocument *doc)
     connect(this,SIGNAL(sectionChange(QString)),doc,SLOT(sectionChange(QString)));
 
     emit loadDocument(height(),width(),first);
+}
+
+void CEPFView::unload()
+{
+    disconnect(this,SIGNAL(loadDocument()),0,0);
+    disconnect(this,SIGNAL(layout(int,int)),0,0);
+    disconnect(this,SIGNAL(sectionChange(QString)),0,0);
+    m_bIsLoading = true;
 }
 
 void CEPFView::setSection(int index)

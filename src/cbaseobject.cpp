@@ -783,21 +783,27 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
 bool CBaseObject::onStylesheetVariableChange(QString key, QString val, QString oval)
 {
     QList<CSS::Property> propsold,dprops;
-    QString oldval;
+    //QString oldval;
+
     //QStringList propnames;
     QElapsedTimer t;
     t.start();
     propsold = document()->stylesheet()->properties(this);
-    qDebug() << "document()->stylesheet()->properties(this);" << t.nsecsElapsed();
     for (int i=0;i<propsold.size();i++)
     {
-        if (!propsold[i].hasVariable())
+        if (!propsold[i].hasVariable(key))
             continue;
-        document()->stylesheet()->oldState(true);
-        oldval = propsold[i].value();
-        document()->stylesheet()->oldState(false);
-        CSS::Property prop = document()->stylesheet()->property(this,propsold[i].name());
-        if (oldval != prop.value())
+
+        if (m_iTransitionTime <= 0)
+        {
+            m_bNeedsRedraw = true;
+            return true;
+        }
+        //document()->stylesheet()->oldState(true);
+        //oldval = propsold[i].value();
+        //document()->stylesheet()->oldState(false);
+        //CSS::Property prop = document()->stylesheet()->property(this,propsold[i].name());
+        //if (oldval != propsold[i].value()/*prop.value()*/)
         {
             //qDebug() << "prop changed" << propsold[i].name() << oldval << prop.value();
             document()->stylesheet()->oldState(true);
@@ -810,7 +816,7 @@ bool CBaseObject::onStylesheetVariableChange(QString key, QString val, QString o
     if (dprops.size() == 0)
         return false;
     //a variable has changes, update and possibly create a transition
-    if (m_iTransitionTime > 0)
+    //if (m_iTransitionTime > 0)
     {
         //CSS::Transitioner::get(thread())->removeTransitions(this);
         //static int count=0;
@@ -830,8 +836,8 @@ bool CBaseObject::onStylesheetVariableChange(QString key, QString val, QString o
         //m_bNeedsRedraw = true;
         return false;
     }
-    else
-        m_bNeedsRedraw = true;
+    /*else
+        m_bNeedsRedraw = true;*/
 
     return true;
 }
@@ -1039,6 +1045,18 @@ CSS::Property CBaseObject::styleProperty(QString key)
         return nprop;
     }
     return prop;
+}
+
+void CBaseObject::onStylesheetChange()
+{
+    //update all overrides with new stylesheet info
+    CSS::Stylesheet* css = document()->stylesheet();
+    QMap<QString,CSS::Property>::iterator it;
+
+    for (it = m_CSSOverrideProps.begin();it != m_CSSOverrideProps.end();it++)
+    {
+        it.value().update(css);
+    }
 }
 
 void CBaseObject::transitionStarted()

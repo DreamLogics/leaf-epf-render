@@ -147,6 +147,7 @@ public:
     CSS::Property styleProperty(QString key);
 
     bool onStylesheetVariableChange(QString key, QString val, QString oldval);
+    void onStylesheetChange();
 
 protected:
 

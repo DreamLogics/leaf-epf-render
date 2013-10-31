@@ -99,7 +99,7 @@ Property Stylesheet::property(QString selector, QString key)
     return m_selectors[selector]->property(key);
 }
 
-void Stylesheet::setVariable(QString key, QString val)
+void Stylesheet::setVariable(QString key, QString val, bool initial)
 {
     if (m_variables.contains(key))
     {
@@ -108,6 +108,11 @@ void Stylesheet::setVariable(QString key, QString val)
     }
     else
         m_variables.insert(key,val);
+    if (!initial)
+    {
+        if (!m_alteredVars.contains(key))
+            m_alteredVars.append(key);
+    }
 }
 
 QString Stylesheet::variable(QString key)
@@ -123,6 +128,13 @@ QString Stylesheet::variable(QString key)
             return m_variables[key];
     }
     return QString();
+}
+
+QList<QString> Stylesheet::variables(bool altered_only)
+{
+    if (altered_only)
+        return m_alteredVars;
+    return m_variables.keys();
 }
 
 Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrides)
@@ -447,12 +459,31 @@ bool Property::isNull() const
     return m_pPrivate->m_bNull;
 }
 
-bool Property::hasVariable() const
+bool Property::hasVariable(QString var) const
 {
     QRegExp varreg("\\$([a-zA-Z_-0-9]+)");
-    if (varreg.indexIn(m_pPrivate->m_sValue) != -1)
-        return true;
+    if (var.isNull())
+    {
+        if (varreg.indexIn(m_pPrivate->m_sValue) != -1)
+            return true;
+    }
+    else
+    {
+        int offset = 0;
+        int index;
+        while ((index = varreg.indexIn(m_pPrivate->m_sValue,offset)) != -1)
+        {
+            if (varreg.cap(1) == var)
+                return true;
+            offset = index + varreg.cap(0).size();
+        }
+    }
     return false;
+}
+
+void Property::update(Stylesheet *css) const
+{
+    m_pPrivate->m_pCSS = css;
 }
 
 QString Property::toString(bool scale) const
@@ -761,7 +792,7 @@ void Stylesheet::parse(QString css)
     {
         ss = varfinder.cap(2).replace(outerspaces,"");
         ss.replace("\"","");
-        setVariable(varfinder.cap(1),ss);
+        setVariable(varfinder.cap(1),ss,true);
         offset = index + varfinder.cap(0).size();
         index = css.indexOf(varfinder,offset);
         qDebug() << "css var added" << varfinder.cap(1) << ss;

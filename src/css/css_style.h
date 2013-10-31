@@ -124,7 +124,7 @@ public:
     virtual ~Property();
 
     Property clone() const;
-
+    void update(Stylesheet*) const;
     QString name() const;
 
     QString toString(bool scale=true) const;
@@ -136,7 +136,7 @@ public:
     QString value() const; //raw
 
     bool isNull() const;
-    bool hasVariable() const;
+    bool hasVariable(QString var = QString()) const;
 
     /*void setValue(QString val, bool scale=false);
     void setValue(int val, bool scale=false);
@@ -204,8 +204,9 @@ public:
 
     void addCSS(QString css);
 
-    void setVariable(QString,QString);
+    void setVariable(QString,QString,bool initial=false);
     QString variable(QString);
+    QList<QString> variables(bool altered_only=false);
 
     void oldState(bool b);
 
@@ -221,6 +222,7 @@ private:
     double m_dHSF;
     double m_dWSF;
     CDocument* m_pDocument;
+    QList<QString> m_alteredVars;
     QMap<QString,QString> m_variables;
     QMap<QString,QString> m_prevariables;
     QMap<QString,Animation*> m_animations;

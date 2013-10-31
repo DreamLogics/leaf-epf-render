@@ -314,9 +314,22 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
     if (m_pCurrentLayout != m_Layouts[match])
     {
         m_pCurrentLayout = m_Layouts[match];
+        CSS::Stylesheet* newcss = new CSS::Stylesheet(m_pCurrentLayout,height,width,this);
         if (m_pStylesheet)
+        {
+            //transfer all css properties which were altered
+            QList<QString> vars = m_pStylesheet->variables(true);
+            QString val;
+            for (i = 0;i<vars.size();i++)
+            {
+                val = m_pStylesheet->variable(vars[i]);
+                //qDebug() << "update var" << vars[i] << "to" << val;
+                if (!val.isNull())
+                    newcss->setVariable(vars[i],val);
+            }
             delete m_pStylesheet;
-        m_pStylesheet = new CSS::Stylesheet(m_pCurrentLayout,height,width,this);
+        }
+        m_pStylesheet = newcss;
     }
     else
     {
@@ -329,6 +342,25 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
     }
     m_mCSSMutex.unlock();
 
+    CSection* s;
+    CLayer* l;
+    CBaseObject* obj;
+    for (i=0;i<sectionCount();i++)
+    {
+        if (shouldStopLayout())
+            return;
+        s = section(i);
+        for (int n=0;n<s->layerCount();n++)
+        {
+            l = s->layer(n);
+            for (int t=0;t<l->objectCount();t++)
+            {
+                obj = l->object(t);
+                obj->onStylesheetChange();
+            }
+        }
+    }
+
     section(sectionid)->layout(height,width);
 
     updateRenderView();
@@ -336,7 +368,7 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
     if (bCurrentSectionOnly)
         return;
 
-    CSection* s;
+
     for (i=0;i<sectionCount();i++)
     {
         if (shouldStopLayout())
