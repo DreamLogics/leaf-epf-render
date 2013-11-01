@@ -661,6 +661,7 @@ void Stylesheet::parse(QString css)
     QRegExp outerspaces("(^ +| +$)");
 
     QRegExp propgroupfinder("([^\\{]+)\\{");
+    QRegExp idgroupfinder("#([a-zA-Z_-0-9]+) *\\{");
     QRegExp varfinder("\\$([a-zA-Z_-0-9]+) *= *([^;]+);");
     QRegExp atrulesfinder("@([a-zA-Z_-0-9]+) *([^;]+) *;");
     QRegExp atrulesblockfinder("@([a-zA-Z_-0-9]+) *([^\\{]+) *\\{");
@@ -799,6 +800,12 @@ void Stylesheet::parse(QString css)
     }
 
     m_prevariables = m_variables;
+
+
+    //group parsing
+    // #section { #object {} } to #section::object {}
+
+    css = parseGroup(css);
 
     offset = 0;
 
@@ -1334,6 +1341,73 @@ void Stylesheet::parse(QString css)
         test += "}\n";
     }
     qDebug() << test;*/
+}
+
+QString Stylesheet::parseGroup(QString css)
+{
+    /*QRegExp newlines("[\n\r]+");
+    QRegExp tabs("[\t]+");
+    css.replace(newlines,"");
+    css.replace(tabs," ");*/
+
+    QString ss;
+
+
+    QRegExp outerspaces("(^ +| +$)");
+
+    QRegExp propgroupfinder("([^\\{]+)\\{([^}]+)\\}");
+    QRegExp idgroupfinder("#([a-zA-Z_-0-9]+) *\\{");
+
+    int offset = 0;
+    int index;
+    int fc;
+    int ei;
+
+    //group parsing
+    // #section { #object {} } to #section::object {}
+
+    QString gcss,g,gg;
+    offset = 0;
+
+    gcss = css;
+
+    int gindex,goff=0;
+
+    while ((index = gcss.indexOf(idgroupfinder,offset)) != -1)
+    {
+        ss = idgroupfinder.cap(1).replace(outerspaces,"");
+        fc=1;
+        for (ei=index+idgroupfinder.cap(0).size();ei<css.size();ei++)
+        {
+            if (css[ei] == '{')
+                fc++;
+            else if (css[ei] == '}')
+                fc--;
+            if (fc==0)
+                break;
+        }
+
+        g = css.mid(index+idgroupfinder.cap(0).size(),ei - (index + idgroupfinder.cap(0).size()));
+        //g = parseGroup(g);
+
+        while ((gindex = g.indexOf(propgroupfinder,goff)) != -1)
+        {
+            gg = propgroupfinder.cap(1).replace(outerspaces,"");
+
+            if (gg[0] == '#')
+            {
+                gg = "#" + ss + "::" + gg.mid(1);
+            }
+
+            g = g.mid(0,gindex) + gg + "{" + propgroupfinder.cap(2) + "}" + g.mid(gindex + propgroupfinder.cap(0).size());
+            goff = gindex + gg.size() + propgroupfinder.cap(2).size() + 2;
+        }
+
+        gcss = gcss.mid(0,index) + g + gcss.mid(ei+1);
+        offset = index + idgroupfinder.cap(0).size() + g.size();
+    }
+
+    return gcss;
 }
 
 void Stylesheet::addCSS(QString css)

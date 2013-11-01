@@ -215,6 +215,7 @@ public:
 private:
 
     void parse(QString css);
+    QString parseGroup(QString css);
 
 
 private:
