@@ -1343,7 +1343,7 @@ void Stylesheet::parse(QString css)
     qDebug() << test;*/
 }
 
-QString Stylesheet::parseGroup(QString css)
+QString Stylesheet::parseGroup(QString gcss)
 {
     /*QRegExp newlines("[\n\r]+");
     QRegExp tabs("[\t]+");
@@ -1352,24 +1352,24 @@ QString Stylesheet::parseGroup(QString css)
 
     QString ss;
 
-
     QRegExp outerspaces("(^ +| +$)");
 
-    QRegExp propgroupfinder("([^\\{]+)\\{([^}]+)\\}");
-    QRegExp idgroupfinder("#([a-zA-Z_-0-9]+) *\\{");
+    QRegExp propgroupfinder("([\\.#][^\\{]+)\\{([^}]+)\\}");
+    QRegExp idgroupfinder("#([a-zA-Z_\\-0-9]+) *\\{");
 
     int offset = 0;
     int index;
     int fc;
     int ei;
+    int ps;
+    int pd;
 
     //group parsing
     // #section { #object {} } to #section::object {}
 
-    QString gcss,g,gg;
+    QString g,gg,p;
     offset = 0;
 
-    gcss = css;
 
     int gindex,goff=0;
 
@@ -1377,34 +1377,57 @@ QString Stylesheet::parseGroup(QString css)
     {
         ss = idgroupfinder.cap(1).replace(outerspaces,"");
         fc=1;
-        for (ei=index+idgroupfinder.cap(0).size();ei<css.size();ei++)
+        for (ei=index+idgroupfinder.cap(0).size();ei<gcss.size();ei++)
         {
-            if (css[ei] == '{')
+            if (gcss[ei] == '{')
                 fc++;
-            else if (css[ei] == '}')
+            else if (gcss[ei] == '}')
                 fc--;
             if (fc==0)
                 break;
         }
 
-        g = css.mid(index+idgroupfinder.cap(0).size(),ei - (index + idgroupfinder.cap(0).size()));
+        g = gcss.mid(index+idgroupfinder.cap(0).size(),ei - (index + idgroupfinder.cap(0).size()));
         //g = parseGroup(g);
+        goff = 0;
 
         while ((gindex = g.indexOf(propgroupfinder,goff)) != -1)
         {
             gg = propgroupfinder.cap(1).replace(outerspaces,"");
+            ps = gindex - goff;
+            pd = 0;
+            p = "";
+            if (ps > 0)
+            {
+                //the group also has properties
+                p = g.mid(goff,ps);
+                p = "#" + ss + "{" + p + "}";
+                pd = p.size() - ps;
+            }
 
             if (gg[0] == '#')
             {
                 gg = "#" + ss + "::" + gg.mid(1);
             }
+            else if (gg[0] == '.')
+                gg = "#" + ss + gg;
 
-            g = g.mid(0,gindex) + gg + "{" + propgroupfinder.cap(2) + "}" + g.mid(gindex + propgroupfinder.cap(0).size());
-            goff = gindex + gg.size() + propgroupfinder.cap(2).size() + 2;
+
+            g = g.mid(0,gindex-ps) + p + gg + "{" + propgroupfinder.cap(2) + "}" + g.mid(gindex + propgroupfinder.cap(0).size());
+            goff = gindex + pd + gg.size() + propgroupfinder.cap(2).size() + 2;
         }
-
-        gcss = gcss.mid(0,index) + g + gcss.mid(ei+1);
+        if (goff > 0)
+        {
+            if (g.size() - 1 - goff > 0)
+            {
+                p = g.mid(goff);
+                p = "#" + ss + "{" + p + "}";
+                g = g.mid(0,goff) + p;
+            }
+            gcss = gcss.mid(0,index) + g + gcss.mid(ei+1);
+        }
         offset = index + idgroupfinder.cap(0).size() + g.size();
+
     }
 
     return gcss;
