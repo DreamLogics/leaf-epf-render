@@ -928,6 +928,33 @@ void CBaseObject::paintBuffered(QPainter *p)
     //qDebug() << "rendertime:" << t.msecsTo(QTime::currentTime());
 
     m_RenderMutex.unlock();
+
+    //paint children
+    QString pos;
+    QObjectList clist = children();
+    CBaseObject* cobj;
+
+
+    p->resetTransform();
+
+    for (int i=0;i<clist.size();i++)
+    {
+
+        cobj = dynamic_cast<CBaseObject*>(clist[i]);
+        if (cobj)
+        {
+            pos = document()->stylesheet()->property(cobj,"position").toString();
+            //qDebug() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
+
+            if (!(pos == "fixed" || cobj->fixedParent()))
+            {
+                p->save();
+                p->translate(cobj->boundingRect().x() - section()->scrollX(),cobj->boundingRect().y() - section()->scrollY());
+                cobj->paintBuffered(p);
+                p->restore();
+            }
+        }
+    }
 }
 
 void CBaseObject::buffer()

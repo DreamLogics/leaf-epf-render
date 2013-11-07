@@ -120,6 +120,8 @@ public:
 
     virtual void onEPFEvent(EPFEvent *ev);
 
+    CBaseObject* objectOnPos(int x, int y, QObject* pParent=0, CBaseObject* pIgnore=0);
+
 public slots:
 
     QObjectList layers();
@@ -146,7 +148,6 @@ private slots:
 
 private:
 
-    CBaseObject* objectOnPos(int x, int y);
     void drawScrollbar(QPainter* p);
 
 private:

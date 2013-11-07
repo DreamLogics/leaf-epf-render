@@ -34,6 +34,7 @@
 #include <QEasingCurve>
 #include <QTimer>
 #include "idevice.h"
+#include "object_types/cscrollareaobject.h"
 
 CViewportItem::CViewportItem()
 {
@@ -475,7 +476,7 @@ void CSection::render(QPainter *p,QRectF region)
                 obj->paintBuffered(p);
                 p->restore();
             }
-            else if (obj->boundingRect().intersects(relreg))
+            else if (obj->boundingRect().intersects(relreg) && !dynamic_cast<CLayer*>(obj->parent()))
             {
                 p->save();
                 p->translate(obj->boundingRect().x() - relreg.x(),obj->boundingRect().y() - relreg.y());
@@ -486,6 +487,7 @@ void CSection::render(QPainter *p,QRectF region)
             {
                 //qDebug() << "dont render" << obj->id();
             }
+
         }
     }
 
@@ -498,7 +500,7 @@ void CSection::render(QPainter *p,QRectF region)
     //m_mRenderMutex.unlock();
 }
 
-CBaseObject* CSection::objectOnPos(int x, int y)
+CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *pIgnore)
 {
     QPoint pos(x,y);
     x -= scrollX();
@@ -517,7 +519,7 @@ CBaseObject* CSection::objectOnPos(int x, int y)
         for (int n=l->objectCount()-1;n>=0;n--)
         {
             obj = l->object(n);
-            if (obj->enabled())
+            if (obj->enabled() && pIgnore != obj && (pParent && pParent == obj->parent()) && (!pParent && dynamic_cast<CLayer*>(obj->parent())))
             {
                 isfixed = false;
                 posi = css->property(obj,"position").toString();
@@ -561,34 +563,10 @@ void CSection::mousePressEvent( int x, int y )
     m_ClickStartPoint.setX(x);
     m_ClickStartPoint.setY(y);
 
+    qDebug() << "section click";
+
     x += scrollX();
     y += scrollY();
-
-    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
-    {
-
-        m_iMomentumPos = -1;
-        m_SwipeTimer.start();
-        m_iScrollYStart = scrollY();
-        return;
-    }
-    else
-    {
-        if (scrollYMax() > 0 && m_rVertScroller.contains(m_ClickStartPoint))
-        {
-            m_iScrollYStart = scrollY();
-            return;
-        }
-        else if (scrollYMax() > 0 && m_rVertScrollerBar.contains(m_ClickStartPoint))
-        {
-            m_iScrollYStart = -2;
-            return;
-        }
-        else
-            m_iScrollYStart = -1;
-
-        //m_iScrollXStart = scrollX();
-    }
 
     if (m_pControlObj)
     {
@@ -597,8 +575,43 @@ void CSection::mousePressEvent( int x, int y )
     }
 
     CBaseObject* obj = objectOnPos(x,y);
+
+    if (!(obj && dynamic_cast<CScrollAreaObject*>(obj)))
+    {
+
+        if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
+        {
+
+            m_iMomentumPos = -1;
+            m_SwipeTimer.start();
+            m_iScrollYStart = scrollY();
+            return;
+        }
+        else
+        {
+            if (scrollYMax() > 0 && m_rVertScroller.contains(m_ClickStartPoint))
+            {
+                m_iScrollYStart = scrollY();
+                return;
+            }
+            else if (scrollYMax() > 0 && m_rVertScrollerBar.contains(m_ClickStartPoint))
+            {
+                m_iScrollYStart = -2;
+                return;
+            }
+            else
+                m_iScrollYStart = -1;
+
+            //m_iScrollXStart = scrollX();
+        }
+
+    }
+
+
     if (!obj)
         return;
+
+    qDebug() << "section click" << obj->id();
 
     x -= obj->boundingRect().x();
     y -= obj->boundingRect().y();
@@ -610,45 +623,55 @@ void CSection::mouseReleaseEvent( int x, int y )
 {
     QPoint endpoint(x,y);
 
-    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
+    if (m_pControlObj)
     {
-        if (m_SwipeTimer.elapsed() > 500)
-            return;
-        int pdist = endpoint.y() - m_ClickStartPoint.y();
-        if (pdist < 0)
-            pdist *= -1;
-        if (pdist > 10)
-        {
-            int swipetime = m_SwipeTimer.elapsed();
-            //1 second momentum
-            int dist = m_ClickStartPoint.y() - y;
-            double speed = ((double)dist / swipetime)/**0.1*/;
-            m_iMomentumDistance = speed * 1000;
-            /*if (m_iMomentumDistance < 10)
-                return;*/
-            m_iMomentumPos = 0;
-            m_iMomentumStart = scrollY();
-            return;
-        }
-
+        m_pControlObj->mouseReleaseEvent(QPoint(x,y));
+        return;
     }
-    else
-    {
-        if (m_iScrollYStart == -2)
-        {
-            if (m_ClickStartPoint.y() < m_rVertScroller.top())
-                setScrollY(scrollY() - m_rRect.height()/5);
-            else
-                setScrollY(scrollY() + m_rRect.height()/5);
-            document()->updateRenderView();
-            return;
-        }
-        else if (m_iScrollYStart >= 0)
-            return;
-    }
-
     x += scrollX();
     y += scrollY();
+    CBaseObject* obj = objectOnPos(x,y);
+
+    if (!(obj && dynamic_cast<CScrollAreaObject*>(obj)))
+    {
+        if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
+        {
+            if (m_SwipeTimer.elapsed() > 500)
+                return;
+            int pdist = endpoint.y() - m_ClickStartPoint.y();
+            if (pdist < 0)
+                pdist *= -1;
+            if (pdist > 10)
+            {
+                int swipetime = m_SwipeTimer.elapsed();
+                //1 second momentum
+                int dist = m_ClickStartPoint.y() - y;
+                double speed = ((double)dist / swipetime)/**0.1*/;
+                m_iMomentumDistance = speed * 1000;
+                /*if (m_iMomentumDistance < 10)
+                    return;*/
+                m_iMomentumPos = 0;
+                m_iMomentumStart = scrollY();
+                return;
+            }
+
+        }
+        else
+        {
+            if (m_iScrollYStart == -2)
+            {
+                if (m_ClickStartPoint.y() < m_rVertScroller.top())
+                    setScrollY(scrollY() - m_rRect.height()/5);
+                else
+                    setScrollY(scrollY() + m_rRect.height()/5);
+                document()->updateRenderView();
+                return;
+            }
+            else if (m_iScrollYStart >= 0)
+                return;
+        }
+    }
+
 
 
 
@@ -657,17 +680,10 @@ void CSection::mouseReleaseEvent( int x, int y )
 
     m_pFocusObj = 0;
 
-    if (m_pControlObj)
-    {
-        qDebug() << "mouseRelease controlobj";
-        m_pControlObj->mouseReleaseEvent(QPoint(x,y));
-        return;
-    }
-
-
-    CBaseObject* obj = objectOnPos(x,y);
     if (!obj)
         return;
+
+    qDebug() << "section click" << obj->id();
 
     m_pFocusObj = obj;
 
@@ -681,30 +697,6 @@ void CSection::mouseMoveEvent( int x, int y )
 {
     QPoint endpoint(x,y);
 
-    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
-    {
-        int pdist = endpoint.y() - m_ClickStartPoint.y();
-        if (pdist < 0)
-            pdist *= -1;
-        if (pdist > 10)
-        {
-            int delta = y - m_ClickStartPoint.y();
-            setScrollY(m_iScrollYStart - delta);
-            document()->updateRenderView();
-            return;
-        }
-    }
-    else
-    {
-        if (scrollYMax() > 0 && m_iScrollYStart >= 0)
-        {
-            int delta = y - m_ClickStartPoint.y();
-            setScrollY(m_iScrollYStart + delta);
-            document()->updateRenderView();
-            return;
-        }
-    }
-
     x += scrollX();
     y += scrollY();
 
@@ -715,6 +707,35 @@ void CSection::mouseMoveEvent( int x, int y )
     }
 
     CBaseObject* obj = objectOnPos(x,y);
+
+    if (!(obj && dynamic_cast<CScrollAreaObject*>(obj)))
+    {
+        if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
+        {
+            int pdist = endpoint.y() - m_ClickStartPoint.y();
+            if (pdist < 0)
+                pdist *= -1;
+            if (pdist > 10)
+            {
+                int delta = endpoint.y() - m_ClickStartPoint.y();
+                setScrollY(m_iScrollYStart - delta);
+                document()->updateRenderView();
+                return;
+            }
+        }
+        else
+        {
+            if (scrollYMax() > 0 && m_iScrollYStart >= 0)
+            {
+                int delta = endpoint.y() - m_ClickStartPoint.y();
+                setScrollY(m_iScrollYStart + delta);
+                document()->updateRenderView();
+                return;
+            }
+        }
+    }
+
+
     if (!obj)
         return;
 

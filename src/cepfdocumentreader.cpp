@@ -47,6 +47,7 @@
 #include "object_types/cimageobject.h"
 #include "object_types/cscriptobject.h"
 #include "object_types/clabelobject.h"
+#include "object_types/cscrollareaobject.h"
 
 CEPFDocumentReader::CEPFDocumentReader()
 {
@@ -55,6 +56,7 @@ CEPFDocumentReader::CEPFDocumentReader()
     registerObjectType("block",new CBlockObjectFactory());
     registerObjectType("scripted",new CScriptObjectFactory());
     registerObjectType("label",new CLabelObjectFactory());
+    registerObjectType("scrollarea",new CScrollAreaObjectFactory());
 }
 
 CEPFDocumentReader::~CEPFDocumentReader()
