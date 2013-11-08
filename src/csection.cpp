@@ -476,7 +476,7 @@ void CSection::render(QPainter *p,QRectF region)
                 obj->paintBuffered(p);
                 p->restore();
             }
-            else if (obj->boundingRect().intersects(relreg) && !dynamic_cast<CLayer*>(obj->parent()))
+            else if (obj->boundingRect().intersects(relreg) && dynamic_cast<CLayer*>(obj->parent()))
             {
                 p->save();
                 p->translate(obj->boundingRect().x() - relreg.x(),obj->boundingRect().y() - relreg.y());
@@ -519,7 +519,8 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
         for (int n=l->objectCount()-1;n>=0;n--)
         {
             obj = l->object(n);
-            if (obj->enabled() && pIgnore != obj && (pParent && pParent == obj->parent()) && (!pParent && dynamic_cast<CLayer*>(obj->parent())))
+            //qDebug() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
+            if (obj->enabled() && pIgnore != obj && ((pParent && pParent == obj->parent()) || (!pParent && dynamic_cast<CLayer*>(obj->parent()))))
             {
                 isfixed = false;
                 posi = css->property(obj,"position").toString();
@@ -527,7 +528,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
                     isfixed = true;
                 else if (obj->fixedParent())
                     isfixed = true;
-
+                //qDebug() << obj->id() << obj->boundingRect() << pos << "yay";
                 if ((obj->boundingRect().contains(pos) && !isfixed) || (obj->boundingRect().contains(posfixed) && isfixed))
                     return obj;
             }
@@ -574,6 +575,8 @@ void CSection::mousePressEvent( int x, int y )
         return;
     }
 
+    //qDebug() << "section click 2";
+
     CBaseObject* obj = objectOnPos(x,y);
 
     if (!(obj && dynamic_cast<CScrollAreaObject*>(obj)))
@@ -611,7 +614,7 @@ void CSection::mousePressEvent( int x, int y )
     if (!obj)
         return;
 
-    qDebug() << "section click" << obj->id();
+    //qDebug() << "section click" << obj->id();
 
     x -= obj->boundingRect().x();
     y -= obj->boundingRect().y();

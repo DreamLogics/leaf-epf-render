@@ -5,6 +5,7 @@
 #include "../cdocument.h"
 #include <QPainter>
 #include <QDebug>
+#include <QEasingCurve>
 
 CBaseObject* CScrollAreaObjectFactory::create(QString id, CLayer *layer)
 {
@@ -46,6 +47,41 @@ void CScrollAreaObject::preload()
 
 }
 
+void CScrollAreaObject::layout(QRectF relativeTo, QList<CBaseObject *> updatelist)
+{
+    CBaseObject::layout(relativeTo,updatelist);
+    int h,w;
+    QString pos;
+    QObjectList clist = children();
+    CBaseObject* cobj;
+
+    h = w = 0;
+
+    for (int i=0;i<clist.size();i++)
+    {
+
+        cobj = dynamic_cast<CBaseObject*>(clist[i]);
+        if (cobj)
+        {
+            pos = document()->stylesheet()->property(cobj,"position").toString();
+            //qDebug() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
+
+            if (!(pos == "fixed" || cobj->fixedParent()))
+            {
+                if (h<cobj->boundingRect().height())
+                    h = cobj->boundingRect().height();
+                if (w<cobj->boundingRect().width())
+                    w = cobj->boundingRect().width();
+            }
+        }
+    }
+
+    if (w > boundingRect().width())
+        setScrollXMax(w-boundingRect().width());
+    if (h > boundingRect().height())
+        setScrollYMax(h-boundingRect().height());
+}
+
 void CScrollAreaObject::paint(QPainter *painter)
 {
 
@@ -54,6 +90,7 @@ void CScrollAreaObject::paint(QPainter *painter)
 void CScrollAreaObject::paintBuffered(QPainter *p)
 {
     //paint children
+    qDebug() << "paint children";
     QString pos;
     QObjectList clist = children();
     CBaseObject* cobj;
@@ -89,7 +126,7 @@ void CScrollAreaObject::mousePressEvent( QPoint pos )
     m_ClickStartPoint.setX(x);
     m_ClickStartPoint.setY(y);
 
-    qDebug() << "scrollarea";
+    qDebug() << "scrollarea press";
 
     x += scrollX();
     y += scrollY();
@@ -136,7 +173,7 @@ void CScrollAreaObject::mouseReleaseEvent( QPoint pos )
     int y = pos.y();
     QPoint endpoint(pos);
 
-    qDebug() << "scrollarea";
+    qDebug() << "scrollarea release";
 
     if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
@@ -298,5 +335,40 @@ int CScrollAreaObject::scrollYMax()
 
 void CScrollAreaObject::momentum()
 {
+    if (m_iMomentumPos != -1)
+    {
+        if (m_iMomentumPos > 100)
+        {
+            m_iMomentumPos = -1;
+            return;
+        }
+        if (m_iMomentumDistance < 10 && m_iMomentumDistance > -10)
+        {
+            m_iMomentumPos = -1;
+            return;
+        }
+        double pos = (double)m_iMomentumPos / 100;
+        QEasingCurve ec(QEasingCurve::OutQuad);
+        pos = ec.valueForProgress(pos);
+        int delta = m_iMomentumStart + (m_iMomentumDistance * pos);
+        //delta *= -1;
 
+        if (delta < 0)
+        {
+            m_iMomentumPos = -1;
+            delta = 0;
+        }
+        else if (delta > scrollYMax())
+        {
+            m_iMomentumPos = -1;
+            delta = scrollYMax();
+        }
+        else
+            m_iMomentumPos++;
+
+        setScrollY(delta);
+        document()->updateRenderView();
+        //qDebug() << m_iMomentumPos << m_iMomentumDistance << delta << m_iMomentumStart;
+
+    }
 }

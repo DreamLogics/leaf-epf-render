@@ -22,6 +22,8 @@ public:
     virtual void paint(QPainter *painter);
     virtual void paintBuffered(QPainter* p);
 
+    virtual void layout(QRectF relativeTo, QList<CBaseObject*> updatelist = QList<CBaseObject*>());
+
     virtual void mousePressEvent( QPoint pos );
     virtual void mouseReleaseEvent( QPoint pos );
     virtual void mouseMoveEvent( QPoint pos );
