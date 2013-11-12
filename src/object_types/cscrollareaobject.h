@@ -3,6 +3,7 @@
 
 #include "../cbaseobject.h"
 #include "../iepfobjectfactory.h"
+#include "../cscrollarea.h"
 
 class QPainter;
 
@@ -11,7 +12,7 @@ class CScrollAreaObjectFactory : public IEPFObjectFactory
     virtual CBaseObject* create(QString id, CLayer *layer);
 };
 
-class CScrollAreaObject : public CBaseObject
+class CScrollAreaObject : public CBaseObject, public CScrollArea
 {
     Q_OBJECT
 public:
@@ -28,15 +29,6 @@ public:
     virtual void mouseReleaseEvent( QPoint pos );
     virtual void mouseMoveEvent( QPoint pos );
 
-    void setScrollXMax(int max);
-    void setScrollYMax(int max);
-    void setScrollX(int val);
-    void setScrollY(int val);
-
-    int scrollX();
-    int scrollY();
-    int scrollXMax();
-    int scrollYMax();
 
 private slots:
 
@@ -50,11 +42,6 @@ private:
 
     int m_iScrollXStart;
     int m_iScrollYStart;
-
-    int m_iScrollX;
-    int m_iScrollY;
-    int m_iScrollXMax;
-    int m_iScrollYMax;
 
     int m_iMomentumDistance;
     int m_iMomentumStart;

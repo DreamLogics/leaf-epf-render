@@ -14,10 +14,6 @@ CBaseObject* CScrollAreaObjectFactory::create(QString id, CLayer *layer)
 
 CScrollAreaObject::CScrollAreaObject(QString id, CLayer* layer) : CBaseObject(id, layer)
 {
-    m_iScrollX = 0;
-    m_iScrollY = 0;
-    m_iScrollXMax = 0;
-    m_iScrollYMax = 0;
 
     m_iMomentumPos = -1;
     m_iMomentumDistance = 0;
@@ -219,6 +215,18 @@ void CScrollAreaObject::mouseReleaseEvent( QPoint pos )
 
     m_ClickStartPoint.setX(0);
     m_ClickStartPoint.setY(0);
+
+    x += boundingRect().x();
+    y += boundingRect().y();
+
+    CBaseObject* obj = section()->objectOnPos(x,y,this,this);
+    if (!obj)
+        return;
+
+    x -= obj->boundingRect().x();
+    y -= obj->boundingRect().y();
+
+    obj->mouseReleaseEvent(QPoint(x,y));
 }
 
 void CScrollAreaObject::mouseMoveEvent( QPoint pos )
@@ -253,84 +261,18 @@ void CScrollAreaObject::mouseMoveEvent( QPoint pos )
 
     x += scrollX();
     y += scrollY();
-}
 
-void CScrollAreaObject::setScrollX(int val)
-{
-    m_mScrollMutex.lock();
-    if (val >= 0 && val <= m_iScrollXMax)
-        m_iScrollX = val;
-    else if (val < 0)
-        m_iScrollX = 0;
-    else if (val > m_iScrollXMax)
-        m_iScrollX = m_iScrollXMax;
-    m_mScrollMutex.unlock();
-}
+    x += boundingRect().x();
+    y += boundingRect().y();
 
-void CScrollAreaObject::setScrollY(int val)
-{
-    m_mScrollMutex.lock();
-    if (val >= 0 && val <= m_iScrollYMax)
-        m_iScrollY = val;
-    else if (val < 0)
-        m_iScrollY = 0;
-    else if (val > m_iScrollYMax)
-        m_iScrollY = m_iScrollYMax;
-    m_mScrollMutex.unlock();
-}
-
-void CScrollAreaObject::setScrollXMax(int val)
-{
-    if (val < 0)
+    CBaseObject* obj = section()->objectOnPos(x,y,this,this);
+    if (!obj)
         return;
-    m_mScrollMutex.lock();
-    if (m_iScrollX > val)
-        m_iScrollX = val;
-    m_iScrollXMax = val;
-    m_mScrollMutex.unlock();
-}
 
-void CScrollAreaObject::setScrollYMax(int val)
-{
-    if (val < 0)
-        return;
-    m_mScrollMutex.lock();
-    if (m_iScrollY > val)
-        m_iScrollY = val;
-    m_iScrollYMax = val;
-    m_mScrollMutex.unlock();
-}
+    x -= obj->boundingRect().x();
+    y -= obj->boundingRect().y();
 
-int CScrollAreaObject::scrollX()
-{
-    m_mScrollMutex.lock();
-    int i = m_iScrollX;
-    m_mScrollMutex.unlock();
-    return i;
-}
-
-int CScrollAreaObject::scrollY()
-{
-    m_mScrollMutex.lock();
-    int i = m_iScrollY;
-    m_mScrollMutex.unlock();
-    return i;
-}
-
-int CScrollAreaObject::scrollXMax()
-{
-    m_mScrollMutex.lock();
-    int i = m_iScrollXMax;
-    m_mScrollMutex.unlock();
-    return i;
-}
-
-int CScrollAreaObject::scrollYMax()
-{
-    m_mScrollMutex.lock();
-    int i = m_iScrollYMax;
-    m_mScrollMutex.unlock();
-    return i;
+    obj->mouseMoveEvent(QPoint(x,y));
 }
 
 void CScrollAreaObject::momentum()

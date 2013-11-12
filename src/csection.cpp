@@ -70,11 +70,6 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
     m_iX = x;
     m_iY = y;
 
-    m_iScrollX = 0;
-    m_iScrollY = 0;
-    m_iScrollXMax = 0;
-    m_iScrollYMax = 0;
-
     m_pFocusObj = 0;
     m_pControlObj = 0;
 
@@ -513,14 +508,13 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
     QString posi;
     bool isfixed;
 
-    for (int i=0;i<layerCount();i++)
+    if (pParent)
     {
-        l = layer(i);
-        for (int n=l->objectCount()-1;n>=0;n--)
+        QObjectList children = pParent->children();
+        for (int i=0;i<children.size();i++)
         {
-            obj = l->object(n);
-            //qDebug() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
-            if (obj->enabled() && pIgnore != obj && ((pParent && pParent == obj->parent()) || (!pParent && dynamic_cast<CLayer*>(obj->parent()))))
+            obj = dynamic_cast<CBaseObject*>(children[i]);
+            if (obj && obj != pIgnore && obj->enabled())
             {
                 isfixed = false;
                 posi = css->property(obj,"position").toString();
@@ -533,6 +527,54 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
                     return obj;
             }
         }
+    }
+    else
+    {
+
+        for (int i=0;i<layerCount();i++)
+        {
+            l = layer(i);
+            for (int n=l->objectCount()-1;n>=0;n--)
+            {
+                obj = l->object(n);
+                //qDebug() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
+                if (obj->enabled() && pIgnore != obj && dynamic_cast<CLayer*>(obj->parent()))
+                {
+                    isfixed = false;
+                    posi = css->property(obj,"position").toString();
+                    if (posi == "fixed")
+                        isfixed = true;
+                    else if (obj->fixedParent())
+                        isfixed = true;
+                    //qDebug() << obj->id() << obj->boundingRect() << pos << "yay";
+                    if ((obj->boundingRect().contains(pos) && !isfixed) || (obj->boundingRect().contains(posfixed) && isfixed))
+                        return obj;
+                }
+            }
+        }
+
+        for (int i=0;i<layerCount();i++)
+        {
+            l = layer(i);
+            for (int n=l->objectCount()-1;n>=0;n--)
+            {
+                obj = l->object(n);
+                //qDebug() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
+                if (obj->enabled() && pIgnore != obj)
+                {
+                    isfixed = false;
+                    posi = css->property(obj,"position").toString();
+                    if (posi == "fixed")
+                        isfixed = true;
+                    else if (obj->fixedParent())
+                        isfixed = true;
+                    //qDebug() << obj->id() << obj->boundingRect() << pos << "yay";
+                    if ((obj->boundingRect().contains(pos) && !isfixed) || (obj->boundingRect().contains(posfixed) && isfixed))
+                        return obj;
+                }
+            }
+        }
+
     }
 
     return 0;
@@ -844,83 +886,7 @@ void CSection::drawScrollbar(QPainter *p)
 
 }
 
-void CSection::setScrollX(int val)
-{
-    m_mScrollMutex.lock();
-    if (val >= 0 && val <= m_iScrollXMax)
-        m_iScrollX = val;
-    else if (val < 0)
-        m_iScrollX = 0;
-    else if (val > m_iScrollXMax)
-        m_iScrollX = m_iScrollXMax;
-    m_mScrollMutex.unlock();
-}
 
-void CSection::setScrollY(int val)
-{
-    m_mScrollMutex.lock();
-    if (val >= 0 && val <= m_iScrollYMax)
-        m_iScrollY = val;
-    else if (val < 0)
-        m_iScrollY = 0;
-    else if (val > m_iScrollYMax)
-        m_iScrollY = m_iScrollYMax;
-    m_mScrollMutex.unlock();
-}
-
-void CSection::setScrollXMax(int val)
-{
-    if (val < 0)
-        return;
-    m_mScrollMutex.lock();
-    if (m_iScrollX > val)
-        m_iScrollX = val;
-    m_iScrollXMax = val;
-    m_mScrollMutex.unlock();
-}
-
-void CSection::setScrollYMax(int val)
-{
-    if (val < 0)
-        return;
-    m_mScrollMutex.lock();
-    if (m_iScrollY > val)
-        m_iScrollY = val;
-    m_iScrollYMax = val;
-    m_mScrollMutex.unlock();
-}
-
-int CSection::scrollX()
-{
-    m_mScrollMutex.lock();
-    int i = m_iScrollX;
-    m_mScrollMutex.unlock();
-    return i;
-}
-
-int CSection::scrollY()
-{
-    m_mScrollMutex.lock();
-    int i = m_iScrollY;
-    m_mScrollMutex.unlock();
-    return i;
-}
-
-int CSection::scrollXMax()
-{
-    m_mScrollMutex.lock();
-    int i = m_iScrollXMax;
-    m_mScrollMutex.unlock();
-    return i;
-}
-
-int CSection::scrollYMax()
-{
-    m_mScrollMutex.lock();
-    int i = m_iScrollYMax;
-    m_mScrollMutex.unlock();
-    return i;
-}
 
 void CSection::clearBuffers()
 {

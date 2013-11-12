@@ -33,7 +33,7 @@
 #include "epfevent.h"
 #include <QColor>
 #include <QElapsedTimer>
-
+#include "cscrollarea.h"
 
 class CDocument;
 class CLayer;
@@ -57,7 +57,7 @@ private:
     QRectF m_qrRect;
 };
 
-class CSection : public QObject, public EPFComponent
+class CSection : public QObject, public EPFComponent, public CScrollArea
 {
     Q_OBJECT
 public:
@@ -102,16 +102,6 @@ public:
 
     void setFocus(CBaseObject* obj);
     CBaseObject* focus();
-
-    void setScrollXMax(int max);
-    void setScrollYMax(int max);
-    void setScrollX(int val);
-    void setScrollY(int val);
-
-    int scrollX();
-    int scrollY();
-    int scrollXMax();
-    int scrollYMax();
 
     void clearBuffers();
 
@@ -174,11 +164,6 @@ private:
     int m_iScrollXStart;
     int m_iScrollYStart;
 
-    int m_iScrollX;
-    int m_iScrollY;
-    int m_iScrollXMax;
-    int m_iScrollYMax;
-
     int m_iMomentumDistance;
     int m_iMomentumStart;
     int m_iMomentumPos;
@@ -190,7 +175,7 @@ private:
     int m_iLayoutWidth;
 
     QMutex m_mRectMutex;
-    QMutex m_mScrollMutex;
+
     QMutex m_mTransitionFxMutex;
     QMutex m_mScrollStyleMutex;
 
