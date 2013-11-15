@@ -122,7 +122,7 @@ void CScrollAreaObject::mousePressEvent( QPoint pos )
     m_ClickStartPoint.setX(x);
     m_ClickStartPoint.setY(y);
 
-    qDebug() << "scrollarea press";
+    qDebug() << "scrollarea press" << pos;
 
     x += scrollX();
     y += scrollY();

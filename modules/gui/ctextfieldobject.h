@@ -20,38 +20,43 @@
 **
 ****************************************************************************/
 
-#include "cblockobject.h"
-#include <QPainter>
-#include <QStyleOptionGraphicsItem>
-#include <QWidget>
-#include "../css/css_painters.h"
+#ifndef CTEXTFIELDOBJECT_H
+#define CTEXTFIELDOBJECT_H
 
-CBaseObject* CBlockObjectFactory::create(QString id, CLayer *layer)
+#include "../../src/cbaseobject.h"
+#include "../../src/iepfobjectfactory.h"
+
+class CTextFieldObjectFactory : public IEPFObjectFactory
 {
-    return new CBlockObject(id,layer);
-}
+    virtual CBaseObject* create(QString id, CLayer *layer);
+};
 
-CBlockObject::CBlockObject(QString id, CLayer *layer) : CBaseObject(id,layer)
+class QLineEdit;
+
+class CTextFieldObject : public CBaseObject
 {
+    Q_OBJECT
+public:
+    CTextFieldObject(QString id, CLayer* layer);
+    virtual ~CTextFieldObject();
 
-}
+    virtual void preload();
 
-void CBlockObject::preload()
-{
+    virtual void layout(QRectF relativeTo);
 
-}
+    virtual void paint(QPainter *painter);
+    virtual void paintBuffered(QPainter *p);
 
-void CBlockObject::paint(QPainter *painter)
-{
-    CSS::paintBackgroundColor(painter,this);
-    CSS::paintBackgroundGradient(painter,this);
-    CSS::paintBackgroundImage(painter,this);
-    CSS::paintBorder(painter,this);
-    CSS::paintColorOverlay(painter,this);
+signals:
 
-    /*painter->setFont(QFont("sans-serif",10));
-    painter->setPen(QColor("red"));
-    painter->drawText(r.left()+16,r.bottom()-16,id());
+    void createTextField();
+    void updateWidgetGeometry(QRect r);
+    void showWidget();
+    void hideWidget();
+    void destroyWidget();
 
-    painter->drawRect(r);*/
-}
+private:
+
+};
+
+#endif // CTextFieldOBJECT_H

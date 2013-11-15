@@ -27,9 +27,11 @@
 #include <QObject>
 #include <QString>
 #include <QList>
-//#include <QGraphicsView>
+#include <QGraphicsView>
+#include <QGraphicsScene>
 #include <QGLWidget>
 #include "csection.h"
+#include <QLayout>
 
 class CDocument;
 //class QGraphicsScene;
@@ -37,12 +39,49 @@ class CDocument;
 class QTimer;
 class COverlay;
 
+class CEPFLayout : public QLayout
+{
+public:
+    CEPFLayout(QWidget* parent);
+
+    virtual void addItem(QLayoutItem *);
+    virtual int count() const;
+    virtual QLayoutItem* itemAt(int index) const;
+    virtual QLayoutItem* takeAt(int index);
+
+    //virtual Qt::Orientations expandingDirections () const;
+    virtual QRect geometry() const;
+    /*virtual bool isEmpty() const;
+    virtual QSize maximumSize() const;
+    virtual QSize minimumSize() const;*/
+    virtual QSize sizeHint() const;
+
+private:
+    QList<QLayoutItem*> m_items;
+};
+
+/*class CEPFView;
+
+class CEPFScene : public QGraphicsScene
+{
+public:
+    CEPFScene(CEPFView* view);
+
+protected:
+
+    virtual void drawBackground(QPainter *painter, const QRectF &rect);
+
+private:
+    CEPFView* m_pView;
+};*/
+
+
 class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QGLWidget
 {
     Q_OBJECT
 public:
-    CEPFView();
-
+    CEPFView(QWidget* parent=0);
+    ~CEPFView();
 
     void setDocument(CDocument* doc);
     void unload();
@@ -66,6 +105,8 @@ public slots:
     void transitionAnim();
 
     void resizeDone();
+
+    void updateView();
 
 signals:
 
@@ -136,6 +177,7 @@ private:
 
 
     //QGraphicsScene* m_pDocScene;
+    friend class CEPFGL;
 };
 
 #endif // CEPFVIEW_H

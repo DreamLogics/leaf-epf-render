@@ -37,7 +37,194 @@
 #include <QWheelEvent>
 #include <QTouchEvent>
 
-CEPFView::CEPFView()
+CEPFLayout::CEPFLayout(QWidget *parent) : QLayout(parent)
+{
+
+}
+
+void CEPFLayout::addItem(QLayoutItem *p)
+{
+    m_items.append(p);
+}
+
+int CEPFLayout::count() const
+{
+    return m_items.size();
+}
+QLayoutItem* CEPFLayout::itemAt(int index) const
+{
+    if (m_items.size() < index && index >= 0)
+        return m_items[index];
+    return 0;
+}
+QLayoutItem* CEPFLayout::takeAt(int index)
+{
+    if (m_items.size() < index && index >= 0)
+        return m_items.takeAt(index);
+    return 0;
+}
+
+QRect CEPFLayout::geometry() const
+{
+    return QRect();
+}
+
+QSize CEPFLayout::sizeHint() const
+{
+    return QSize();
+}
+/*
+CEPFScene::CEPFScene(CEPFView *view) : m_pView(view)
+{
+}
+
+void CEPFScene::drawBackground(QPainter *painter, const QRectF &rect)
+{
+    //QPainter p;
+    //p.begin(this);
+    if (!(painter->paintEngine()->type() == QPaintEngine::OpenGL || painter->paintEngine()->type() == QPaintEngine::OpenGL2)) {
+                qWarning("OpenGLScene: drawBackground needs a "
+                         "QGLWidget to be set as viewport on the "
+                         "graphics view");
+                qDebug() << painter->paintEngine()->type();
+                return;
+            }
+
+    painter->save();
+
+    if (m_pView->m_bIsLoading)
+    {
+        painter->resetTransform();
+        painter->setRenderHint(QPainter::Antialiasing);
+
+        painter->setOpacity(1.0);
+
+
+        painter->fillRect(0,0,width(),height(),QColor(30,30,30));
+
+        for (int dot=0;dot<3;dot++)
+        {
+            if (dot == m_pView->m_iRenderDot)
+                painter->setBrush(QColor(200,0,0));
+            else
+                painter->setBrush(QColor("grey"));
+            painter->drawEllipse((width()/2)-18+(dot*12),(height()/2)+100,8,8);
+        }
+
+        painter->setBrush(Qt::NoBrush);
+
+        return;
+    }
+    else
+    {
+        //painter->setRenderHint(QPainter::HighQualityAntialiasing);
+        painter->setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing);
+
+        CSection* s = m_pView->m_pDocument->section(m_pView->m_iCurrentSection);
+        int nx,ny,psx,psy,sx,sy;
+
+        sx = s->x() * width();
+        sy = s->y() * height();
+
+        if (m_pView->m_iPreviousSection != -1 && m_pView->m_dTransition > 0)
+        {
+            CSection* ps = m_pView->m_pDocument->section(m_pView->m_iPreviousSection);
+
+            psx = ps->x() * width();
+            psy = ps->y() * height();
+
+            if (m_pView->m_TransFx == CSection::SlideFx)
+            {
+                nx = (m_pView->m_dTransition * psx) + ((1-m_pView->m_dTransition) * sx);
+                ny = (m_pView->m_dTransition * psy) + ((1-m_pView->m_dTransition) * sy);
+                //painter->translate(psx-nx,psy-ny);
+            }
+
+
+            //ps->render(&p,QRectF(nx,ny,width(),height()));
+            //painter->resetTransform();
+        }
+        else
+        {
+            nx = (1-m_pView->m_dTransition) * sx;
+            ny = (1-m_pView->m_dTransition) * sy;
+        }
+
+        CSection* cs;
+
+
+        //for (int i=0;i<m_pDocument->sectionCount();i++)
+        int i;
+
+        if (m_pView->m_iCurrentSection < m_pView->m_iPreviousSection)
+            i=m_pView->m_pDocument->sectionCount()-1;
+        else
+            i=0;
+
+        while (true)
+        {
+            if (m_pView->m_TransFx == CSection::SlideFx || (m_pView->m_TransFx == CSection::FadeFx && (i == m_pView->m_iCurrentSection || i == m_pView->m_iPreviousSection) ) || i == m_pView->m_iCurrentSection )
+            {
+
+                cs = m_pView->m_pDocument->section(i);
+                if (!(cs->isHidden() && i != m_pView->m_iCurrentSection))
+                {
+                    if (m_pView->m_TransFx == CSection::SlideFx)
+                    {
+                        painter->resetTransform();
+                        painter->translate(cs->x()*width()-nx,cs->y()*height()-ny);
+                    }
+                    else
+                    {
+                        if (m_pView->m_TransFx == CSection::FadeFx && i == m_pView->m_iCurrentSection)
+                        {
+                            //qDebug() << "transition" << 1-m_dTransition << cs->id();
+                            painter->setOpacity(1-m_pView->m_dTransition);
+                        }
+                        else
+                            painter->setOpacity(1.0);
+
+                        nx = cs->x() * width();
+                        ny = cs->y() * height();
+
+                    }
+                    cs->render(painter,QRectF(nx,ny,width(),height()));
+                }
+            }
+
+            if (m_pView->m_iCurrentSection < m_pView->m_iPreviousSection)
+                i--;
+            else
+                i++;
+
+            if (i<0 || i >= m_pView->m_pDocument->sectionCount())
+                break;
+        }
+
+
+
+
+        //overlays
+        painter->resetTransform();
+        COverlay* overlay;
+        for (int oi=0;oi<m_pView->m_pDocument->overlayCount();oi++)
+        {
+            overlay = m_pView->m_pDocument->overlay(oi);
+            if (overlay->isVisible())
+                overlay->render(painter,QRectF(0,0,width(),height()));
+        }
+
+
+        //s->render(&p,QRectF(nx,ny,width(),height()));
+        //painter->translate(-s->x()*width(),-s->y()*height());
+        //for (int i=0;i<m_pDocument->sectionCount();i++)
+        //    m_pDocument->section(i)->render(&p,QRectF(s->x()*width(),s->y()*height(),width(),height()));
+
+    }
+    painter->restore();
+}*/
+
+CEPFView::CEPFView(QWidget* parent) : QGLWidget(parent)//QGraphicsView(parent)
 {
     //m_pDocScene = new QGraphicsScene();
     //setScene(m_pDocScene);
@@ -54,11 +241,24 @@ CEPFView::CEPFView()
 
     m_pDocument = 0;
 
+
+    //setViewport(new QGLWidget);
+    //setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+    //setScene(new CEPFScene(this));
+
+    //setLayout(new CEPFLayout(this));
+    //setLayout(new QBoxLayout(QBoxLayout::LeftToRight,this));
+
     connect(m_pResizeTimer,SIGNAL(timeout()),this,SLOT(resizeDone()));
     //setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
     //setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     //setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+}
+
+CEPFView::~CEPFView()
+{
+
 }
 
 void CEPFView::setDocument(CDocument *doc)
@@ -124,7 +324,7 @@ void CEPFView::setDocument(CDocument *doc)
     connect(this,SIGNAL(loadDocument(int,int,int)),doc,SLOT(load(int,int,int)));
     connect(this,SIGNAL(layout(int,int,int,bool)),doc,SLOT(layout(int,int,int,bool)));
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
-    connect(doc,SIGNAL(_updateRenderView()),this,SLOT(update()));
+    connect(doc,SIGNAL(_updateRenderView()),this,SLOT(updateView()));
     connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
     connect(this,SIGNAL(clearBuffers()),doc,SLOT(clearBuffers()));
     connect(this,SIGNAL(sectionChange(QString)),doc,SLOT(sectionChange(QString)));
@@ -180,7 +380,7 @@ void CEPFView::setSection(int index)
     else
         emit sectionChange(s->id());
 
-    update();
+    updateView();
 }
 
 void CEPFView::setSection(QString id)
@@ -332,11 +532,19 @@ void CEPFView::drawForeground(QPainter *p, const QRectF &rect)
 void CEPFView::updateDot()
 {
     if (m_iRenderDot == 2) m_iRenderDot = 0; else m_iRenderDot++;
-    //viewport()->update();
-    update();
+    //viewport()->updateView();
+    updateView();
     if (m_bIsLoading)
         QTimer::singleShot(300,this,SLOT(updateDot()));
 }
+
+void CEPFView::updateView()
+{
+    /*if (scene())
+        scene()->update();*/
+    update();
+}
+
 /*
 bool CEPFView::viewportEvent(QEvent *event)
 {
@@ -360,6 +568,8 @@ void CEPFView::scrollContentsBy(int dx, int dy)
 */
 void CEPFView::resizeEvent(QResizeEvent *event)
 {
+    /*if (scene())
+        scene()->setSceneRect(QRect(QPoint(0, 0), event->size()));*/
     if (!m_bIsLoading && m_pDocument && m_pDocument->sectionCount() > 0)
     {
         //m_pDocument->layout(height(),width());
@@ -530,6 +740,9 @@ void CEPFView::mousePressEvent(QMouseEvent *ev)
 {
     if (m_bIsLoading)
         return;
+    //QGraphicsView::mousePressEvent(ev);
+    //if (ev->isAccepted())
+    //    return;
     int x,y;
     x = ev->x();
     y = ev->y();
@@ -543,6 +756,9 @@ void CEPFView::mouseReleaseEvent(QMouseEvent *ev)
 {
     if (m_bIsLoading)
         return;
+    //QGraphicsView::mouseReleaseEvent(ev);
+    //if (ev->isAccepted())
+    //    return;
     int x,y;
     x = ev->x();
     y = ev->y();
@@ -556,6 +772,9 @@ void CEPFView::mouseMoveEvent(QMouseEvent *ev)
 {
     if (m_bIsLoading)
         return;
+    //QGraphicsView::mouseMoveEvent(ev);
+    //if (ev->isAccepted())
+    //    return;
     int x,y;
     x = ev->x();
     y = ev->y();
@@ -569,6 +788,9 @@ void CEPFView::mouseDoubleClickEvent(QMouseEvent *ev)
 {
     if (m_bIsLoading)
         return;
+    //QGraphicsView::mouseDoubleClickEvent(ev);
+    //if (ev->isAccepted())
+    //    return;
     int x,y;
     x = ev->x();
     y = ev->y();
@@ -582,7 +804,7 @@ void CEPFView::transitionAnim()
 {
     //400 ms anim
     m_dTransition -= 0.05;
-    update();
+    updateView();
     if (m_dTransition > 0)
         QTimer::singleShot(20,this,SLOT(transitionAnim()));
     else
@@ -602,7 +824,7 @@ void CEPFView::wheelEvent(QWheelEvent *ev)
             s->setScrollY(s->scrollY()-ev->delta());
         else
             s->setScrollX(s->scrollX()-ev->delta());
-        update();
+        updateView();
     }
 }
 
