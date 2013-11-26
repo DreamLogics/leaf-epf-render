@@ -22,6 +22,10 @@ public:
 
     void renderWidget(QObject* obj, QPainter* p);
 
+private:
+
+    bool isActiveObject(QObject* obj);
+
 signals:
 
 public slots:

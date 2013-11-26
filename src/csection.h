@@ -107,10 +107,16 @@ public:
 
     void takeControl(CBaseObject* obj);
     void releaseControl(CBaseObject* obj);
+    bool hasControl(CBaseObject* obj);
 
     virtual void onEPFEvent(EPFEvent *ev);
 
     CBaseObject* objectOnPos(int x, int y, QObject* pParent=0, CBaseObject* pIgnore=0);
+
+signals:
+
+    void nextSection();
+    void previousSection();
 
 public slots:
 
@@ -130,7 +136,8 @@ public slots:
     void mouseReleaseEvent( int x, int y );
     void mouseMoveEvent( int x, int y );
 
-    void keyEvent(int key, QString val);
+    void keyPressEvent(int key, QString val);
+    void keyReleaseEvent(int key, QString val);
 
 private slots:
 
@@ -164,9 +171,12 @@ private:
     int m_iScrollXStart;
     int m_iScrollYStart;
 
-    int m_iMomentumDistance;
-    int m_iMomentumStart;
-    int m_iMomentumPos;
+    int m_iMomentumDistanceX;
+    int m_iMomentumStartX;
+    int m_iMomentumPosX;
+    int m_iMomentumDistanceY;
+    int m_iMomentumStartY;
+    int m_iMomentumPosY;
 
     QElapsedTimer m_SwipeTimer;
     QTimer* m_MomentumTimer;

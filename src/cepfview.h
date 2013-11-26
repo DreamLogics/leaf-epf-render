@@ -130,6 +130,9 @@ signals:
     void mouseReleaseEventOverlay( int x, int y );
     void mouseMoveEventOverlay( int x, int y );
 
+    void keyPressEvent(int key, QString val);
+    void keyReleaseEvent(int key, QString val);
+
 
     void clearBuffers();
 
@@ -145,6 +148,8 @@ protected:
     virtual void mouseReleaseEvent( QMouseEvent *ev );
     virtual void mouseMoveEvent( QMouseEvent *ev );
     virtual void wheelEvent(QWheelEvent *ev);
+    virtual void keyPressEvent(QKeyEvent *ev);
+    virtual void keyReleaseEvent(QKeyEvent* ev);
 
     virtual bool event(QEvent *ev);
 

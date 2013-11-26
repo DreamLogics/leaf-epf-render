@@ -36,6 +36,7 @@
 #include <QRectF>
 #include <QWheelEvent>
 #include <QTouchEvent>
+#include <QEasingCurve>
 
 CEPFLayout::CEPFLayout(QWidget *parent) : QLayout(parent)
 {
@@ -241,6 +242,8 @@ CEPFView::CEPFView(QWidget* parent) : QGLWidget(parent)//QGraphicsView(parent)
 
     m_pDocument = 0;
 
+    setFocusPolicy(Qt::StrongFocus);
+
 
     //setViewport(new QGLWidget);
     //setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
@@ -354,16 +357,25 @@ void CEPFView::setSection(int index)
         curview->setX(width());
     }*/
     CSection* s = m_pDocument->section(index);
+    CSection* ps = m_pDocument->section(m_iCurrentSection);
 
     disconnect(this,SIGNAL(mouseDoubleClickEvent(int,int)),0,0);
     disconnect(this,SIGNAL(mouseMoveEvent(int,int)),0,0);
     disconnect(this,SIGNAL(mousePressEvent(int,int)),0,0);
     disconnect(this,SIGNAL(mouseReleaseEvent(int,int)),0,0);
+    disconnect(this,SIGNAL(keyPressEvent(int,QString)),0,0);
+    disconnect(this,SIGNAL(keyReleaseEvent(int,QString)),0,0);
+    disconnect(ps,SIGNAL(nextSection()),0,0);
+    disconnect(ps,SIGNAL(previousSection()),0,0);
 
     connect(this,SIGNAL(mouseDoubleClickEvent(int,int)),s,SLOT(mouseDoubleClickEvent(int,int)));
     connect(this,SIGNAL(mouseMoveEvent(int,int)),s,SLOT(mouseMoveEvent(int,int)));
     connect(this,SIGNAL(mousePressEvent(int,int)),s,SLOT(mousePressEvent(int,int)));
     connect(this,SIGNAL(mouseReleaseEvent(int,int)),s,SLOT(mouseReleaseEvent(int,int)));
+    connect(this,SIGNAL(keyPressEvent(int,QString)),s,SLOT(keyPressEvent(int,QString)));
+    connect(this,SIGNAL(keyReleaseEvent(int,QString)),s,SLOT(keyReleaseEvent(int,QString)));
+    connect(s,SIGNAL(nextSection()),this,SLOT(nextSection()));
+    connect(s,SIGNAL(previousSection()),this,SLOT(previousSection()));
 
     m_iPreviousSection = m_iCurrentSection;
     m_iCurrentSection = index;
@@ -403,7 +415,7 @@ void CEPFView::nextSection()
         if (!m_pDocument->section(i)->isHidden())
         {
             setSection(i);
-            break;
+            return;
         }
     }
 
@@ -421,7 +433,7 @@ void CEPFView::previousSection()
         if (!m_pDocument->section(i)->isHidden())
         {
             setSection(i);
-            break;
+            return;
         }
     }
 }
@@ -622,6 +634,8 @@ void CEPFView::paintEvent(QPaintEvent *ev)
 
         CSection* s = m_pDocument->section(m_iCurrentSection);
         int nx,ny,psx,psy,sx,sy;
+        QEasingCurve ec(QEasingCurve::InOutQuad);
+        double dt = ec.valueForProgress(m_dTransition);
 
         sx = s->x() * width();
         sy = s->y() * height();
@@ -635,8 +649,8 @@ void CEPFView::paintEvent(QPaintEvent *ev)
 
             if (m_TransFx == CSection::SlideFx)
             {
-                nx = (m_dTransition * psx) + ((1-m_dTransition) * sx);
-                ny = (m_dTransition * psy) + ((1-m_dTransition) * sy);
+                nx = (dt * psx) + ((1-dt) * sx);
+                ny = (dt * psy) + ((1-dt) * sy);
                 //p.translate(psx-nx,psy-ny);
             }
 
@@ -646,8 +660,8 @@ void CEPFView::paintEvent(QPaintEvent *ev)
         }
         else
         {
-            nx = (1-m_dTransition) * sx;
-            ny = (1-m_dTransition) * sy;
+            nx = (1-dt) * sx;
+            ny = (1-dt) * sy;
         }
 
         CSection* cs;
@@ -740,6 +754,8 @@ void CEPFView::mousePressEvent(QMouseEvent *ev)
 {
     if (m_bIsLoading)
         return;
+
+    setFocus();
     //QGraphicsView::mousePressEvent(ev);
     //if (ev->isAccepted())
     //    return;
@@ -798,6 +814,22 @@ void CEPFView::mouseDoubleClickEvent(QMouseEvent *ev)
         emit mouseDoubleClickEventOverlay(x,y);
     else
         emit mouseDoubleClickEvent(x,y);
+}
+
+void CEPFView::keyPressEvent(QKeyEvent *ev)
+{
+    if (m_bIsLoading)
+        return;
+    emit keyPressEvent(ev->key(),ev->text());
+    ev->accept();
+}
+
+void CEPFView::keyReleaseEvent(QKeyEvent* ev)
+{
+    if (m_bIsLoading)
+        return;
+
+    emit keyReleaseEvent(ev->key(),ev->text());
 }
 
 void CEPFView::transitionAnim()

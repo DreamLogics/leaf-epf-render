@@ -83,7 +83,8 @@ public:
     virtual void mouseReleaseEvent( QPoint pos );
     virtual void mouseMoveEvent( QPoint pos );
 
-    virtual void keyEvent(int key, QString val);
+    virtual void keyPressEvent(int key, QString val);
+    virtual void keyReleaseEvent(int key, QString val);
 
     //virtual CSS::Stylesheet* style();
 

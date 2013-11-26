@@ -991,7 +991,12 @@ void CBaseObject::buffer()
     m_RenderMutex.unlock();
 }
 
-void CBaseObject::keyEvent(int key, QString val)
+void CBaseObject::keyPressEvent(int key, QString val)
+{
+
+}
+
+void CBaseObject::keyReleaseEvent(int key, QString val)
 {
 
 }

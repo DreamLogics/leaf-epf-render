@@ -158,6 +158,8 @@ int CDocument::sectionCount()
 
 CSection* CDocument::section(int index)
 {
+    if (index < 0 || index >= m_Sections.size())
+        return 0;
     return m_Sections[index];
 }
 

@@ -47,16 +47,25 @@ public:
     virtual void paint(QPainter *painter);
     virtual void paintBuffered(QPainter *p);
 
-signals:
+    virtual void mouseDoubleClickEvent ( QPoint pos );
+    virtual void mousePressEvent( QPoint pos );
+    virtual void mouseReleaseEvent( QPoint pos );
+    virtual void mouseMoveEvent( QPoint pos );
+
+    virtual void keyPressEvent(int key, QString val);
+    virtual void keyReleaseEvent(int key, QString val);
+
+/*signals:
 
     void createTextField();
     void updateWidgetGeometry(QRect r);
     void showWidget();
     void hideWidget();
-    void destroyWidget();
+    void destroyWidget();*/
 
 private:
-
+    bool m_bHasFocus;
+    QString m_sValue;
 };
 
 #endif // CTextFieldOBJECT_H

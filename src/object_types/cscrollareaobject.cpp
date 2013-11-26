@@ -74,8 +74,18 @@ void CScrollAreaObject::layout(QRectF relativeTo, QList<CBaseObject *> updatelis
 
     if (w > boundingRect().width())
         setScrollXMax(w-boundingRect().width());
+    else
+    {
+        setScrollXMax(0);
+        setScrollX(0);
+    }
     if (h > boundingRect().height())
         setScrollYMax(h-boundingRect().height());
+    else
+    {
+        setScrollYMax(0);
+        setScrollY(0);
+    }
 }
 
 void CScrollAreaObject::paint(QPainter *painter)

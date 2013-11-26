@@ -27,6 +27,9 @@
 #include "../../src/cepfview.h"
 #include <QLayout>
 #include "cwidgethandler.h"
+#include <QDebug>
+#include <QInputMethod>
+#include <QApplication>
 
 CBaseObject* CTextFieldObjectFactory::create(QString id, CLayer *layer)
 {
@@ -35,25 +38,25 @@ CBaseObject* CTextFieldObjectFactory::create(QString id, CLayer *layer)
 
 CTextFieldObject::CTextFieldObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 {
-
+    m_bHasFocus = false;
     //m_bEmbedded = false;
 }
 
 CTextFieldObject::~CTextFieldObject()
 {
-    emit destroyWidget();
+    //emit destroyWidget();
 }
 
 void CTextFieldObject::preload()
 {
-    CWidgetHandler* h = CWidgetHandler::get(document()->renderview());
+    /*CWidgetHandler* h = CWidgetHandler::get(document()->renderview());
     connect(this,SIGNAL(createTextField()),h,SLOT(createTextField()));
     connect(this,SIGNAL(updateWidgetGeometry()),h,SLOT(updateWidgetGeometry()));
     connect(this,SIGNAL(showWidget()),h,SLOT(showWidget()));
     connect(this,SIGNAL(hideWidget()),h,SLOT(hideWidget()));
     connect(this,SIGNAL(destroyWidget()),h,SLOT(destroyWidget()));
 
-    emit createTextField();
+    emit createTextField();*/
 }
 
 void CTextFieldObject::paint(QPainter *painter)
@@ -63,12 +66,93 @@ void CTextFieldObject::paint(QPainter *painter)
 
 void CTextFieldObject::paintBuffered(QPainter *p)
 {
-    CWidgetHandler::get(document()->renderview())->renderWidget(this,p);
+    //CWidgetHandler::get(document()->renderview())->renderWidget(this,p);
+    //TODO: multithreaded
+    QRectF r(0,0,boundingRect().width(),boundingRect().height());
+    p->fillRect(r,QColor("white"));
+    if (m_bHasFocus)
+    {
+        QPen pen("#ff0000");
+        p->setPen(pen);
+        p->drawRect(0,0,r.width(),r.height()-1);
+    }
+    QFont font;
+    QRectF textbox(4,4,r.width()-8,r.height()-8);
+    font.setPixelSize(textbox.height());
+    p->setFont(font);
+    p->setPen(QPen("#000000"));
+    p->drawText(textbox,m_sValue);
 }
 
 void CTextFieldObject::layout(QRectF relativeTo)
 {
     CBaseObject::layout(relativeTo);
 
-    emit updateWidgetGeometry(boundingRect().toRect());
+    //emit updateWidgetGeometry(boundingRect().toRect());
+}
+
+void CTextFieldObject::mouseDoubleClickEvent ( QPoint pos )
+{
+
+}
+
+void CTextFieldObject::mousePressEvent( QPoint pos )
+{
+    if (section()->hasControl(this))
+    {
+        if (!boundingRect().contains(pos))
+        {
+            section()->releaseControl(this);
+            m_bHasFocus = false;
+            QApplication::inputMethod()->hide();
+            document()->updateRenderView();
+            section()->mousePressEvent(pos.x(),pos.y());
+        }
+    }
+}
+
+void CTextFieldObject::mouseReleaseEvent( QPoint pos )
+{
+    QApplication::inputMethod()->show();
+    if (!section()->hasControl(this))
+    {
+        section()->takeControl(this);
+        m_bHasFocus = true;
+
+        document()->updateRenderView();
+    }
+}
+
+void CTextFieldObject::mouseMoveEvent( QPoint pos )
+{
+
+}
+
+void CTextFieldObject::keyPressEvent(int key, QString val)
+{
+    //qDebug() << "press" << key << val;
+    if (key == Qt::Key_Return)
+    {
+        QApplication::inputMethod()->hide();
+    }
+    else if (key == Qt::Key_Backspace)
+    {
+        if (m_sValue.size() > 0)
+            m_sValue = m_sValue.left(m_sValue.size()-1);
+    }
+    else
+    {
+        if (val.size() > 0)
+        {
+            QChar c = val[0];
+            if (c.isPrint())
+                m_sValue += c;
+        }
+    }
+    document()->updateRenderView();
+}
+
+void CTextFieldObject::keyReleaseEvent(int key, QString val)
+{
+    //qDebug() << "release" << key;
 }
