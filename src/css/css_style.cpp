@@ -152,14 +152,17 @@ Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrid
         if (m_cachedProperty.contains(obj))
         {
             if (m_cachedProperty[obj].contains(key))
+            {
+                //qDebug()() << "css from cache";
                 return m_cachedProperty[obj][key];
+            }
         }
 
 
         /*prop = obj->cssOverrideProp(key);
         if (!prop.isNull())
         {
-            //qDebug() << "CSS: got override for prop:" << key << "object" <<obj->id();
+            //qDebug()() << "CSS: got override for prop:" << key << "object" <<obj->id();
             return prop;
         }*/
 
@@ -173,11 +176,13 @@ Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrid
             {
                 prop = property(it.key(),key);
             }
-            else
+
+            if (prop.isNull())
             {
                 it=m_selectors.find("."+classes[i]);
                 if (it != m_selectors.end())
                 {
+                    //qDebug()() << "from" <<it.key();
                     prop = property(it.key(),key);
                 }
             }
@@ -196,8 +201,15 @@ Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrid
         if (!prop.isNull())
         {
             //indirect selector, make read only
-            //qDebug() << "CSS: got class style for prop:" << key << "object" <<obj->id();
+            //qDebug()() << "CSS: got class style for prop:" << key << "object" <<obj->id();
             prop.m_pPrivate->m_bReadOnly = true;
+            if (m_cachedProperty.contains(obj))
+                m_cachedProperty[obj].insert(key,prop);
+            else
+            {
+                m_cachedProperty.insert(obj,QMap<QString,Property>());
+                m_cachedProperty[obj].insert(key,prop);
+            }
             return prop;
         }
     }
@@ -796,7 +808,7 @@ void Stylesheet::parse(QString css)
         setVariable(varfinder.cap(1),ss,true);
         offset = index + varfinder.cap(0).size();
         index = css.indexOf(varfinder,offset);
-        qDebug() << "css var added" << varfinder.cap(1) << ss;
+        //qDebug() << "css var added" << varfinder.cap(1) << ss;
     }
 
     m_prevariables = m_variables;
@@ -814,7 +826,7 @@ void Stylesheet::parse(QString css)
     {
         ss = propgroupfinder.cap(1).replace(outerspaces,"");
         //propdata = propgroupfinder.cap(2);
-        //qDebug() << "found propgrpup" << ss;
+        //qDebug()() << "found propgrpup" << ss;
 
         fc=1;
         for (ei=index+propgroupfinder.cap(0).size();ei<css.size();ei++)
@@ -830,13 +842,13 @@ void Stylesheet::parse(QString css)
         propdata = css.mid(index+propgroupfinder.cap(0).size(),ei - (index + propgroupfinder.cap(0).size()));
         offset = ei+1;
 
-        //qDebug() << propdata;
+        //qDebug()() << propdata;
 
         if (ss.left(1) != "@")
         {
 
 
-            //qDebug() << "selector found: " <<ss;
+            //qDebug()() << "selector found: " <<ss;
 
             if (m_selectors.contains(ss))
                 s = m_selectors[ss];
@@ -856,7 +868,7 @@ void Stylesheet::parse(QString css)
                     propkey = proper[0].replace(outerspaces,"");
                     propvalue = proper[1].replace(outerspaces,"");
 
-                    //qDebug() << "prop found: " << propkey << propvalue;
+                    //qDebug()() << "prop found: " << propkey << propvalue;
 
                     f = propvalue.indexOf("!");
                     if (f != -1)
@@ -1096,7 +1108,7 @@ void Stylesheet::parse(QString css)
     for (int i=0;i<m_pDocument->overlayCount();i++)
     {
         o=m_pDocument->overlay(i);
-        //qDebug() << "propagating section" << cs->id();
+        //qDebug()() << "propagating section" << cs->id();
 
         s = selector("overlay");
 
@@ -1125,7 +1137,7 @@ void Stylesheet::parse(QString css)
         for (int n=0;n<o->layerCount();n++)
         {
             l=o->layer(n);
-            //qDebug() << "propagating layer" << l->id();
+            //qDebug()() << "propagating layer" << l->id();
 
             s = selector("#"+o->id()+" layer");
 
@@ -1153,18 +1165,18 @@ void Stylesheet::parse(QString css)
             for (int j=0;j<l->objectCount();j++)
             {
                 obj=l->object(j);
-                //qDebug() << "propagating object" << obj->id();
+                //qDebug()() << "propagating object" << obj->id();
 
                 // propagate the section specific object base
                 s = selector("#"+o->id()+" object");
                 base = selector("object");
                 baseprops = base->properties();
 
-                //qDebug() << "propagating obj baseprops size" << baseprops.size();
+                //qDebug()() << "propagating obj baseprops size" << baseprops.size();
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    //qDebug() << "#"+o->id()+" object" << baseprops[n];
+                    //qDebug()() << "#"+o->id()+" object" << baseprops[n];
                     if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
@@ -1198,7 +1210,7 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    //qDebug() << "#"+o->id()+"::"+obj->id() << baseprops[n];
+                    //qDebug()() << "#"+o->id()+"::"+obj->id() << baseprops[n];
                     if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
@@ -1214,7 +1226,7 @@ void Stylesheet::parse(QString css)
     for (int i=0;i<m_pDocument->sectionCount();i++)
     {
         cs=m_pDocument->section(i);
-        //qDebug() << "propagating section" << cs->id();
+        //qDebug()() << "propagating section" << cs->id();
 
         s = selector("section");
 
@@ -1243,7 +1255,7 @@ void Stylesheet::parse(QString css)
         for (int n=0;n<cs->layerCount();n++)
         {
             l=cs->layer(n);
-            //qDebug() << "propagating layer" << l->id();
+            //qDebug()() << "propagating layer" << l->id();
 
             s = selector("#"+cs->id()+" layer");
 
@@ -1271,18 +1283,18 @@ void Stylesheet::parse(QString css)
             for (int j=0;j<l->objectCount();j++)
             {
                 obj=l->object(j);
-                //qDebug() << "propagating object" << obj->id();
+                //qDebug()() << "propagating object" << obj->id();
 
                 // propagate the section specific object base
                 s = selector("#"+cs->id()+" object");
                 base = selector("object");
                 baseprops = base->properties();
 
-                //qDebug() << "propagating obj baseprops size" << baseprops.size();
+                //qDebug()() << "propagating obj baseprops size" << baseprops.size();
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    //qDebug() << "#"+cs->id()+" object" << baseprops[n];
+                    //qDebug()() << "#"+cs->id()+" object" << baseprops[n];
                     if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
@@ -1316,7 +1328,7 @@ void Stylesheet::parse(QString css)
 
                 for (int n=0;n<baseprops.size();n++)
                 {
-                    //qDebug() << "#"+cs->id()+"::"+obj->id() << baseprops[n];
+                    //qDebug()() << "#"+cs->id()+"::"+obj->id() << baseprops[n];
                     if (s->property(baseprops[n]).isNull() || !oriprops.contains(baseprops[n]))
                         s->property(baseprops[n]).setValue(base->property(baseprops[n]).toString());
                 }
@@ -1340,7 +1352,7 @@ void Stylesheet::parse(QString css)
             test += "\t"+list[i]+": "+s->property(list[i]).toString()+";\n";
         test += "}\n";
     }
-    qDebug() << test;*/
+    //qDebug() << test;*/
 }
 
 QString Stylesheet::parseGroup(QString gcss)
@@ -1450,7 +1462,7 @@ Selector* Stylesheet::selector(QString selector)
         return s;
     }
 
-    //qDebug() << m_selectors.keys();
+    //qDebug()() << m_selectors.keys();
 
     return m_selectors[selector];
 }
@@ -1574,7 +1586,7 @@ namespace CSS
         else
             i = 0;
 
-        //qDebug() << "stringToMsTime" << timestr << i;
+        //qDebug()() << "stringToMsTime" << timestr << i;
 
         return (int)i;
     }
@@ -1583,24 +1595,24 @@ namespace CSS
 PropertyPrivate::PropertyPrivate()
 {
     m_iRefCount = 1;
-    //qDebug() << "proppriv c" << this << m_iRefCount << m_sValue;
+    //qDebug()() << "proppriv c" << this << m_iRefCount << m_sValue;
 }
 
 void PropertyPrivate::registerUse()
 {
     m_iRefCount++;
-    //qDebug() << "proppriv r" << this << m_iRefCount << m_sValue;
+    //qDebug()() << "proppriv r" << this << m_iRefCount << m_sValue;
 }
 
 void PropertyPrivate::unregisterUse()
 {
     m_iRefCount--;
-    //qDebug() << "proppriv u" << this << m_iRefCount << m_sValue;
+    //qDebug()() << "proppriv u" << this << m_iRefCount << m_sValue;
 }
 
 bool PropertyPrivate::isUnreferenced()
 {
-    //qDebug() << "proppriv isu" << this << m_iRefCount << m_sValue;
+    //qDebug()() << "proppriv isu" << this << m_iRefCount << m_sValue;
     if (m_iRefCount == 0)
         return true;
     return false;

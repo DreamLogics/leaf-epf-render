@@ -47,6 +47,8 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property borderto
         borderstyle = borderreg.cap(2);
         r.setHeight(borderreg.cap(1).toInt());
         r.setWidth(qrBorderRect.width());
+        r.moveTop(qrBorderRect.top());
+        r.moveLeft(qrBorderRect.left());
         pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
@@ -55,7 +57,8 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property borderto
         borderstyle = borderreg.cap(2);
         r.setHeight(borderreg.cap(1).toInt());
         r.setWidth(qrBorderRect.width());
-        r.moveBottom(qrBorderRect.height());
+        r.moveBottom(qrBorderRect.bottom());
+        r.moveLeft(qrBorderRect.left());
         pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
@@ -64,6 +67,8 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property borderto
         borderstyle = borderreg.cap(2);
         r.setWidth(borderreg.cap(1).toInt());
         r.setHeight(qrBorderRect.height());
+        r.moveTop(qrBorderRect.top());
+        r.moveLeft(qrBorderRect.left());
         pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 
@@ -72,7 +77,8 @@ void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property borderto
         borderstyle = borderreg.cap(2);
         r.setWidth(borderreg.cap(1).toInt());
         r.setHeight(qrBorderRect.height());
-        r.moveRight(qrBorderRect.width());
+        r.moveTop(qrBorderRect.top());
+        r.moveRight(qrBorderRect.right());
         pPainter->fillRect(r,stringToColor(borderreg.cap(3)));
     }
 }
@@ -86,7 +92,7 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
 {
     QRectF qrSize;
 
-    //qDebug() << "paintBackgroundImage :" << strSrc;
+    //qDebug()() << "paintBackgroundImage :" << strSrc;
 
     QRegExp srcreg("[\"'\\(\\)]");
 
@@ -95,14 +101,14 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
 
     strSrc = strSrc.replace(srcreg,"");
 
-    //qDebug() << "paintBackgroundImage :" << strSrc;
+    //qDebug()() << "paintBackgroundImage :" << strSrc;
 
     QImage img = QImage::fromData(pDocument->resource(strSrc));
 
     if (img.isNull())
         return;
 
-    //qDebug() << "paintBackgroundImage - size :" << strSize;
+    //qDebug()() << "paintBackgroundImage - size :" << strSize;
 
     if (strSize != "")
     {
@@ -563,7 +569,7 @@ void paintColorOverlay(QPainter* pPainter, CBaseObject* pObj)
         QRegExp cov("(#[0-9a-fA-F]{3,6}|rgb *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)|rgba *\\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\\)) +([a-zA-Z]+)");
         if (cov.indexIn(pObj->styleProperty("color-overlay").toString()) != -1)
         {
-            //qDebug() << "color overlay" << cov.cap(1) << cov.cap(cov.captureCount());
+            //qDebug()() << "color overlay" << cov.cap(1) << cov.cap(cov.captureCount());
             CSS::paintColorOverlay(pPainter,r,stringToColor(cov.cap(1)),CSS::renderModeFromString(cov.cap(cov.captureCount())));
         }
     }

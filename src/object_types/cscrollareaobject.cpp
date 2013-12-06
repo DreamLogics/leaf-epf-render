@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QDebug>
 #include <QEasingCurve>
+#include "../css/css_painters.h"
 
 CBaseObject* CScrollAreaObjectFactory::create(QString id, CLayer *layer)
 {
@@ -60,7 +61,7 @@ void CScrollAreaObject::layout(QRectF relativeTo, QList<CBaseObject *> updatelis
         if (cobj)
         {
             pos = document()->stylesheet()->property(cobj,"position").toString();
-            //qDebug() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
+            //qDebug()() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
             if (!(pos == "fixed" || cobj->fixedParent()))
             {
@@ -95,14 +96,19 @@ void CScrollAreaObject::paint(QPainter *painter)
 
 void CScrollAreaObject::paintBuffered(QPainter *p)
 {
+    QRectF r(boundingRect().x() - section()->scrollX(),boundingRect().y() - section()->scrollY(),boundingRect().width(),boundingRect().height());
+
     //paint children
-    qDebug() << "paint children";
+    //qDebug() << "paint children";
     QString pos;
     QObjectList clist = children();
     CBaseObject* cobj;
-    QRectF clipping(boundingRect().x() - section()->scrollX(),boundingRect().y() - section()->scrollY(),boundingRect().width(),boundingRect().height());
+    QRectF clipping = r;
 
     p->resetTransform();
+
+
+    //qDebug() << "whaaaa" << r;
 
     for (int i=0;i<clist.size();i++)
     {
@@ -111,7 +117,7 @@ void CScrollAreaObject::paintBuffered(QPainter *p)
         if (cobj)
         {
             pos = document()->stylesheet()->property(cobj,"position").toString();
-            //qDebug() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
+            //qDebug()() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
             if (!(pos == "fixed" || cobj->fixedParent()))
             {
@@ -123,6 +129,8 @@ void CScrollAreaObject::paintBuffered(QPainter *p)
             }
         }
     }
+
+    CSS::paintBorder(p,r,styleProperty("border-top"),styleProperty("border-bottom"),styleProperty("border-left"),styleProperty("border-right"));
 }
 
 void CScrollAreaObject::mousePressEvent( QPoint pos )
@@ -132,7 +140,7 @@ void CScrollAreaObject::mousePressEvent( QPoint pos )
     m_ClickStartPoint.setX(x);
     m_ClickStartPoint.setY(y);
 
-    qDebug() << "scrollarea press" << pos;
+    //qDebug() << "scrollarea press" << pos;
 
     x += scrollX();
     y += scrollY();
@@ -179,7 +187,7 @@ void CScrollAreaObject::mouseReleaseEvent( QPoint pos )
     int y = pos.y();
     QPoint endpoint(pos);
 
-    qDebug() << "scrollarea release";
+    //qDebug() << "scrollarea release";
 
     if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
@@ -320,7 +328,7 @@ void CScrollAreaObject::momentum()
 
         setScrollY(delta);
         document()->updateRenderView();
-        //qDebug() << m_iMomentumPos << m_iMomentumDistance << delta << m_iMomentumStart;
+        //qDebug()() << m_iMomentumPos << m_iMomentumDistance << delta << m_iMomentumStart;
 
     }
 }

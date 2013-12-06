@@ -25,6 +25,7 @@
 
 #include "../../src/cbaseobject.h"
 #include "../../src/iepfobjectfactory.h"
+#include <QElapsedTimer>
 
 class CTextFieldObjectFactory : public IEPFObjectFactory
 {
@@ -66,6 +67,7 @@ public:
 private:
     bool m_bHasFocus;
     QString m_sValue;
+    QElapsedTimer m_HoldTimer;
 };
 
 #endif // CTextFieldOBJECT_H

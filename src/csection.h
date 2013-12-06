@@ -113,6 +113,9 @@ public:
 
     CBaseObject* objectOnPos(int x, int y, QObject* pParent=0, CBaseObject* pIgnore=0);
 
+    int width() const;
+    int height() const;
+
 signals:
 
     void nextSection();

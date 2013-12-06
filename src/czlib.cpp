@@ -24,7 +24,7 @@ qint32 CZLib::uncompressRaw (unsigned char* dest, quint32* destLen, const unsign
     if (err != Z_OK) return err;
 
     err = inflate(&stream, Z_FINISH);
-    //qDebug() << "after inflate " << err;
+    //qDebug()() << "after inflate " << err;
     if (err != Z_STREAM_END) {
         inflateEnd(&stream);
         if (err == Z_NEED_DICT || (err == Z_BUF_ERROR && stream.avail_in == 0))
@@ -78,7 +78,7 @@ bool CZLib::compress(QByteArray* data, qint32 *adler32)
     (*crccc) = crc.getCRC((const unsigned char*)(data->constData()),data->size());*/
 
     (*data) = qCompress(*data);
-    //qDebug() << data->toHex();
+    //qDebug()() << data->toHex();
     data->remove(0,6);
 
     QDataStream ds(data->mid(data->size()-4));
@@ -102,7 +102,7 @@ bool CZLib::compress(QByteArray* data, qint32 *adler32)
     (*crccc) = crc.getCRC(src,srclen);
 
     clen=compressBound(data->size());
-    qDebug() << "cbound: " << clen;
+    //qDebug() << "cbound: " << clen;
     buffer = new unsigned char[clen];
     if (compressRaw(buffer,&clen,src,srclen,Z_DEFAULT_COMPRESSION) != Z_OK)
         return false;
@@ -125,7 +125,7 @@ bool CZLib::decompress(QByteArray* data, int inflatesize, qint32 adler32)
 
     data->prepend(size);
     data->append(adler);
-    //qDebug() << data->toHex();
+    //qDebug()() << data->toHex();
     (*data) = qUncompress(*data);
 
     if (data->size() <= 0)
@@ -136,13 +136,13 @@ bool CZLib::decompress(QByteArray* data, int inflatesize, qint32 adler32)
     /*ZipCRC crc;
     if (crc.getCRC((const unsigned char*)(data->constData()),data->size()) != crc32)
     {
-        qDebug() << "crc error";
+        //qDebug() << "crc error";
         return false;
     }*/
 
     return true;
 
-    /*qDebug() << "decompress inflsize:" << inflatesize << " data size: "<<data->size();
+    /*//qDebug() << "decompress inflsize:" << inflatesize << " data size: "<<data->size();
 
     quint32 clen,srclen;
     unsigned char* buffer;
@@ -157,7 +157,7 @@ bool CZLib::decompress(QByteArray* data, int inflatesize, qint32 adler32)
     int err = uncompressRaw(buffer,&clen,src,srclen);
     if (err != Z_OK)
     {
-        qDebug() << "error: " << err;
+        //qDebug() << "error: " << err;
         return false;
     }
 
@@ -173,7 +173,7 @@ bool CZLib::decompress(QByteArray* data, int inflatesize, qint32 adler32)
     ZipCRC crc;
     if (crc.getCRC((const unsigned char*)(data->constData()),data->size()) != crc32)
     {
-        qDebug() << "crc error";
+        //qDebug() << "crc error";
         return false;
     }
     return true;*/

@@ -48,7 +48,7 @@ void COverlay::setVisibility(bool b)
 
 void COverlay::onEPFEvent(EPFEvent *ev)
 {
-    qDebug() << "overlay event" << ev->event() << ev->parameter(0);
+    //qDebug() << "overlay event" << ev->event() << ev->parameter(0);
     if (ev->event() == "setActive")
     {
         if (ev->parameter(0) == "true" || ev->parameter(0) == "1")

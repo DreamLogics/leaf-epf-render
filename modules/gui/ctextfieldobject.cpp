@@ -30,6 +30,8 @@
 #include <QDebug>
 #include <QInputMethod>
 #include <QApplication>
+#include "../../src/idevice.h"
+#include <QMenu>
 
 CBaseObject* CTextFieldObjectFactory::create(QString id, CLayer *layer)
 {
@@ -98,6 +100,7 @@ void CTextFieldObject::mouseDoubleClickEvent ( QPoint pos )
 
 void CTextFieldObject::mousePressEvent( QPoint pos )
 {
+    m_HoldTimer.start();
     if (section()->hasControl(this))
     {
         if (!boundingRect().contains(pos))
@@ -113,6 +116,14 @@ void CTextFieldObject::mousePressEvent( QPoint pos )
 
 void CTextFieldObject::mouseReleaseEvent( QPoint pos )
 {
+    qint64 t = m_HoldTimer.elapsed();
+    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
+    {
+        if (t >= 1000)
+        {
+
+        }
+    }
     QApplication::inputMethod()->show();
     if (!section()->hasControl(this))
     {
@@ -130,7 +141,7 @@ void CTextFieldObject::mouseMoveEvent( QPoint pos )
 
 void CTextFieldObject::keyPressEvent(int key, QString val)
 {
-    //qDebug() << "press" << key << val;
+    //qDebug()() << "press" << key << val;
     if (key == Qt::Key_Return)
     {
         QApplication::inputMethod()->hide();
@@ -154,5 +165,5 @@ void CTextFieldObject::keyPressEvent(int key, QString val)
 
 void CTextFieldObject::keyReleaseEvent(int key, QString val)
 {
-    //qDebug() << "release" << key;
+    //qDebug()() << "release" << key;
 }

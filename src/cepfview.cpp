@@ -85,9 +85,9 @@ void CEPFScene::drawBackground(QPainter *painter, const QRectF &rect)
     //p.begin(this);
     if (!(painter->paintEngine()->type() == QPaintEngine::OpenGL || painter->paintEngine()->type() == QPaintEngine::OpenGL2)) {
                 qWarning("OpenGLScene: drawBackground needs a "
-                         "QGLWidget to be set as viewport on the "
+                         "WIDGETBASE to be set as viewport on the "
                          "graphics view");
-                qDebug() << painter->paintEngine()->type();
+                //qDebug() << painter->paintEngine()->type();
                 return;
             }
 
@@ -179,7 +179,7 @@ void CEPFScene::drawBackground(QPainter *painter, const QRectF &rect)
                     {
                         if (m_pView->m_TransFx == CSection::FadeFx && i == m_pView->m_iCurrentSection)
                         {
-                            //qDebug() << "transition" << 1-m_dTransition << cs->id();
+                            //qDebug()() << "transition" << 1-m_dTransition << cs->id();
                             painter->setOpacity(1-m_pView->m_dTransition);
                         }
                         else
@@ -225,7 +225,7 @@ void CEPFScene::drawBackground(QPainter *painter, const QRectF &rect)
     painter->restore();
 }*/
 
-CEPFView::CEPFView(QWidget* parent) : QGLWidget(parent)//QGraphicsView(parent)
+CEPFView::CEPFView(QWidget* parent) : WIDGETBASE(parent)//QGraphicsView(parent)
 {
     //m_pDocScene = new QGraphicsScene();
     //setScene(m_pDocScene);
@@ -245,7 +245,7 @@ CEPFView::CEPFView(QWidget* parent) : QGLWidget(parent)//QGraphicsView(parent)
     setFocusPolicy(Qt::StrongFocus);
 
 
-    //setViewport(new QGLWidget);
+    //setViewport(new WIDGETBASE);
     //setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     //setScene(new CEPFScene(this));
 
@@ -280,7 +280,7 @@ void CEPFView::setDocument(CDocument *doc)
 
     int i,first=-1;
 
-    qDebug() << "setting document";
+    //qDebug() << "setting document";
 
     /*for (i=0;i<m_SectionViews.size();i++)
         delete m_SectionViews[i];*/
@@ -565,7 +565,7 @@ bool CEPFView::viewportEvent(QEvent *event)
 
     if (event->type() == QEvent::Scroll || event->type() == QEvent::Wheel)
     {
-        qDebug() << verticalScrollBar()->value();
+        //qDebug() << verticalScrollBar()->value();
         //return QAbstractScrollArea::viewportEvent(event);
         //return true;
     }
@@ -681,7 +681,7 @@ void CEPFView::paintEvent(QPaintEvent *ev)
             {
 
                 cs = m_pDocument->section(i);
-                if (!(cs->isHidden() && i != m_iCurrentSection))
+                if (!(cs->isHidden() && i != m_iCurrentSection && i != m_iPreviousSection))
                 {
                     if (m_TransFx == CSection::SlideFx)
                     {
@@ -692,7 +692,7 @@ void CEPFView::paintEvent(QPaintEvent *ev)
                     {
                         if (m_TransFx == CSection::FadeFx && i == m_iCurrentSection)
                         {
-                            //qDebug() << "transition" << 1-m_dTransition << cs->id();
+                            //qDebug()() << "transition" << 1-m_dTransition << cs->id();
                             p.setOpacity(1-m_dTransition);
                         }
                         else
@@ -719,7 +719,7 @@ void CEPFView::paintEvent(QPaintEvent *ev)
         /*if (m_TransFx == CSection::SlideFx)
         {
             p.translate(sx-nx,sy-ny);
-            //qDebug() << "nxy" << nx << ny;
+            //qDebug()() << "nxy" << nx << ny;
         }
         else
         {
@@ -851,7 +851,7 @@ void CEPFView::wheelEvent(QWheelEvent *ev)
     if (s)
     {
         //s->setScrollY(ev->delta());
-        //qDebug() << ev->delta();
+        //qDebug()() << ev->delta();
         if (ev->orientation() == Qt::Vertical)
             s->setScrollY(s->scrollY()-ev->delta());
         else
@@ -867,7 +867,7 @@ int CEPFView::indexForSection(QString id)
 
 bool CEPFView::event(QEvent *ev)
 {
-    bool b = QGLWidget::event(ev);
+    bool b = WIDGETBASE::event(ev);
     if (ev->type() == QEvent::TouchBegin)
     {
         QTouchEvent* tev = dynamic_cast<QTouchEvent*>(ev);

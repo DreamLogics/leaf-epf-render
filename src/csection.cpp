@@ -202,7 +202,7 @@ QObject* CSection::getObjectByID(QString id)
 void CSection::rendered(QPainter *p)
 {
     m_gRenderMutex.lock();
-    //qDebug() << "rendered lock";
+    //qDebug()() << "rendered lock";
     p->drawImage(0,0,m_imgRendered);
     m_gRenderMutex.unlock();
 }*/
@@ -227,6 +227,16 @@ void CSection::updateRendered()
     updateRendered(m_rView);
 }
 */
+
+int CSection::width() const
+{
+    return m_iLayoutWidth;
+}
+int CSection::height() const
+{
+    return m_iLayoutHeight;
+}
+
 void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
 {
     m_iLayoutWidth = width;
@@ -235,7 +245,7 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
     m_pViewportItem->setSize(height,width);
     CSS::Stylesheet* css = document()->stylesheet();
 
-    qDebug() << "CSection::layout" << width << height;
+    //qDebug() << "CSection::layout" << width << height;
 
     QElapsedTimer t;
     t.start();
@@ -272,7 +282,7 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
             if (dynamic_cast<CLayer*>(obj->parent()))
             {
                 pos = css->property(obj,"position").toString();
-                //qDebug() << "position" << pos;
+                //qDebug()() << "position" << pos;
                 if (pos == "static" || pos == "relative")
                 {
                     obj->layout(relrect,updatelist);
@@ -336,7 +346,7 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
 
 /*
     m_gRenderMutex.lock();
-    //qDebug() << "layout lock";
+    //qDebug()() << "layout lock";
     QPainter p;
     m_imgRendered = QImage(m_rView.size().toSize(),QImage::Format_RGB32);
     p.begin(&m_imgRendered);
@@ -360,7 +370,7 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
         m_iTransitionFx = NoneFx;
     m_mTransitionFxMutex.unlock();
 
-    //qDebug() << "scrollmax" << docheight - height;
+    //qDebug()() << "scrollmax" << docheight - height;
     if (updatelist.size() == 0)
         setScrollYMax(docheight - height);
 
@@ -430,7 +440,7 @@ void CSection::render(QPainter *p,QRectF region)
     //QList<QRectF> changedregions;
 
 
-    //qDebug() << id() << "section render" << relreg;
+    //qDebug()() << id() << "section render" << relreg;
 
     //TODO load from css
     //p->fillRect(absreg,QColor("white"));
@@ -482,7 +492,7 @@ void CSection::render(QPainter *p,QRectF region)
             }
             else
             {
-                //qDebug() << "dont render" << obj->id();
+                //qDebug()() << "dont render" << obj->id();
             }
 
         }
@@ -492,7 +502,7 @@ void CSection::render(QPainter *p,QRectF region)
 
     drawScrollbar(p);
 
-    qDebug() << "Section render time elapsed: " << t.nsecsElapsed();
+    //qDebug() << "Section render time elapsed: " << t.nsecsElapsed();
 
     //m_mRenderMutex.unlock();
 }
@@ -524,7 +534,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
                     isfixed = true;
                 else if (obj->fixedParent())
                     isfixed = true;
-                //qDebug() << obj->id() << obj->boundingRect() << pos << "yay";
+                //qDebug()() << obj->id() << obj->boundingRect() << pos << "yay";
                 if ((obj->boundingRect().contains(pos) && !isfixed) || (obj->boundingRect().contains(posfixed) && isfixed))
                     return obj;
             }
@@ -539,7 +549,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
             for (int n=l->objectCount()-1;n>=0;n--)
             {
                 obj = l->object(n);
-                //qDebug() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
+                //qDebug()() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
                 if (obj->enabled() && pIgnore != obj && dynamic_cast<CLayer*>(obj->parent()))
                 {
                     isfixed = false;
@@ -548,7 +558,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
                         isfixed = true;
                     else if (obj->fixedParent())
                         isfixed = true;
-                    //qDebug() << obj->id() << obj->boundingRect() << pos << "yay";
+                    //qDebug()() << obj->id() << obj->boundingRect() << pos << "yay";
                     if ((obj->boundingRect().contains(pos) && !isfixed) || (obj->boundingRect().contains(posfixed) && isfixed))
                         return obj;
                 }
@@ -561,7 +571,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
             for (int n=l->objectCount()-1;n>=0;n--)
             {
                 obj = l->object(n);
-                //qDebug() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
+                //qDebug()() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
                 if (obj->enabled() && pIgnore != obj)
                 {
                     isfixed = false;
@@ -570,7 +580,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
                         isfixed = true;
                     else if (obj->fixedParent())
                         isfixed = true;
-                    //qDebug() << obj->id() << obj->boundingRect() << pos << "yay";
+                    //qDebug()() << obj->id() << obj->boundingRect() << pos << "yay";
                     if ((obj->boundingRect().contains(pos) && !isfixed) || (obj->boundingRect().contains(posfixed) && isfixed))
                         return obj;
                 }
@@ -608,7 +618,7 @@ void CSection::mousePressEvent( int x, int y )
     m_ClickStartPoint.setX(x);
     m_ClickStartPoint.setY(y);
 
-    qDebug() << "section click";
+    //qDebug() << "section click";
 
     x += scrollX();
     y += scrollY();
@@ -619,7 +629,7 @@ void CSection::mousePressEvent( int x, int y )
         return;
     }
 
-    //qDebug() << "section click 2";
+    //qDebug()() << "section click 2";
 
     CBaseObject* obj = objectOnPos(x,y);
 
@@ -660,7 +670,7 @@ void CSection::mousePressEvent( int x, int y )
     if (!obj)
         return;
 
-    //qDebug() << "section click" << obj->id();
+    //qDebug()() << "section click" << obj->id();
 
     x -= obj->boundingRect().x();
     y -= obj->boundingRect().y();
@@ -751,7 +761,7 @@ void CSection::mouseReleaseEvent( int x, int y )
     if (!obj)
         return;
 
-    qDebug() << "section click" << obj->id();
+    //qDebug() << "section click" << obj->id();
 
     m_pFocusObj = obj;
 
@@ -997,7 +1007,7 @@ void CSection::momentum()
 
         setScrollY(deltay);
         document()->updateRenderView();
-        //qDebug() << m_iMomentumPos << m_iMomentumDistance << delta << m_iMomentumStart;
+        //qDebug()() << m_iMomentumPos << m_iMomentumDistance << delta << m_iMomentumStart;
 
     }
 }

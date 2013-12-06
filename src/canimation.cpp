@@ -188,7 +188,7 @@ QString CAnimation::mixColor(QString color1, QString color2, double pos)
 
     nc = "rgba(" + QString::number(r) + "," + QString::number(g) + "," + QString::number(b) + "," + QString::number(a) + ")";
 
-    //qDebug() << color1 << color2 << pos << nc;
+    //qDebug()() << color1 << color2 << pos << nc;
 
     return nc;
 }
@@ -200,7 +200,7 @@ QString CAnimation::mixInt(QString int1, QString int2, double pos)
     int offi1b,offi1s;
     QString sn;
 
-    //qDebug() << "mix int:"<<int1<<int2<<pos;
+    //qDebug()() << "mix int:"<<int1<<int2<<pos;
 
     offi1b = intreg.indexIn(int1);
     if (offi1b != -1)
@@ -217,7 +217,7 @@ QString CAnimation::mixInt(QString int1, QString int2, double pos)
     in = i1 - ((i1 - i2)*pos);
     sn = int1.left(offi1b) + QString::number(in) + int1.mid(offi1b+offi1s);
 
-    //qDebug() << sn;
+    //qDebug()() << sn;
 
     return sn;
 }
@@ -229,7 +229,7 @@ QString CAnimation::mixDouble(QString dbl1, QString dbl2, double pos)
     int offi1b,offi1s;
     QString sn;
 
-    //qDebug() << "mix double:"<<dbl1<<dbl2<<pos;
+    //qDebug()() << "mix double:"<<dbl1<<dbl2<<pos;
 
     offi1b = intreg.indexIn(dbl1);
     if (offi1b != -1)
@@ -246,7 +246,7 @@ QString CAnimation::mixDouble(QString dbl1, QString dbl2, double pos)
     in = i1 - ((i1 - i2)*pos);
     sn = dbl1.left(offi1b) + QString::number(in) + dbl1.mid(offi1b+offi1s);
 
-    //qDebug() << sn;
+    //qDebug()() << sn;
 
     return sn;
 }
@@ -271,13 +271,13 @@ void CAnimation::playNextFrame()
 {
     /*if (!m_pDoc->currentLayout())
     {
-        qDebug() << "currentlayout null";
+        //qDebug() << "currentlayout null";
         return;
     }*/
 
     if (!m_Frames.contains(m_pDoc->currentLayout()->id()))
     {
-        qDebug() << "No animation found for layout "<<m_pDoc->currentLayout()->id();
+        //qDebug() << "No animation found for layout "<<m_pDoc->currentLayout()->id();
         m_pTimer->stop();
         return;
     }
@@ -361,7 +361,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
     objpropmapend = endframep->objectPropMap();
 
     objs = objpropmapend.keys();
-    //qDebug() << objs.size();
+    //qDebug()() << objs.size();
 
     if (frames.contains(startframe))
         objpropmapstart = frames[startframe]->objectPropMap();
@@ -372,7 +372,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
         if (frames.contains(0))
             delete frames[0];
 
-        //qDebug() << "build start frames";
+        //qDebug()() << "build start frames";
 
         //animframe = new CAnimFrame(endframep->section());
         CSS::Stylesheet* sp = m_pDoc->stylesheet();
@@ -387,7 +387,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
             for (int ii=0;ii<sl.size();ii++)
             {
                 startpropmap.insert(sl[ii],sp->property(obj,sl[ii]).value());
-                //qDebug() << sl[ii] << sp.property(sl[ii]);
+                //qDebug()() << sl[ii] << sp.property(sl[ii]);
             }
             objpropmapstart.insert(obj,startpropmap);
             //animframe->setPropertiesForObject(obj,startpropmap);
@@ -426,7 +426,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
             propval2 = endpropmap[props[pi]];
             position = (double)(frame-startframe)/(double)(endframe-startframe-1);
 
-            //qDebug() << "Mix prop: "<<props[pi] << propval1 << startpropmap[props[pi]];
+            //qDebug()() << "Mix prop: "<<props[pi] << propval1 << startpropmap[props[pi]];
 
             /*if (CSS::color_props.contains(props[pi]))
             {
@@ -458,7 +458,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
                 }
                 else
                 {
-                    qDebug() << "color-overlay" << propval1 << propval2;
+                    //qDebug() << "color-overlay" << propval1 << propval2;
                 }
             }
             /*else if (props[pi].startsWith("$"))
@@ -493,7 +493,7 @@ CAnimFrame* CAnimation::generateFrame(QString layout, int frame)
         props = endpropmap.keys();
         for (int pi=0;pi<props.size();pi++)
         {
-            //qDebug() << "Copy prop: "<<props[pi];
+            //qDebug()() << "Copy prop: "<<props[pi];
             if (!propmapnew.contains(props[pi]))
                 propmapnew.insert(props[pi],endpropmap[props[pi]]);
         }

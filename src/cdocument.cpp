@@ -114,13 +114,13 @@ void CDocument::setStylesheetVariable(QString key, QString val)
                 obj = l->object(t);
                 if (obj->onStylesheetVariableChange(key,val,oldval))
                     filter.append(obj);
-                //qDebug() << "on css var" << obj->id() << tt.nsecsElapsed();
+                //qDebug()() << "on css var" << obj->id() << tt.nsecsElapsed();
             }
         }
         if (filter.size() > 0)
             s->layout(filter);
     }
-    qDebug() << "set css var (sections) took" <<  t.nsecsElapsed();
+    //qDebug() << "set css var (sections) took" <<  t.nsecsElapsed();
     for (int i = 0;i<overlayCount();i++)
     {
         filter.clear();
@@ -134,14 +134,14 @@ void CDocument::setStylesheetVariable(QString key, QString val)
                 obj = l->object(t);
                 if (obj->onStylesheetVariableChange(key,val,oldval))
                     filter.append(obj);
-                //qDebug() << "on css var" << obj->id() << tt.nsecsElapsed();
+                //qDebug()() << "on css var" << obj->id() << tt.nsecsElapsed();
             }
         }
         if (filter.size() > 0)
             o->layout(filter);
     }
     //delete ev;
-    qDebug() << "set css var took" <<  t.nsecsElapsed();
+    //qDebug() << "set css var took" <<  t.nsecsElapsed();
 }
 
 QString CDocument::stylesheetVariable(QString key)
@@ -325,7 +325,7 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
             for (i = 0;i<vars.size();i++)
             {
                 val = m_pStylesheet->variable(vars[i]);
-                //qDebug() << "update var" << vars[i] << "to" << val;
+                //qDebug()() << "update var" << vars[i] << "to" << val;
                 if (!val.isNull())
                     newcss->setVariable(vars[i],val);
             }
@@ -456,7 +456,7 @@ int CDocument::resource(QString resource, char *buffer, int len, int offset)
 {
     if (!m_Resources.contains(resource))
     {
-        qDebug() << "Requested non existing resource:" << resource;
+        //qDebug() << "Requested non existing resource:" << resource;
         return 0;
     }
 
@@ -474,7 +474,7 @@ int CDocument::resource(QString resource, char *buffer, int len, int offset)
             s = res.size;
         else
         {
-            qDebug() << "compressed stream impl";
+            //qDebug() << "compressed stream impl";
             return 0;
         }
 
@@ -498,10 +498,10 @@ int CDocument::resource(QString resource, char *buffer, int len, int offset)
     }
     else if (res.type == 4)
     {
-        qDebug() << "remote res not implemented";
+        //qDebug() << "remote res not implemented";
     }
     else
-        qDebug() << "unsupported resource type";
+        //qDebug() << "unsupported resource type";
 
     return br;
 }
@@ -519,7 +519,7 @@ CDocument::Resource CDocument::resourceInfo(QString resource)
 
     if (!m_Resources.contains(resource))
     {
-        qDebug() << "Requested non existing resource:" << resource;
+        //qDebug() << "Requested non existing resource:" << resource;
         return res;
     }
 
@@ -552,7 +552,7 @@ void CDocument::addResource(QString re, QString container_file, QString extra, q
         {
             res.external_device = new QFile(res.container);
             if (!res.external_device->open(QIODevice::ReadOnly))
-                qDebug() << "unable to open file resource container";
+                //qDebug() << "unable to open file resource container";
             m_devices.insert(res.container,res.external_device);
         }
     }
@@ -561,7 +561,8 @@ void CDocument::addResource(QString re, QString container_file, QString extra, q
 
     if (re == "main.js")
     {
-        m_pJS = new CEPFJS(QString::fromUtf8(resource(re)),this);
+        QByteArray data = resource(re);
+        m_pJS = new CEPFJS(QString::fromUtf8(data),this);
     }
 }
 
@@ -657,7 +658,7 @@ void CDocument::load(int height, int width, int sectionid)
     CBaseObject* obj;
     int i;
 
-    qDebug() << "load" << height << width;
+    //qDebug() << "load" << height << width;
 
     for (i=0;i<sectionCount();i++)
     {
@@ -670,7 +671,7 @@ void CDocument::load(int height, int width, int sectionid)
             for (int l=0;l<layer->objectCount();l++)
             {
                 obj = layer->object(l);
-                qDebug() << "preload" << obj->id();
+                //qDebug() << "preload" << obj->id();
                 obj->preload();
             }
         }
@@ -687,7 +688,7 @@ void CDocument::load(int height, int width, int sectionid)
             for (int l=0;l<layer->objectCount();l++)
             {
                 obj = layer->object(l);
-                qDebug() << "preload" << obj->id();
+                //qDebug() << "preload" << obj->id();
                 obj->preload();
             }
         }
@@ -718,7 +719,7 @@ void CDocument::releaseStylesheet()
 
 void CDocument::onEPFEvent(EPFEvent *ev)
 {
-    qDebug() << ev->event();
+    //qDebug() << ev->event();
     if (ev->event() == "playAnimation")
     {
         if (ev->parameter(0) != "")
@@ -814,7 +815,7 @@ void CDocument::clearBuffers()
 
 void CDocument::registerFont(int id)
 {
-    qDebug() << "font registered" << id;
+    //qDebug() << "font registered" << id;
     m_RegisteredFonts.append(id);
 }
 
@@ -850,14 +851,14 @@ qint64 ResourceIO::readData(char *data, qint64 maxlen)
     if (read == -1)
         return -1;*/
     //m_iPos += read;
-    //qDebug() << "read data" << r.size << pos();
+    //qDebug()() << "read data" << r.size << pos();
     return r.external_device->read(data,len);
     //return m_pDoc->resource(m_sResource,data,maxlen,pos());
 }
 
 qint64 ResourceIO::writeData(const char *data, qint64 len)
 {
-    qDebug() << "write data";
+    //qDebug() << "write data";
     return 0;
 }
 
@@ -881,7 +882,7 @@ bool ResourceIO::isSequential() const
 bool ResourceIO::seek(qint64 p)
 {
     //return true;
-    qDebug() << "seek b" << p << pos();
+    //qDebug() << "seek b" << p << pos();
     return QIODevice::seek(p);
 }
 /*

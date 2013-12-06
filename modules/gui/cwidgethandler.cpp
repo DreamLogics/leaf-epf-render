@@ -111,10 +111,10 @@ bool CWidgetHandler::eventFilter(QObject *p, QEvent *ev)
                     || ev->type() == QEvent::MouseMove || ev->type() == QEvent::MouseButtonDblClick)
             {
                 QMouseEvent* mev = dynamic_cast<QMouseEvent*>(ev);
-                //qDebug() << "mouse ev" << mev->pos() << r;
+                //qDebug()() << "mouse ev" << mev->pos() << r;
                 if (mev && r.contains(mev->pos()))
                 {
-                    qDebug() << "mouse ev pos";
+                    //qDebug() << "mouse ev pos";
                     QPoint lpos(mev->pos().x() - r.x(),mev->pos().y() - r.y());
                     QMouseEvent* nme = new QMouseEvent(ev->type(),lpos,mev->button(),mev->buttons(),mev->modifiers());
                     QApplication::sendEvent(it.value(),nme);
@@ -137,7 +137,7 @@ bool CWidgetHandler::eventFilter(QObject *p, QEvent *ev)
     }
     else if (dynamic_cast<QWidget*>(p))
     {
-        qDebug() << "event intercepted";
+        //qDebug() << "event intercepted";
         return false;
     }
     return false;

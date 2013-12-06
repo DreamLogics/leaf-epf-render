@@ -75,8 +75,9 @@ private:
     CEPFView* m_pView;
 };*/
 
+#define WIDGETBASE QGLWidget
 
-class LEAFEPFRENDERSHARED_EXPORT CEPFView : public QGLWidget
+class LEAFEPFRENDERSHARED_EXPORT CEPFView : public WIDGETBASE//QGLWidget
 {
     Q_OBJECT
 public:

@@ -26,7 +26,7 @@
 #include "csection.h"
 #include "cdocument.h"
 #include "cepfview.h"
-#include <QDebug>
+//#include <QDebug>
 #include <QGLFramebufferObject>
 #include <QTime>
 #include "canimator.h"
@@ -105,7 +105,7 @@ QRectF CBaseObject::boundingRect() const
 
 void CBaseObject::preload()
 {
-    qDebug() << "preload func";
+    //qDebug() << "preload func";
 }
 
 QString CBaseObject::id() const
@@ -127,13 +127,13 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 
     CBaseObject* obj = dynamic_cast<CBaseObject*>(r);
     if (obj)
-        qDebug() << "child of:" << obj->id();*/
+        //qDebug() << "child of:" << obj->id();*/
     QString pos;
     CSS::Stylesheet* css = document()->stylesheet();
 
     if ((updatelist.size() > 0 && updatelist.contains(this)) || updatelist.size() == 0)
     {
-        qDebug() << "layout" << id();
+        //qDebug() << "layout" << id();
         QRectF oldrect = m_rRect;
         QRectF newrect = m_rRect;
         //QRectF relrect = r->boundingRect();
@@ -146,10 +146,12 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         m_RenderPropsMutex.lock();
 
         m_dOpacity = styleProperty("opacity").toDouble();
+        //if (id() == "menu-sorting-text")
+            //qDebug() << "whaaaaa" << m_dOpacity;
 
         m_RenderPropsMutex.unlock();
 
-        //qDebug() << "test ret val" << styleProperty("opacity").value();
+        //qDebug()() << "test ret val" << styleProperty("opacity").value();
 
         setMargin(styleProperty("margin-top").toInt(),styleProperty("margin-left").toInt(),styleProperty("margin-bottom").toInt(),styleProperty("margin-right").toInt());
         //setPadding(styleProperty("padding-top").toInt(),styleProperty("padding-left").toInt(),styleProperty("padding-bottom").toInt(),styleProperty("padding-right").toInt());
@@ -157,7 +159,7 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         newrect.setHeight(styleProperty("height").toInt()+styleProperty("mod-height").toInt());
         newrect.setWidth(styleProperty("width").toInt()+styleProperty("mod-width").toInt());
 
-        //qDebug() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << styleProperty("height").toString();
+        //qDebug()() << "CBaseObject::layout" << m_rRect.size() << "#"+section()->id()+"::"+id() << styleProperty("height").toString();
 
         /*if (styleProperty("relative-to").toString() == "")
         {
@@ -175,7 +177,7 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
             newrect.moveTop(relrect.top() + styleProperty("top").toInt());
             newrect.moveLeft(relrect.left() + styleProperty("left").toInt());
 
-            //qDebug() << "CBaseObject::layout" << newrect << "#"+section()->id()+"::"+id() << styleProperty("top").toInt();
+            //qDebug()() << "CBaseObject::layout" << newrect << "#"+section()->id()+"::"+id() << styleProperty("top").toInt();
 
             //m_rRect.setHeight(styleProperty("height").toInt());
             //m_rRect.setWidth(styleProperty("width").toInt());
@@ -357,11 +359,12 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         }
     }
 
-    //qDebug() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;
+    //qDebug()() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;
 
     QObjectList clist = children();
     CBaseObject* cobj;
     QRectF relr = m_rRect;
+    QRectF fixr(0,0,section()->width(),section()->height());
     for (int i=0;i<clist.size();i++)
     {
         if (document()->shouldStopLayout())
@@ -370,10 +373,12 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         if (cobj)
         {
             pos = css->property(cobj,"position").toString();
-            //qDebug() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
+            //qDebug()() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
             if (pos == "absolute")
                 cobj->layout(m_rRect,updatelist);
+            else if (pos == "fixed")
+                cobj->layout(fixr,updatelist);
             else
             {
                 cobj->layout(relr,updatelist);
@@ -447,13 +452,13 @@ void CBaseObject::setCSSOverride(QString ss)
         propv = props[i].split(":");
         if (propv.size() == 2)
         {
-            //qDebug() << "add override prop" << propv[0] << propv[1];
+            //qDebug()() << "add override prop" << propv[0] << propv[1];
             prop = CSS::Property(propv[0],propv[1],css,css->property(this,propv[0]).scaleMode(),CSS::height_props.contains(propv[0]));
             m_CSSOverrideProps.insert(propv[0],prop);
         }
         else
         {
-            qDebug() << "prop without : " << props[i] << ss;
+            //qDebug() << "prop without : " << props[i] << ss;
         }
     }
 
@@ -463,7 +468,7 @@ void CBaseObject::setCSSOverride(QString ss)
 
 CSS::Property CBaseObject::cssOverrideProp(QString prop)
 {
-    //qDebug() << "requested css override" << prop;
+    //qDebug()() << "requested css override" << prop;
     QMap<QString,CSS::Property>::Iterator it;
 
     it=m_CSSOverrideProps.find(prop);
@@ -472,13 +477,13 @@ CSS::Property CBaseObject::cssOverrideProp(QString prop)
 
     //CSS::Property cprop = it.value();
     //QString t = cprop.toString();
-    //qDebug() << "override prop" <<  prop  << it.value().toString();
+    //qDebug()() << "override prop" <<  prop  << it.value().toString();
     return it.value();
 }
 
 void CBaseObject::setCSSOverrideProp(QString key, CSS::Property value)
 {
-    //qDebug() << "override prop for object" << id() << "prop" << key << "value" << value.toString();
+    //qDebug()() << "override prop for object" << id() << "prop" << key << "value" << value.toString();
     if (!value.isNull())
         m_bNeedsRedraw = true;
     if (m_CSSOverrideProps.contains(key))
@@ -688,7 +693,7 @@ void CBaseObject::removeStyleClass(QString classname)
         if (!CSS::Transitioner::get(thread())->undoTransition(id()+"_"+classname))
         {
             //create transition
-            qDebug() << "create reversed transition";
+            //qDebug() << "create reversed transition";
             CSS::Selector* sel;
             QList<CSS::Property> deltaprops;
             QStringList props,props2;
@@ -703,7 +708,7 @@ void CBaseObject::removeStyleClass(QString classname)
                     if (!sel->property(props[i]).isNull())
                     {
                         deltaprops.append(document()->stylesheet()->property(this,props[i],true));
-                        //qDebug() << props[i];
+                        //qDebug()() << props[i];
                     }
                 }
             }
@@ -758,7 +763,7 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
 {
     if (ev->event() == "addStyleClass")
     {
-        //qDebug() << "addstyleclass" << ev->parameter(0);
+        //qDebug()() << "addstyleclass" << ev->parameter(0);
         if (ev->parameter(0) != "")
             addStyleClass(ev->parameter(0));
     }
@@ -774,7 +779,7 @@ void CBaseObject::onEPFEvent(EPFEvent *ev)
     }
     else if (ev->event() == "toggleStyleClass")
     {
-        //qDebug() << "toggleStyleClass" << ev->parameter(0);
+        //qDebug()() << "toggleStyleClass" << ev->parameter(0);
         if (ev->parameter(0) != "")
             toggleStyleClass(ev->parameter(0));
     }
@@ -805,14 +810,14 @@ bool CBaseObject::onStylesheetVariableChange(QString key, QString val, QString o
         //CSS::Property prop = document()->stylesheet()->property(this,propsold[i].name());
         //if (oldval != propsold[i].value()/*prop.value()*/)
         {
-            //qDebug() << "prop changed" << propsold[i].name() << oldval << prop.value();
+            //qDebug()() << "prop changed" << propsold[i].name() << oldval << prop.value();
             document()->stylesheet()->oldState(true);
             dprops.append(propsold[i].clone());
             document()->stylesheet()->oldState(false);
         }
     }
 
-    qDebug() << "onStylesheetVariableChange time" << t.nsecsElapsed();
+    //qDebug() << "onStylesheetVariableChange time" << t.nsecsElapsed();
     if (dprops.size() == 0)
         return false;
     //a variable has changes, update and possibly create a transition
@@ -821,7 +826,7 @@ bool CBaseObject::onStylesheetVariableChange(QString key, QString val, QString o
         //CSS::Transitioner::get(thread())->removeTransitions(this);
         //static int count=0;
         //count++;
-        //qDebug() << "onStylesheetVariableChange" << id() << ev->parameter(0) << ev->parameter(1) << count;
+        //qDebug()() << "onStylesheetVariableChange" << id() << ev->parameter(0) << ev->parameter(1) << count;
         CSS::Transitioner::get(thread())->removeTransition(id()+"_"+key);
         m_iInTransition++;
         m_iTransitionStarted++;
@@ -888,7 +893,7 @@ void CBaseObject::paintBuffered(QPainter *p)
 
     //draw in chunks
     //int chunksize = 512;
-    //qDebug() << "drawing" << id();
+    //qDebug()() << "drawing" << id();
     //QTime t = QTime::currentTime();
 
     if (m_qiRenderBuffer.width() <= dw && m_qiRenderBuffer.height() <= dh)
@@ -944,7 +949,7 @@ void CBaseObject::paintBuffered(QPainter *p)
         if (cobj)
         {
             pos = document()->stylesheet()->property(cobj,"position").toString();
-            //qDebug() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
+            //qDebug()() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
             if (!(pos == "fixed" || cobj->fixedParent()))
             {
@@ -1051,7 +1056,7 @@ void CBaseObject::updateRenderMode()
 
 void CBaseObject::transitionDone(QString transition)
 {
-    //qDebug() << "transition done" << transition;
+    //qDebug()() << "transition done" << transition;
     m_iInTransition--;
     /*if (m_CSSVariableSetter.contains(transition))
     {
@@ -1063,8 +1068,11 @@ CSS::Property CBaseObject::styleProperty(QString key)
 {
     CSS::Stylesheet* css = document()->stylesheet();
     CSS::Property prop = cssOverrideProp(key);
+    //if (key == "opacity")
+    //qDebug() << "request for opacity prop" << id() << styleClasses() << prop.isNull();
     if (prop.isNull())
         prop = css->property(this,key);
+    //qDebug() << prop.isNull() << prop.toString();
     if (prop.isNull())
         return prop;
     if (m_iTransitionStarted > 0)

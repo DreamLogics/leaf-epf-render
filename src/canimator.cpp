@@ -85,7 +85,7 @@ void CAnimator::update()
     for (it=m_Animations.begin();it != m_Animations.end();it++)
     {
         registered_animation regani = it.value();
-        //qDebug() << "CAnimator::update()" << m_iTime << regani.m_iStartTime;
+        //qDebug()() << "CAnimator::update()" << m_iTime << regani.m_iStartTime;
         if (regani.m_pObject->section() != m_pSection)
             continue;
 
@@ -142,8 +142,8 @@ void CAnimator::update()
 
             pos = (double)regani.m_iCurFrame / (double)regani.m_iFrames;
 
-            //qDebug() << "curframes" << regani.m_iCurFrame << "frames" << regani.m_iFrames;
-            //qDebug() << "pos pre-ease" << pos;
+            //qDebug()() << "curframes" << regani.m_iCurFrame << "frames" << regani.m_iFrames;
+            //qDebug()() << "pos pre-ease" << pos;
 
             if (regani.m_efEasing == CSS::efEase)
             {
@@ -161,7 +161,7 @@ void CAnimator::update()
                 pos = ec.valueForProgress(pos);
             }
 
-            //qDebug() << "pos post-ease" << pos;
+            //qDebug()() << "pos post-ease" << pos;
 
             if (regani.m_dirDirection == CSS::dirReverse || (regani.m_dirDirection == CSS::dirAlternate && regani.m_bAlternate)
                     || (regani.m_dirDirection == CSS::dirAlternateReverse && !regani.m_bAlternate) )
@@ -211,7 +211,7 @@ int CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_tim
 
 int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction direction, bool bTransition, int current_anim)
 {
-    //qDebug() << "register animation for object" << obj->id();
+    //qDebug()() << "register animation for object" << obj->id();
     registered_animation regani;
     CSS::Stylesheet* css = obj->document()->stylesheet();
     CSS::Animation* ani;
@@ -221,7 +221,7 @@ int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, in
 
     if (isRegistered(current_anim,obj))
     {
-        //qDebug() << "animation already registered";
+        //qDebug()() << "animation already registered";
         if (m_Animations[current_anim].m_sAnimation == animation->name())
             return current_anim;
         else

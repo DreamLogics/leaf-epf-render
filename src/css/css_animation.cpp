@@ -49,7 +49,7 @@ Property Animation::keyedProperty(QString property, double position)
     int startframe = qFloor(percent);
     int endframe = qCeil(percent);
 
-    //qDebug() << "creating keyed prop" << property << position << startframe << endframe;
+    //qDebug()() << "creating keyed prop" << property << position << startframe << endframe;
 
     if (startframe == endframe)
         return m_keyframes[startframe]->property(property);
@@ -85,7 +85,7 @@ Property Animation::keyedProperty(QString property, double position)
         break;
     }
 
-    //qDebug() << propstart.toString() << propend.toString() << newprop.toString();
+    //qDebug()() << propstart.toString() << propend.toString() << newprop.toString();
 
     return newprop;
 }
@@ -157,12 +157,12 @@ void Animation::generateFrames(KeyFrame* startframe)
                     Property propstart = lf->property(props[a]);
                     Property propend = nf->property(props[a]);
 
-                    //qDebug() << "generating keyframe" << props[a] << propstart.toString() << propend.toString() << pos;
+                    //qDebug()() << "generating keyframe" << props[a] << propstart.toString() << propend.toString() << pos;
 
                     if (propend.isNull())
                     {
                         kf->addProperty(props[a],propstart);
-                        qDebug() << "empty value";
+                        //qDebug() << "empty value";
                         continue;
                     }
 
@@ -172,7 +172,7 @@ void Animation::generateFrames(KeyFrame* startframe)
                     if (vts != vte)
                     {
                         kf->addProperty(props[a],propstart);
-                        qDebug() << "value type mismatch";
+                        //qDebug() << "value type mismatch";
                         continue;
                     }
 
@@ -182,7 +182,7 @@ void Animation::generateFrames(KeyFrame* startframe)
                     if (vts == vtUndefined)
                     {
                         //check if we are a mixed prop
-                        //qDebug() << "undefined mixprop" << propstart.name() << propstart.value() << propend.value();
+                        //qDebug()() << "undefined mixprop" << propstart.name() << propstart.value() << propend.value();
                         QStringList mixedstart = propstart.value().split(QRegExp("[ ]+"));
                         QStringList mixedend = propend.value().split(QRegExp("[ ]+"));
                         QString newpropval = "";
@@ -198,7 +198,7 @@ void Animation::generateFrames(KeyFrame* startframe)
                                 if (vts != vte)
                                     break;
 
-                                //qDebug() << "in da mix" << mixedstart[t] << vts;
+                                //qDebug()() << "in da mix" << mixedstart[t] << vts;
 
                                 switch (vts)
                                 {
@@ -224,7 +224,7 @@ void Animation::generateFrames(KeyFrame* startframe)
                             }
 
                             newpropval = newpropval.left(newpropval.size()-1);
-                            //qDebug() << "new val" << newpropval;
+                            //qDebug()() << "new val" << newpropval;
                             newprop.setValue(newpropval,propstart.scaleMode());
                         }
                     }

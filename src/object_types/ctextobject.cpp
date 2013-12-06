@@ -68,6 +68,7 @@ void CTextObject::paint(QPainter *painter)
     r.moveLeft(0);
 
     //painter->fillRect(r,QColor("white"));
+    //qDebug() << "text obj on pos" << boundingRect();
 
     if (!css->property(this,"background-color").isNull())
     {
@@ -119,7 +120,7 @@ void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 
         if (!m_pTextDoc)
         {
-            qDebug() << "QTextDocument not initialized.";
+            //qDebug() << "QTextDocument not initialized.";
             return;
         }
 
@@ -166,7 +167,7 @@ void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
                 html += body;
                 html += "</body></html>";
 
-                //qDebug() << html;
+                //qDebug()() << html;
             }
             else
             {
@@ -181,7 +182,7 @@ void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
                         html += "</head><body id=\""+id()+"\">";
                         html += tpar->overflow();
                         html += "</body></html>";
-                        //qDebug() << html;
+                        //qDebug()() << html;
                     }
                     else
                         return;
@@ -194,7 +195,7 @@ void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 
         QRectF r = boundingRect();
         m_pTextDoc->addResource(QTextDocument::StyleSheetResource, QUrl( "format.css" ), css());
-        //qDebug() << html << css;
+        //qDebug()() << html << css;
 
         //hebben we geen hoogte? Dan gewoon vullen
         int height = r.height();
@@ -202,11 +203,11 @@ void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 
         m_iRenderOffset = 0;
 
-        //qDebug() << "text object width" << width << container_width;
+        //qDebug()() << "text object width" << width << container_width;
 
         if (width == 0)
         {
-            qDebug() << "text object with no width";
+            //qDebug() << "text object with no width";
             return;
         }
 
@@ -216,7 +217,7 @@ void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
             {
                 m_pTextDoc->setTextWidth(width);
                 m_pTextDoc->setHtml(html);
-                //qDebug() << "hooooogg text" << m_pTextDoc->size().height() << r.height();
+                //qDebug()() << "hooooogg text" << m_pTextDoc->size().height() << r.height();
                 r.setHeight(m_pTextDoc->size().height());
                 setBoundingRect(r);
             }
@@ -238,7 +239,7 @@ void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
                 QTextCursor tc(m_pTextDoc);
                 QPoint pp(0,height);
                 int pos = m_pTextDoc->documentLayout()->hitTest(pp,Qt::FuzzyHit);
-                //qDebug() << pos;
+                //qDebug()() << pos;
                 tc.setPosition(pos);
                 tc.setPosition(m_pTextDoc->characterCount()-1,QTextCursor::KeepAnchor);
                 QTextDocumentFragment tdf = tc.selection();
@@ -344,7 +345,7 @@ void CTextObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         p.begin(&m_pmRendered);
         m_pTextDoc->drawContents(&p);
         p.end();*/
-        //qDebug() << m_pTextDoc->toHtml();
+        //qDebug()() << m_pTextDoc->toHtml();
 
         buffer();
     }
@@ -403,7 +404,7 @@ QString CTextObject::css()
             {
                 bInSel = true;
                 sel.replace(outerspaces,"");
-                //qDebug() << sel << "#"+section()->id()+"::"+id();
+                //qDebug()() << sel << "#"+section()->id()+"::"+id();
                 if ((sel.startsWith("#"+section()->id()+"::"+id()) || sel.startsWith("#"+section()->id()+":"+layer()->id()+":"+id()))
                         && !(sel == "#"+section()->id()+"::"+id() || sel == "#"+section()->id()+":"+layer()->id()+":"+id()))
                 {
@@ -414,7 +415,7 @@ QString CTextObject::css()
                     sel.replace("#"+section()->id()+":"+layer()->id()+":"+id(),"");
                     newcss += sel + "{";
 
-                    //qDebug() << proplist;
+                    //qDebug()() << proplist;
 
                     for (int n=0;n<proplist.size();n++)
                     {
@@ -422,7 +423,7 @@ QString CTextObject::css()
                         if (proplist[n] == "font-size" && propval.endsWith("px"))
                             propval = QString::number(pointFromPixel(propval.left(propval.size()-2).toInt()))+"pt";
                         newcss += proplist[n] + ": " + propval + ";";
-                        //qDebug() << proplist[n] << propval;
+                        //qDebug()() << proplist[n] << propval;
                     }
 
                     newcss += "}";
@@ -434,7 +435,7 @@ QString CTextObject::css()
         }
     }
 
-    //qDebug() << newcss;
+    //qDebug()() << newcss;
 
     return newcss;
 
@@ -458,7 +459,7 @@ void CTextObject::onEPFEvent(EPFEvent *ev)
     CBaseObject::onEPFEvent(ev);
     if (ev->event() == "setText")
     {
-        //qDebug() << "set text shizzle" << ev->parameter(0);
+        //qDebug()() << "set text shizzle" << ev->parameter(0);
         m_sOverrideHTML = "<p>" + ev->parameter(0) + "</p>";
         m_bTextChanged = true;
         section()->layout();

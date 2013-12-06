@@ -66,7 +66,7 @@ void CLayer::addObject(CBaseObject *obj)
 /*
 QRectF CLayer::boundingRect() const
 {
-    //qDebug() << "clayer::bounding" << childrenBoundingRect().size() << childItems().size();
+    //qDebug()() << "clayer::bounding" << childrenBoundingRect().size() << childItems().size();
     return childrenBoundingRect();
     //return QRectF();
 }
