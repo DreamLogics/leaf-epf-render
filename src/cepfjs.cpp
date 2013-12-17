@@ -5,7 +5,7 @@
 
 static QScriptValue jsAlert(QScriptContext *context, QScriptEngine *engine)
 {
-    //qDebug() << "javascript:" << context->argument(0).toString();
+    qDebug() << "javascript:" << context->argument(0).toString();
     return QScriptValue();
 }
 

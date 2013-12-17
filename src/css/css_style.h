@@ -26,6 +26,7 @@
 #include <QMap>
 #include <QString>
 #include <QStringList>
+#include <QHash>
 
 class CBaseObject;
 class CDocument;
@@ -219,20 +220,20 @@ private:
 
 
 private:
-    QMap<QString,Selector*> m_selectors;
+    QHash<QString,Selector*> m_selectors;
     double m_dHSF;
     double m_dWSF;
     CDocument* m_pDocument;
     QList<QString> m_alteredVars;
-    QMap<QString,QString> m_variables;
-    QMap<QString,QString> m_prevariables;
-    QMap<QString,Animation*> m_animations;
+    QHash<QString,QString> m_variables;
+    QHash<QString,QString> m_prevariables;
+    QHash<QString,Animation*> m_animations;
 
-    QMap<CBaseObject*,QList<Property> > m_cachedProplist;
-    QMap<CBaseObject*,QList<Property> > m_cachedProplistIgnOv;
+    QHash<CBaseObject*,QList<Property> > m_cachedProplist;
+    QHash<CBaseObject*,QList<Property> > m_cachedProplistIgnOv;
 
-    QMap<CBaseObject*, QMap<QString,Property> > m_cachedProperty;
-    QMap<CBaseObject*, QMap<QString,Property> > m_cachedPropertyIgnOv;
+    QHash<CBaseObject*, QMap<QString,Property> > m_cachedProperty;
+    QHash<CBaseObject*, QMap<QString,Property> > m_cachedPropertyIgnOv;
 
     bool m_bOldState;
 };

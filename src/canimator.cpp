@@ -46,7 +46,7 @@ CAnimator::CAnimator(QObject *parent) :
     m_pSection = 0;
     m_iTime = 0;
     m_pTimer = new QTimer();
-    m_pTimer->setInterval(FRAMERATE);
+    m_pTimer->setInterval(1000/FRAMERATE);
     connect(m_pTimer,SIGNAL(timeout()),this,SLOT(update()));
     m_pTimer->start();
 }
@@ -195,7 +195,7 @@ void CAnimator::update()
     if (updatelist.size() > 0)
         m_pSection->layout(updatelist);
 
-    m_iTime+=FRAMERATE;
+    m_iTime+=(1000/FRAMERATE);
 }
 
 int CAnimator::registerAnimation(CBaseObject* obj, QString animation, int ms_time, CSS::easing_function ef, int ms_delay, int iterations, CSS::direction dir, int current_anim)
@@ -269,7 +269,7 @@ int CAnimator::registerAnimation(CBaseObject *obj, CSS::Animation *animation, in
         regani.m_pAnim = ani;
         regani.m_pObject = obj;
         regani.m_sAnimation = animation->name();
-        regani.m_iFrames = ms_time/FRAMERATE;
+        regani.m_iFrames = ms_time*FRAMERATE/1000;
         regani.m_iCurFrame = 1;
         regani.m_bAlternate = false;
         regani.m_bFinished = false;

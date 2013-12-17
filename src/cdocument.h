@@ -65,7 +65,7 @@ public:
 private:
     CDocument* m_pDoc;
     QString m_sResource;
-    qint64 m_iPos;
+    //qint64 m_iPos;
 };
 
 class CDocument : public QObject, public EPFComponent

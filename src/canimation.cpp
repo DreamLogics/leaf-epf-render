@@ -199,6 +199,8 @@ QString CAnimation::mixInt(QString int1, QString int2, double pos)
     int i1,i2,in;
     int offi1b,offi1s;
     QString sn;
+    
+    i1=i2=offi1s=0;
 
     //qDebug()() << "mix int:"<<int1<<int2<<pos;
 
@@ -228,6 +230,8 @@ QString CAnimation::mixDouble(QString dbl1, QString dbl2, double pos)
     double i1,i2,in;
     int offi1b,offi1s;
     QString sn;
+    
+    i1=i2=offi1s=0;
 
     //qDebug()() << "mix double:"<<dbl1<<dbl2<<pos;
 

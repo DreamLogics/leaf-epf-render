@@ -59,7 +59,7 @@ Stylesheet::Stylesheet(CLayout *layout, int target_height, int target_width, CDo
 
 Stylesheet::~Stylesheet()
 {
-    QMap<QString,Selector*>::Iterator it;
+    QHash<QString,Selector*>::Iterator it;
     for (it=m_selectors.begin();it != m_selectors.end();it++)
         delete it.value();
 
@@ -142,17 +142,22 @@ Property Stylesheet::property(CBaseObject *obj, QString key, bool bIgnoreOverrid
     Property prop;
     //QString selector;
     QStringList classes = obj->styleClasses();
-    QMap<QString,Selector*>::Iterator it;
+    QHash<QString,Selector*>::Iterator it;
+    //QElapsedTimer bitch;
+    //bitch.start();
 
     //cascade from overrides > style class > object
 
     //overrides
     if (!bIgnoreOverrides)
     {
+        //qDebug() << "Stylesheet::property c1" << bitch.nsecsElapsed();
         if (m_cachedProperty.contains(obj))
         {
+            //qDebug() << "Stylesheet::property c2" << bitch.nsecsElapsed();
             if (m_cachedProperty[obj].contains(key))
             {
+                //qDebug() << "Stylesheet::property c3" << bitch.nsecsElapsed();
                 //qDebug()() << "css from cache";
                 return m_cachedProperty[obj][key];
             }
@@ -1339,7 +1344,7 @@ void Stylesheet::parse(QString css)
 
     //reverse
     /*
-    QMap<QString,Selector*>::Iterator it;
+    QHash<QString,Selector*>::Iterator it;
     QString test;
 
     for (it=m_selectors.begin();it!=m_selectors.end();it++)

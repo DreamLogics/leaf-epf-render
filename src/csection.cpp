@@ -292,8 +292,9 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
                 }
                 else
                     objpos.insert(obj,pos);
+                qDebug() << "CSection::layout() layout time for object" << obj->id() << objt.nsecsElapsed();
             }
-            qDebug() << "layout time for object" << obj->id() << objt.nsecsElapsed();
+
         }
         if (lobj)
         {
@@ -340,8 +341,9 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
                 }
 
             }
+            qDebug() << "CSection::layout() layout time for object" << obj->id() << objt.nsecsElapsed();
         }
-        qDebug() << "layout time for object" << obj->id() << objt.nsecsElapsed();
+
     }
 
 /*

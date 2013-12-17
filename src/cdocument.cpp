@@ -91,7 +91,7 @@ void CDocument::setStylesheetVariable(QString key, QString val)
 {
     if (!m_pStylesheet)
         return;
-    QElapsedTimer t,tt;
+    QElapsedTimer t/*,tt*/;
     t.start();
     QString oldval = stylesheetVariable(key);
     m_pStylesheet->setVariable(key,val);
@@ -474,7 +474,7 @@ int CDocument::resource(QString resource, char *buffer, int len, int offset)
             s = res.size;
         else
         {
-            //qDebug() << "compressed stream impl";
+            qDebug() << "compressed stream impl";
             return 0;
         }
 
@@ -498,10 +498,10 @@ int CDocument::resource(QString resource, char *buffer, int len, int offset)
     }
     else if (res.type == 4)
     {
-        //qDebug() << "remote res not implemented";
+        qDebug() << "remote res not implemented";
     }
     else
-        //qDebug() << "unsupported resource type";
+        qDebug() << "unsupported resource type";
 
     return br;
 }
@@ -858,7 +858,7 @@ qint64 ResourceIO::readData(char *data, qint64 maxlen)
 
 qint64 ResourceIO::writeData(const char *data, qint64 len)
 {
-    //qDebug() << "write data";
+    qDebug() << "write data";
     return 0;
 }
 

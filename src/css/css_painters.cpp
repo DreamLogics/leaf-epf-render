@@ -332,7 +332,7 @@ void paintColorOverlay(QPainter *pPainter, QRectF qrRect, QColor mixcolor, Rende
 
 void paintBorder(QPainter* pPainter, CBaseObject* pObj)
 {
-    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    //CSS::Stylesheet* css = pObj->document()->stylesheet();
     QRectF r = pObj->boundingRect();
     r.moveTop(0);
     r.moveLeft(0);
@@ -342,7 +342,7 @@ void paintBorder(QPainter* pPainter, CBaseObject* pObj)
 
 void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj)
 {
-    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    //CSS::Stylesheet* css = pObj->document()->stylesheet();
     QRectF r = pObj->boundingRect();
     r.moveTop(0);
     r.moveLeft(0);
@@ -355,7 +355,7 @@ void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj)
 
 void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj)
 {
-    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    //CSS::Stylesheet* css = pObj->document()->stylesheet();
     QRectF r = pObj->boundingRect();
     r.moveTop(0);
     r.moveLeft(0);
@@ -376,7 +376,7 @@ void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj)
 
 void paintBackgroundGradient(QPainter *pPainter, CBaseObject *pObj)
 {
-    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    //CSS::Stylesheet* css = pObj->document()->stylesheet();
     QRectF r = pObj->boundingRect();
     r.moveTop(0);
     r.moveLeft(0);
@@ -559,7 +559,7 @@ void paintDropShadow(QPainter* pPainter, CBaseObject* pObj)
 }
 void paintColorOverlay(QPainter* pPainter, CBaseObject* pObj)
 {
-    CSS::Stylesheet* css = pObj->document()->stylesheet();
+    //CSS::Stylesheet* css = pObj->document()->stylesheet();
     QRectF r = pObj->boundingRect();
     r.moveTop(0);
     r.moveLeft(0);

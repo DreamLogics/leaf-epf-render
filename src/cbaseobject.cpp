@@ -26,11 +26,12 @@
 #include "csection.h"
 #include "cdocument.h"
 #include "cepfview.h"
-//#include <QDebug>
+#include <QDebug>
 #include <QGLFramebufferObject>
 #include <QTime>
 #include "canimator.h"
 #include "css/css_transition.h"
+#include <QGLPixelBuffer>
 
 
 CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
@@ -120,16 +121,10 @@ const char* CBaseObject::objectType() const
 
 void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 {
-    /*QGraphicsItem* r = parentItem();
-
-    if (!r)
-        return;
-
-    CBaseObject* obj = dynamic_cast<CBaseObject*>(r);
-    if (obj)
-        //qDebug() << "child of:" << obj->id();*/
     QString pos;
     CSS::Stylesheet* css = document()->stylesheet();
+    //QElapsedTimer bitch;
+    //bitch.start();
 
     if ((updatelist.size() > 0 && updatelist.contains(this)) || updatelist.size() == 0)
     {
@@ -142,6 +137,9 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 
         //if (CSS::Transitioner::get(thread())->hasTransitions(this))
         //    css->oldState(true);
+        
+
+        
 
         m_RenderPropsMutex.lock();
 
@@ -150,6 +148,8 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
             //qDebug() << "whaaaaa" << m_dOpacity;
 
         m_RenderPropsMutex.unlock();
+
+        //qDebug() << "t1" << bitch.nsecsElapsed();
 
         //qDebug()() << "test ret val" << styleProperty("opacity").value();
 
@@ -169,7 +169,10 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
             //top/left/bottom/right negeren
         }
         else*/
+        //qDebug() << "t1a" << bitch.nsecsElapsed();
         pos = styleProperty("position").toString();
+
+        //qDebug() << "t2" << bitch.nsecsElapsed();
 
 
         if (pos != "static" && pos != "relative")
@@ -203,6 +206,8 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
             newrect.moveTop(relrect.top()+marginTop());
             newrect.moveLeft(marginLeft());
         }
+
+        //qDebug() << "t3" << bitch.nsecsElapsed();
 
         //mod position
         CSS::Property modtop = styleProperty("mod-top");
@@ -246,7 +251,7 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
 
         if (!styleProperty("max-width").isNull() && newrect.width() > styleProperty("max-width").toInt())
             newrect.setHeight(styleProperty("max-width").toInt());
-
+        //qDebug() << "t4" << bitch.nsecsElapsed();
 
         if (oldrect != newrect)
         {
@@ -268,6 +273,8 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         else if (m_bNeedsRedraw)
             buffer();
 
+        //qDebug() << "t5" << bitch.nsecsElapsed();
+
         m_FPMutex.lock();
 
         CBaseObject* obj = dynamic_cast<CBaseObject*>(parent());
@@ -278,6 +285,8 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         }
 
         m_FPMutex.unlock();
+
+        //qDebug() << "t6" << bitch.nsecsElapsed();
 
         //m_bCSSOldState = false;
 
@@ -359,6 +368,8 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         }
     }
 
+    //qDebug() << "t7" << bitch.nsecsElapsed();
+
     //qDebug()() << "CBaseObject::layout parent" << "#"+section()->id()+"::"+id() << pos;
 
     QObjectList clist = children();
@@ -387,7 +398,7 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         }
     }
 
-
+    //qDebug() << "t8" << bitch.nsecsElapsed();
 }
 /*
 CBaseObject* CBaseObject::relative()
@@ -896,33 +907,40 @@ void CBaseObject::paintBuffered(QPainter *p)
     //qDebug()() << "drawing" << id();
     //QTime t = QTime::currentTime();
 
-    if (m_qiRenderBuffer.width() <= dw && m_qiRenderBuffer.height() <= dh)
-        p->drawImage(0,0,m_qiRenderBuffer);
-    else
+    /*if (m_iInTransition > 0)
     {
-        QImage chunk;
-        //const uchar* bufferdata = m_qiRenderBuffer.bits();
-        for (int x=0;x<m_qiRenderBuffer.width();x+=dw)
+        paint(p);
+    }
+    else*/
+    {
+        if (m_qiRenderBuffer.width() <= dw && m_qiRenderBuffer.height() <= dh)
+            p->drawImage(0,0,m_qiRenderBuffer);
+        else
         {
-            if (cx + x+dw < 0)
-                continue;
-            if (cx + x > dw)
-                break;
-            for (int y=0;y<m_qiRenderBuffer.height();y+=dh)
+            QImage chunk;
+            //const uchar* bufferdata = m_qiRenderBuffer.bits();
+            for (int x=0;x<m_qiRenderBuffer.width();x+=dw)
             {
-                if (cy + y+dh < 0)
+                if (cx + x+dw < 0)
                     continue;
-                if (cy + y > dh)
+                if (cx + x > dw)
                     break;
-
-                chunk = m_qiRenderBuffer.copy(x,y,dw,dh);
-                //for (int line=0;line<dh;line++)
+                for (int y=0;y<m_qiRenderBuffer.height();y+=dh)
                 {
-                    //const uchar* buffer = bufferdata + (4 * (x + (m_qiRenderBuffer.width()*(y+line))));
-                    //chunk = QImage(buffer,dw,1,m_qiRenderBuffer.format());
-                    p->drawImage(x,y,chunk);
+                    if (cy + y+dh < 0)
+                        continue;
+                    if (cy + y > dh)
+                        break;
+
+                    chunk = m_qiRenderBuffer.copy(x,y,dw,dh);
+                    //for (int line=0;line<dh;line++)
+                    {
+                        //const uchar* buffer = bufferdata + (4 * (x + (m_qiRenderBuffer.width()*(y+line))));
+                        //chunk = QImage(buffer,dw,1,m_qiRenderBuffer.format());
+                        p->drawImage(x,y,chunk);
+                    }
+                    //p->drawImage(x,y,m_qiRenderBuffer,x,y,1024,1024);
                 }
-                //p->drawImage(x,y,m_qiRenderBuffer,x,y,1024,1024);
             }
         }
     }
@@ -964,22 +982,29 @@ void CBaseObject::paintBuffered(QPainter *p)
 
 void CBaseObject::buffer()
 {
+    //if (m_iInTransition > 0)
+    //    return;
     m_RenderMutex.lock();
     m_bNeedsRedraw = false;
     /*if (m_pBuffer)
         delete m_pBuffer;*/
-
+    QElapsedTimer t;
+    t.start();
     //QGLFramebufferObject fbo(m_rRect.size().toSize());
 
     //m_pBuffer = new QGLFramebufferObject();
 
     m_qiRenderBuffer = QImage(m_rRect.size().toSize(),QImage::Format_ARGB32_Premultiplied);
     m_qiRenderBuffer.fill(0x00000000);
+    //QGLFormat glf(QGLFormat::defaultFormat());
+    //glf.setRgba(true);
+    //QGLPixelBuffer glpb(m_rRect.size().toSize(),glf);
 
     QPainter bp;
     //bp.setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing);
     //bp.begin(&fbo);
     bp.begin(&m_qiRenderBuffer);
+    //bp.begin(&glpb);
 
     //bp.fillRect(QRectF(0,0,m_rRect.width(),m_rRect.height()),QColor(0,0,0,0));
 
@@ -987,7 +1012,11 @@ void CBaseObject::buffer()
 
     bp.end();
 
-    CSS::Stylesheet* css = document()->stylesheet();
+    qDebug() << "buffertime" << t.nsecsElapsed();
+
+    //m_qiRenderBuffer = glpb.toImage();
+
+    //CSS::Stylesheet* css = document()->stylesheet();
 
 
     m_iRotation = styleProperty("rotation").toInt();
@@ -1066,12 +1095,16 @@ void CBaseObject::transitionDone(QString transition)
 
 CSS::Property CBaseObject::styleProperty(QString key)
 {
+    //QElapsedTimer bitch;
+    //bitch.start();
     CSS::Stylesheet* css = document()->stylesheet();
     CSS::Property prop = cssOverrideProp(key);
+    //qDebug() << "st1" << bitch.nsecsElapsed();
     //if (key == "opacity")
     //qDebug() << "request for opacity prop" << id() << styleClasses() << prop.isNull();
     if (prop.isNull())
         prop = css->property(this,key);
+    //qDebug() << "st2" << bitch.nsecsElapsed();
     //qDebug() << prop.isNull() << prop.toString();
     if (prop.isNull())
         return prop;
@@ -1081,7 +1114,7 @@ CSS::Property CBaseObject::styleProperty(QString key)
         css->oldState(true);
         nprop.setValue(prop.value());
         css->oldState(false);
-
+        //qDebug() << "st3" << bitch.nsecsElapsed();
         return nprop;
     }
     return prop;
