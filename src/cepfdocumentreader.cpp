@@ -137,7 +137,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
             return 0;
         }
 
-        CDocument* document = new CDocument(m_Platforms,m_sLanguage);
+        CDocument* document = new CDocument(filename,m_Platforms,m_sLanguage);
 
         while (!f.atEnd())
         {

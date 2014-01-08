@@ -23,8 +23,8 @@
 #ifndef CVideoOBJECT_H
 #define CVideoOBJECT_H
 
-#include "cbaseobject.h"
-#include "iepfobjectfactory.h"
+#include "../../src/cbaseobject.h"
+#include "../../src/iepfobjectfactory.h"
 
 class CVideoObjectFactory : public IEPFObjectFactory
 {
@@ -57,7 +57,7 @@ public:
 
     virtual void preload();
 
-    virtual void layout(QRectF relativeTo);
+    virtual void layout(QRectF relativeTo, QList<CBaseObject*> updatelist);
 
     virtual void paint(QPainter *painter);
     virtual void paintBuffered(QPainter *p);

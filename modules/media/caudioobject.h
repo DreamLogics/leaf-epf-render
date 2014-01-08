@@ -1,8 +1,8 @@
 #ifndef CAUDIOOBJECT_H
 #define CAUDIOOBJECT_H
 
-#include "cbaseobject.h"
-#include "iepfobjectfactory.h"
+#include "../../src/cbaseobject.h"
+#include "../../src/iepfobjectfactory.h"
 
 class CAudioObjectFactory : public IEPFObjectFactory
 {

@@ -88,6 +88,8 @@ public:
     void unload();
     int currentSection();
 
+    CDocument* document();
+
     void clearDocBuffers();
 
     COverlay* activeOverlay();
@@ -108,6 +110,8 @@ public slots:
     void resizeDone();
 
     void updateView();
+
+    void unhandledClick(int x, int y);
 
 signals:
 
@@ -151,8 +155,11 @@ protected:
     virtual void wheelEvent(QWheelEvent *ev);
     virtual void keyPressEvent(QKeyEvent *ev);
     virtual void keyReleaseEvent(QKeyEvent* ev);
+    virtual void mouseClick(int x, int y);
 
     virtual bool event(QEvent *ev);
+
+    virtual void paint(QPainter* p);
 
 private:
 

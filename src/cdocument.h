@@ -72,7 +72,7 @@ class CDocument : public QObject, public EPFComponent
 {
     Q_OBJECT
 public:
-    CDocument(QStringList platforms, QString language);
+    CDocument(QString filename, QStringList platforms, QString language);
     ~CDocument();
 
     int sectionCount();
@@ -135,6 +135,8 @@ public:
 
     bool shouldStopLayout();
     void stopLayout(bool b);
+
+    QString filename() const;
 
 signals:
 
@@ -202,6 +204,8 @@ private:
     int m_iLayoutWidth;
 
     CEPFJS* m_pJS;
+
+    QString m_sFileName;
 
     friend class CEPFView;
 };

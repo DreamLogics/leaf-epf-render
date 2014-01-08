@@ -761,7 +761,10 @@ void CSection::mouseReleaseEvent( int x, int y )
     m_pFocusObj = 0;
 
     if (!obj)
+    {
+        emit unhandledClick(x,y);
         return;
+    }
 
     //qDebug() << "section click" << obj->id();
 

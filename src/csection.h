@@ -120,6 +120,7 @@ signals:
 
     void nextSection();
     void previousSection();
+    void unhandledClick(int x, int y);
 
 public slots:
 

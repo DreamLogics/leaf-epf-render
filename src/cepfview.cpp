@@ -37,6 +37,7 @@
 #include <QWheelEvent>
 #include <QTouchEvent>
 #include <QEasingCurve>
+#include "idevice.h"
 
 CEPFLayout::CEPFLayout(QWidget *parent) : QLayout(parent)
 {
@@ -244,6 +245,10 @@ CEPFView::CEPFView(QWidget* parent) : WIDGETBASE(parent)//QGraphicsView(parent)
 
     setFocusPolicy(Qt::StrongFocus);
 
+    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
+    {
+        setAttribute(Qt::WA_AcceptTouchEvents,true);
+    }
 
     //setViewport(new WIDGETBASE);
     //setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
@@ -367,6 +372,7 @@ void CEPFView::setSection(int index)
     disconnect(this,SIGNAL(keyReleaseEvent(int,QString)),0,0);
     disconnect(ps,SIGNAL(nextSection()),0,0);
     disconnect(ps,SIGNAL(previousSection()),0,0);
+    disconnect(ps,SIGNAL(unhandledClick(int,int)),0,0);
 
     connect(this,SIGNAL(mouseDoubleClickEvent(int,int)),s,SLOT(mouseDoubleClickEvent(int,int)));
     connect(this,SIGNAL(mouseMoveEvent(int,int)),s,SLOT(mouseMoveEvent(int,int)));
@@ -376,6 +382,7 @@ void CEPFView::setSection(int index)
     connect(this,SIGNAL(keyReleaseEvent(int,QString)),s,SLOT(keyReleaseEvent(int,QString)));
     connect(s,SIGNAL(nextSection()),this,SLOT(nextSection()));
     connect(s,SIGNAL(previousSection()),this,SLOT(previousSection()));
+    connect(s,SIGNAL(unhandledClick(int,int)),this,SLOT(unhandledClick(int,int)));
 
     m_iPreviousSection = m_iCurrentSection;
     m_iCurrentSection = index;
@@ -604,33 +611,40 @@ void CEPFView::paintEvent(QPaintEvent *ev)
     QPainter p;
     p.begin(this);
 
+    paint(&p);
+
+    p.end();
+}
+
+void CEPFView::paint(QPainter *p)
+{
     if (m_bIsLoading)
     {
-        p.resetTransform();
-        p.setRenderHint(QPainter::Antialiasing);
+        p->resetTransform();
+        p->setRenderHint(QPainter::Antialiasing);
 
-        p.setOpacity(1.0);
+        p->setOpacity(1.0);
 
 
-        p.fillRect(0,0,width(),height(),QColor(30,30,30));
+        p->fillRect(0,0,width(),height(),QColor(30,30,30));
 
         for (int dot=0;dot<3;dot++)
         {
             if (dot == m_iRenderDot)
-                p.setBrush(QColor(200,0,0));
+                p->setBrush(QColor(200,0,0));
             else
-                p.setBrush(QColor("grey"));
-            p.drawEllipse((width()/2)-18+(dot*12),(height()/2)+100,8,8);
+                p->setBrush(QColor("grey"));
+            p->drawEllipse((width()/2)-18+(dot*12),(height()/2)+100,8,8);
         }
 
-        p.setBrush(Qt::NoBrush);
+        p->setBrush(Qt::NoBrush);
 
         return;
     }
     else
     {
-        //p.setRenderHint(QPainter::HighQualityAntialiasing);
-        p.setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing);
+        //p->setRenderHint(QPainter::HighQualityAntialiasing);
+        p->setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing);
 
         CSection* s = m_pDocument->section(m_iCurrentSection);
         int nx,ny,psx,psy,sx,sy;
@@ -651,12 +665,12 @@ void CEPFView::paintEvent(QPaintEvent *ev)
             {
                 nx = (dt * psx) + ((1-dt) * sx);
                 ny = (dt * psy) + ((1-dt) * sy);
-                //p.translate(psx-nx,psy-ny);
+                //p->translate(psx-nx,psy-ny);
             }
 
 
             //ps->render(&p,QRectF(nx,ny,width(),height()));
-            //p.resetTransform();
+            //p->resetTransform();
         }
         else
         {
@@ -685,24 +699,24 @@ void CEPFView::paintEvent(QPaintEvent *ev)
                 {
                     if (m_TransFx == CSection::SlideFx)
                     {
-                        p.resetTransform();
-                        p.translate(cs->x()*width()-nx,cs->y()*height()-ny);
+                        p->resetTransform();
+                        p->translate(cs->x()*width()-nx,cs->y()*height()-ny);
                     }
                     else
                     {
                         if (m_TransFx == CSection::FadeFx && i == m_iCurrentSection)
                         {
                             //qDebug()() << "transition" << 1-m_dTransition << cs->id();
-                            p.setOpacity(1-m_dTransition);
+                            p->setOpacity(1-m_dTransition);
                         }
                         else
-                            p.setOpacity(1.0);
+                            p->setOpacity(1.0);
 
                         nx = cs->x() * width();
                         ny = cs->y() * height();
 
                     }
-                    cs->render(&p,QRectF(nx,ny,width(),height()));
+                    cs->render(p,QRectF(nx,ny,width(),height()));
                 }
             }
 
@@ -718,36 +732,34 @@ void CEPFView::paintEvent(QPaintEvent *ev)
 
         /*if (m_TransFx == CSection::SlideFx)
         {
-            p.translate(sx-nx,sy-ny);
+            p->translate(sx-nx,sy-ny);
             //qDebug()() << "nxy" << nx << ny;
         }
         else
         {
             if (m_TransFx == CSection::FadeFx)
-                p.setOpacity(1-m_dTransition);
+                p->setOpacity(1-m_dTransition);
             nx = sx;
             ny = sy;
         }*/
 
         //overlays
-        p.resetTransform();
+        p->resetTransform();
         COverlay* overlay;
         for (int oi=0;oi<m_pDocument->overlayCount();oi++)
         {
             overlay = m_pDocument->overlay(oi);
             if (overlay->isVisible())
-                overlay->render(&p,QRectF(0,0,width(),height()));
+                overlay->render(p,QRectF(0,0,width(),height()));
         }
 
 
         //s->render(&p,QRectF(nx,ny,width(),height()));
-        //p.translate(-s->x()*width(),-s->y()*height());
+        //p->translate(-s->x()*width(),-s->y()*height());
         //for (int i=0;i<m_pDocument->sectionCount();i++)
         //    m_pDocument->section(i)->render(&p,QRectF(s->x()*width(),s->y()*height(),width(),height()));
 
     }
-
-    p.end();
 }
 
 void CEPFView::mousePressEvent(QMouseEvent *ev)
@@ -892,4 +904,19 @@ bool CEPFView::event(QEvent *ev)
 void CEPFView::clearDocBuffers()
 {
     emit clearBuffers();
+}
+
+void CEPFView::unhandledClick(int x, int y)
+{
+    mouseClick(x,y);
+}
+
+void CEPFView::mouseClick(int x, int y)
+{
+
+}
+
+CDocument* CEPFView::document()
+{
+    return m_pDocument;
 }

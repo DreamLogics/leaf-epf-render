@@ -39,7 +39,7 @@
 #include "canimator.h"
 #include <QElapsedTimer>
 
-CDocument::CDocument(QStringList platforms, QString language) : m_Platforms(platforms), m_sLanguage(language)
+CDocument::CDocument(QString filename, QStringList platforms, QString language) : m_sFileName(filename), m_Platforms(platforms), m_sLanguage(language)
 {
     m_pCurrentLayout = 0;
     m_pRenderView = 0;
@@ -217,7 +217,7 @@ void CDocument::addOverlay(COverlay* overlay)
 QString CDocument::property(QString key)
 {
     if (!m_Props.contains(key))
-        return "";
+        return QString();
     return m_Props[key];
 }
 
@@ -896,4 +896,8 @@ void CDocument::sectionChange(QString id)
     if (id != "")
         s = sectionByID(id);
     CAnimator::get(thread())->setSection(s);
+}
+QString CDocument::filename() const
+{
+    return m_sFileName;
 }

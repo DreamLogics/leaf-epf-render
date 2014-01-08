@@ -22,8 +22,8 @@
 
 #include "cvideoobject.h"
 #include "cavdecoder.h"
-#include <css/css_style.h>
-#include <cdocument.h>
+#include "../../src/css/css_style.h"
+#include "../../src/cdocument.h"
 #include <QPainter>
 #include <QDebug>
 
@@ -70,38 +70,42 @@ void CVideoObject::paintBuffered(QPainter *p)
     }
 }
 
-void CVideoObject::layout(QRectF relativeTo)
+void CVideoObject::layout(QRectF relativeTo, QList<CBaseObject*> updatelist)
 {
-    CBaseObject::layout(relativeTo);
+    CBaseObject::layout(relativeTo,updatelist);
 
-    CSS::Stylesheet* css = document()->stylesheet();
-    CSS::Property vidprop = css->property(this,"video");
-    QString vid = vidprop.toString();
-    QRegExp srcreg("src *\\([ \"]*([^\"\\) ]+)[ \"]*\\)");
-
-    if (srcreg.indexIn(vid) != -1)
-        vid = srcreg.cap(1);
-
-    //setup video if needed
-    if (m_sVideo != vid)
+    if ((updatelist.size() > 0 && updatelist.contains(this)) || updatelist.size() == 0)
     {
-        m_sVideo = vid;
-        ResourceIO* io = document()->resourceIO(m_sVideo);
+        CSS::Stylesheet* css = document()->stylesheet();
+        CSS::Property vidprop = css->property(this,"video");
+        QString vid = vidprop.toString();
+        QRegExp srcreg("src *\\([ \"]*([^\"\\) ]+)[ \"]*\\)");
 
-        if (!io)
+        if (srcreg.indexIn(vid) != -1)
+            vid = srcreg.cap(1);
+
+        //setup video if needed
+        if (m_sVideo != vid)
         {
+            m_sVideo = vid;
+            ResourceIO* io = document()->resourceIO(m_sVideo);
+
+            if (!io)
+            {
+                if (m_pAV)
+                    delete m_pAV;
+                m_pAV = 0;
+                return;
+            }
+
             if (m_pAV)
                 delete m_pAV;
-            m_pAV = 0;
-            return;
+            m_pAV = new AV::CAVDecoder();
+            connect(m_pAV,SIGNAL(update()),document(),SLOT(updateRenderView()));
+            connect(m_pAV,SIGNAL(updateTime(int)),m_pPrivate,SLOT(updateTime(int)));
+            m_pAV->init(io);
         }
 
-        if (m_pAV)
-            delete m_pAV;
-        m_pAV = new AV::CAVDecoder();
-        connect(m_pAV,SIGNAL(update()),document(),SLOT(updateRenderView()));
-        connect(m_pAV,SIGNAL(updateTime(int)),m_pPrivate,SLOT(updateTime(int)));
-        m_pAV->init(io);
     }
 }
 
