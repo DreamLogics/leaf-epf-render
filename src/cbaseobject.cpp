@@ -133,7 +133,7 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         QRectF newrect = m_rRect;
         //QRectF relrect = r->boundingRect();
 
-
+        updateRenderMode();
 
         //if (CSS::Transitioner::get(thread())->hasTransitions(this))
         //    css->oldState(true);
@@ -1079,7 +1079,7 @@ int CBaseObject::renderMode()
 void CBaseObject::updateRenderMode()
 {
     m_RMMutex.lock();
-    m_iRenderMode = CSS::renderModeFromString(document()->stylesheet()->property(this,"render-mode").toString());
+    m_iRenderMode = CSS::renderModeFromString(styleProperty("render-mode").toString());
     m_RMMutex.unlock();
 }
 

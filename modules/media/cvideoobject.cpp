@@ -114,11 +114,14 @@ void CVideoObject::mouseReleaseEvent(QPoint pos)
     if (m_pAV)
     {
         if (m_pAV->isPlaying())
+        {
             m_pAV->pause();
+            document()->updateRenderView();
+        }
         else
         {
             m_pAV->play();
-            qDebug() << "play vid";
+
         }
     }
 }
@@ -170,7 +173,7 @@ void CVideoObject::drawAVControls(QPainter *p)
     double pos = (double)m_iCurTime / (double)m_pAV->duration();
     p->setBrush(br);
     p->drawRoundedRect(30,boundingRect().height()-16,(double)(boundingRect().width()-40)*pos,12,6,6);
-    qDebug() << m_iCurTime << m_pAV->duration() << pos;
+    //qDebug() << m_iCurTime << m_pAV->duration() << pos;
 }
 
 CVideoPrivate::CVideoPrivate(CVideoObject *p) : m_pObject(p)

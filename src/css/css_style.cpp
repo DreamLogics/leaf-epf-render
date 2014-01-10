@@ -849,11 +849,15 @@ void Stylesheet::parse(QString css)
 
         //qDebug()() << propdata;
 
+        if (ss.indexOf(";") != -1)
+            ss = ss.section(';',-1);
+
         if (ss.left(1) != "@")
         {
 
 
-            //qDebug()() << "selector found: " <<ss;
+            //qDebug() << "selector found: " <<ss;
+
 
             if (m_selectors.contains(ss))
                 s = m_selectors[ss];
@@ -1499,6 +1503,8 @@ namespace CSS
             return rmReplace;
         else if (str == "screen")
             return rmScreen;
+        else if (str == "none")
+            return rmNone;
         else
             return rmNormal;
     }

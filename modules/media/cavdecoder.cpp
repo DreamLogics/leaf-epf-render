@@ -16,7 +16,39 @@ extern "C" {
 
 #include <stdio.h>
 #include <QDebug>
+/*
+#define REGISTER_DECODER(X, x)                                          \
+    {                                                                   \
+        extern AVCodec ff_##x##_decoder;                                \
+            avcodec_register(&ff_##x##_decoder);                        \
+    }
 
+#define REGISTER_PARSER(X, x)                                           \
+    {                                                                   \
+        extern AVCodecParser ff_##x##_parser;                           \
+            av_register_codec_parser(&ff_##x##_parser);                 \
+    }
+
+#define REGISTER_MUXER(X, x)                                            \
+    {                                                                   \
+        extern AVOutputFormat ff_##x##_muxer;                           \
+            av_register_output_format(&ff_##x##_muxer);                 \
+    }
+
+#define REGISTER_DEMUXER(X, x)                                          \
+    {                                                                   \
+        extern AVInputFormat ff_##x##_demuxer;                          \
+            av_register_input_format(&ff_##x##_demuxer);                \
+    }
+
+#define REGISTER_MUXDEMUX(X, x) REGISTER_MUXER(X, x); REGISTER_DEMUXER(X, x)*/
+/*
+#define REGISTER_PROTOCOL(X, x)                                         \
+    {                                                                   \
+        extern URLProtocol ff_##x##_protocol;                           \
+            ffurl_register_protocol(&ff_##x##_protocol);                \
+    }
+*/
 using namespace AV;
 
 CAVDecoder::CAVDecoder(QObject *parent) :
@@ -27,6 +59,7 @@ CAVDecoder::CAVDecoder(QObject *parent) :
 
     m_pWorker = new CAVWorker(this);
     m_pWorkerThread = new QThread();
+    m_pWorkerThread->setObjectName("AVDecoderThread");
     m_pWorker->moveToThread(m_pWorkerThread);
     m_pWorkerThread->start();
 
@@ -75,7 +108,27 @@ void CAVDecoder::init(QIODevice* io)
 
     m_pIOContext = new CAVIOContext(io);
 
+    //register formats
     av_register_all();
+    /*REGISTER_DECODER(VP8, vp8);
+    REGISTER_DECODER(VP9, vp9);
+
+    REGISTER_DECODER (VORBIS, vorbis);
+
+    REGISTER_DECODER (LIBVPX_VP8, libvpx_vp8);
+    REGISTER_DECODER (LIBVPX_VP9, libvpx_vp9);
+
+    REGISTER_PARSER(VORBIS, vorbis);
+    REGISTER_PARSER(VP8, vp8);
+
+    REGISTER_MUXDEMUX(MATROSKA,         matroska);
+    REGISTER_MUXER   (MATROSKA_AUDIO,   matroska_audio);
+    REGISTER_MUXER   (WEBM,             webm);*/
+/*
+    REGISTER_PROTOCOL(CONCAT,           concat);
+    REGISTER_PROTOCOL(FILE,             file);
+    REGISTER_PROTOCOL(PIPE,             pipe);
+*/
 
     //set iocontext
     m_pFormatCtx = avformat_alloc_context();
@@ -199,6 +252,18 @@ void CAVDecoder::addFrame(AVFrame *frame, qint64 time)
 {
     m_mFrameMutex.lock();
 
+    if (m_iFrameCount < 0)
+    {
+        m_iFrameCount = 0;
+        qDebug() << "FrameCount out of bounds!";
+    }
+
+    if (m_iFrameCount >= FRAME_BUFFER_SIZE)
+    {
+        m_iFrameCount = FRAME_BUFFER_SIZE-1;
+        qDebug() << "FrameCount out of bounds!";
+    }
+
     for(int y=0;y<m_pCodecCtx->height;y++)
     {
         if (!m_Frames[m_iFrameCount].data)
@@ -261,14 +326,19 @@ void CAVDecoder::nextFrame()
 
     m_mFrameMutex.lock();
 
-    if (m_Frames[0].frametime < m_iNextFrameTime)
+    if (m_iFrameCount <= 0)
+    {
+        //buffer starvation
+        qDebug() << "Buffer starvation!";
+    }
+    else if (m_Frames[0].frametime < m_iNextFrameTime)
     {
         emit update();
         for (int i=0;i<FRAME_BUFFER_SIZE;i++)
         {
-            if (i == FRAME_BUFFER_SIZE-1)
+            /*if (i == FRAME_BUFFER_SIZE-1)
                 m_Frames[i] = m_Frames[0];
-            else
+            else*/
                 m_Frames[i] = m_Frames[i+1];
         }
         m_CurrentFrame = m_Frames[0].data; //TODO naar boven halen
