@@ -1,7 +1,7 @@
 #ifndef CWIDGETHANDLER_H
 #define CWIDGETHANDLER_H
 
-#include <QObject>
+#include <QWidget>
 #include <QMap>
 #include <QMutex>
 #include <QRect>
@@ -9,11 +9,11 @@
 class CEPFView;
 class QPainter;
 
-class CWidgetHandler : public QObject
+class CWidgetHandler : public QWidget
 {
     Q_OBJECT
 public:
-    CWidgetHandler(CEPFView* p, QObject *parent = 0);
+    CWidgetHandler(QWidget *parent = 0);
 
     static CWidgetHandler* get(CEPFView* p);
     void destroy();
@@ -22,9 +22,13 @@ public:
 
     void renderWidget(QObject* obj, QPainter* p);
 
+protected:
+
+    virtual bool event(QEvent *ev);
+
 private:
 
-    bool isActiveObject(QObject* obj);
+    //bool isActiveObject(QObject* obj);
 
 signals:
 
@@ -39,7 +43,6 @@ public slots:
 private:
     QMap<QObject*,QWidget*> m_widgets;
     //QMutex m_mWidgetMutex;
-    CEPFView* m_pView;
 };
 
 #endif // CWIDGETHANDLER_H

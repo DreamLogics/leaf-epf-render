@@ -29,6 +29,7 @@
 #include "epfevent.h"
 #include <QRectF>
 #include <QImage>
+#include <QPixmap>
 #include <QMutex>
 #include "css/css_style.h"
 #include "css/css_animation.h"
@@ -41,6 +42,51 @@ class CSection;
 class CDocument;
 class QPainter;
 //class QGLFramebufferObject;
+
+class CBaseObject;
+
+class JSBaseObjectProxy : public QObject
+{
+    Q_OBJECT
+public:
+    JSBaseObjectProxy(CBaseObject* obj);
+
+    void _clicked();
+    void _onMouseDown(int posx, int posy);
+    void _onMouseMove(int posx, int posy);
+    void _onMouseUp(int posx, int posy);
+    void _onMouseEnter();
+    void _onMouseLeave();
+    void _onSwipe(int direction);
+    void _onFocus();
+    void _onLoseFocus();
+
+public slots:
+
+    virtual QStringList styleClasses() const;
+    virtual void addStyleClass(QString classname);
+    virtual void setStyleClass(QString classname);
+    virtual void toggleStyleClass(QString classname);
+    virtual void removeStyleClass(QString classname);
+
+    virtual void setBoundingRect(const QRectF&);
+    virtual QRectF boundingRect() const;
+
+signals:
+
+    void clicked();
+    void onMouseDown(int posx, int posy);
+    void onMouseMove(int posx, int posy);
+    void onMouseUp(int posx, int posy);
+    void onMouseEnter();
+    void onMouseLeave();
+    void onSwipe(int direction);
+    void onFocus();
+    void onLoseFocus();
+
+private:
+    CBaseObject* m_pObject;
+};
 
 class LEAFEPFRENDERSHARED_EXPORT CBaseObject : public QObject, public EPFComponent
 {
@@ -62,6 +108,8 @@ public:
     CLayer* layer();
     CSection* section();
     CDocument* document();
+
+    virtual QObject* jsProxy() const;
 
     int renderMode();
     void updateRenderMode();
@@ -108,6 +156,8 @@ public:
 
     virtual int outerHeight() const;
     virtual int outerWidth() const;
+
+    virtual bool useDevicePixels() const;
 /*
     virtual int paddingTop() const;
     virtual int paddingBottom() const;
@@ -194,7 +244,8 @@ private:
 
     //QString m_sCSSOverrides;
 
-    QImage m_qiRenderBuffer;
+    //QImage m_qiRenderBuffer;
+    QPixmap m_qiRenderBuffer;
     //QList<QImage> m_RenderBuffers;
     bool m_bNeedsRedraw;
 
@@ -237,6 +288,7 @@ private:
     bool m_bChanged;
     QMutex m_mChangedMutex;
 
+    JSBaseObjectProxy* m_pJSProxy;
 };
 
 #endif // CBASEOBJECT_H

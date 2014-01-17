@@ -31,6 +31,8 @@
 #include <QLinearGradient>
 #include <qmath.h>
 #include <QRadialGradient>
+#include <QGuiApplication>
+#include <QSvgRenderer>
 
 namespace CSS
 {
@@ -101,43 +103,100 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
 
     strSrc = strSrc.replace(srcreg,"");
 
-    //qDebug()() << "paintBackgroundImage :" << strSrc;
-
-    QImage img = QImage::fromData(pDocument->resource(strSrc));
-
-    if (img.isNull())
-        return;
-
-    //qDebug()() << "paintBackgroundImage - size :" << strSize;
-
-    if (strSize != "")
+    if (strSrc.endsWith(".svg"))
     {
-        QRegExp percreg("([0-9]+)%");
-        QRegExp sizereg("([0-9]+)px +([0-9]+)px");
-        QRegExp sizeautoreg("([0-9]+)px");
-        QString propstr = strSize;
-        if (propstr == "cover")
-            img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-        else if (propstr == "contain")
-            img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
-        else if (sizereg.indexIn(propstr) != -1)
-            img = img.scaled(sizereg.cap(1).toInt(),sizereg.cap(2).toInt(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-        else if (sizeautoreg.indexIn(propstr) != -1)
-            img = img.scaledToWidth(sizeautoreg.cap(1).toInt(),Qt::SmoothTransformation);
-        else if (percreg.indexIn(propstr) != -1)
-            img = img.scaled(((float)(percreg.cap(1).toInt())/100)*img.width(),((float)(percreg.cap(2).toInt())/100)*img.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-        else
-            img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::KeepAspectRatio);
+        QSvgRenderer svg(pDocument->resource(strSrc));
+
+        QSize svgsize = svg.defaultSize();
+        QRectF bounds(0,0,svgsize.width(),svgsize.height());
+
+        if (strSize != "")
+        {
+            QRegExp percreg("([0-9]+)%");
+            QRegExp sizereg("([0-9]+)px +([0-9]+)px");
+            QRegExp sizeautoreg("([0-9]+)px");
+            //TODO: scale the sizes?
+            QString propstr = strSize;
+            if (propstr == "cover")
+            {
+                qreal rs = svgsize.height() / svgsize.width();
+                qreal rb = qrBgRect.height() / qrBgRect.width();
+                if ((rs <= 1.0 && rb <= 1.0) || (rs > 1.0 && rb > 1.0))
+                {
+                    if (rb <= rs)
+                        bounds = QRectF(0,0,qrBgRect.height()*svgsize.width()/svgsize.height(),qrBgRect.height());
+                    else
+                        bounds = QRectF(0,0,qrBgRect.width(),qrBgRect.width()*svgsize.height()/svgsize.width());
+                }
+                else
+                {
+                    if (rs > 1.0)
+                        bounds = QRectF(0,0,qrBgRect.height()*svgsize.width()/svgsize.height(),qrBgRect.height());
+                    else
+                        bounds = QRectF(0,0,qrBgRect.width(),qrBgRect.width()*svgsize.height()/svgsize.width());
+                }
+            }
+            else if (propstr == "contain")
+                bounds = qrBgRect;
+            else if (sizereg.indexIn(propstr) != -1)
+                bounds = QRectF(0,0,sizereg.cap(1).toInt(),sizereg.cap(2).toInt());
+            else if (sizeautoreg.indexIn(propstr) != -1)
+                bounds = QRectF(0,0,sizeautoreg.cap(1).toInt(),sizeautoreg.cap(1).toInt()*qrBgRect.height()/qrBgRect.width());
+            else if (percreg.indexIn(propstr) != -1)
+                bounds = QRectF(0,0,(percreg.cap(1).toDouble()/100)*svgsize.width(),(percreg.cap(2).toDouble()/100)*svgsize.height());
+
+        }
+
+        svg.render(pPainter,bounds);
     }
+    else
+    {
 
-    qrSize = img.rect();
+        //qDebug()() << "paintBackgroundImage :" << strSrc;
 
-    if (img.height() > qrBgRect.height())
-        qrSize.setHeight(qrBgRect.height());
-    if (img.width() > qrBgRect.width())
-        qrSize.setWidth(qrBgRect.width());
+        QImage img = QImage::fromData(pDocument->resource(strSrc));
 
-    pPainter->drawImage(qrBgRect,img,qrSize);
+        if (img.isNull())
+            return;
+
+        //high dpi
+        qreal dpr = qApp->devicePixelRatio();
+        //QSize targetSize(pPainter->device()->width(),pPainter->device()->height());
+        //qrBgRect.setSize(qrBgRect.size()*dpr);
+        img.setDevicePixelRatio(dpr);
+
+        //qDebug()() << "paintBackgroundImage - size :" << strSize;
+
+        if (strSize != "")
+        {
+            QRegExp percreg("([0-9]+)%");
+            QRegExp sizereg("([0-9]+)px +([0-9]+)px");
+            QRegExp sizeautoreg("([0-9]+)px");
+            //TODO: scale the sizes?
+            QString propstr = strSize;
+            if (propstr == "cover")
+                img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+            else if (propstr == "contain")
+                img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
+            else if (sizereg.indexIn(propstr) != -1)
+                img = img.scaled(sizereg.cap(1).toInt(),sizereg.cap(2).toInt(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+            else if (sizeautoreg.indexIn(propstr) != -1)
+                img = img.scaledToWidth(sizeautoreg.cap(1).toInt(),Qt::SmoothTransformation);
+            else if (percreg.indexIn(propstr) != -1)
+                img = img.scaled(((float)(percreg.cap(1).toInt())/100)*img.width(),((float)(percreg.cap(2).toInt())/100)*img.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+            else
+                img = img.scaled(qrBgRect.width(),qrBgRect.height(),Qt::KeepAspectRatio);
+        }
+
+        qrSize = img.rect();
+
+        if (img.height() > qrBgRect.height())
+            qrSize.setHeight(qrBgRect.height());
+        if (img.width() > qrBgRect.width())
+            qrSize.setWidth(qrBgRect.width());
+
+        pPainter->drawImage(qrBgRect,img,qrSize);
+    }
 }
 
 void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QColor strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)

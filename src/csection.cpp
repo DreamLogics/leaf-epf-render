@@ -41,6 +41,11 @@ CViewportItem::CViewportItem()
 
 }
 
+CViewportItem::~CViewportItem()
+{
+
+}
+
 void CViewportItem::paint(QPainter *painter/*, const QStyleOptionGraphicsItem *option, QWidget *widget*/)
 {
     //painter->fillRect(boundingRect(),QColor("red"));
@@ -56,6 +61,21 @@ void CViewportItem::setSize(int height, int width)
     //prepareGeometryChange();
     m_qrRect.setHeight(height);
     m_qrRect.setWidth(width);
+}
+
+JSSectionProxy::JSSectionProxy(CSection *section) : QObject(section), m_pSection(section)
+{
+
+}
+
+QObject* JSSectionProxy::getObjectByID(QString id)
+{
+    return m_pSection->getObjectByID(id);
+}
+
+QObjectList JSSectionProxy::layers()
+{
+    return m_pSection->layers();
 }
 
 
@@ -95,6 +115,7 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
         m_MomentumTimer = 0;
 
     m_pViewportItem = new CViewportItem();
+    m_pJSProxy = new JSSectionProxy(this);
 }
 
 CSection::~CSection()
@@ -102,6 +123,7 @@ CSection::~CSection()
     delete m_pViewportItem;
     if (m_MomentumTimer)
         delete m_MomentumTimer;
+    delete m_pJSProxy;
 
     /*for (int i=0;i<m_Layers.size();i++)
         delete m_Layers[i];*/
@@ -196,7 +218,7 @@ QObject* CSection::getActiveLayer()
 */
 QObject* CSection::getObjectByID(QString id)
 {
-    return objectByID(id);
+    return objectByID(id)->jsProxy();
 }
 /*
 void CSection::rendered(QPainter *p)
@@ -453,6 +475,11 @@ void CSection::render(QPainter *p,QRectF region)
         for (int n=0;n<l->objectCount();n++)
         {
             obj = l->object(n);
+            if (!obj)
+            {
+                qDebug() << "null object in section" << id();
+                continue;
+            }
             /*QRegion clipregion;
 
             if (!obj->changed())

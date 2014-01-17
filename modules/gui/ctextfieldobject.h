@@ -26,6 +26,7 @@
 #include "../../src/cbaseobject.h"
 #include "../../src/iepfobjectfactory.h"
 #include <QElapsedTimer>
+#include <QMutex>
 
 class CTextFieldObjectFactory : public IEPFObjectFactory
 {
@@ -33,6 +34,27 @@ class CTextFieldObjectFactory : public IEPFObjectFactory
 };
 
 class QLineEdit;
+
+class CTextFieldObject;
+
+class JSTextFieldObjectProxy : public JSBaseObjectProxy
+{
+    Q_OBJECT
+public:
+    JSTextFieldObjectProxy(CTextFieldObject* obj);
+
+    void _textChanged(QString str);
+
+public slots:
+    void setText(QString str);
+
+signals:
+
+    void textChanged(QString str);
+
+private:
+    CTextFieldObject* m_pObject;
+};
 
 class CTextFieldObject : public CBaseObject
 {
@@ -43,31 +65,47 @@ public:
 
     virtual void preload();
 
-    virtual void layout(QRectF relativeTo);
+    virtual void layout(QRectF relativeTo,QList<CBaseObject*> updatelist = QList<CBaseObject*>());
 
     virtual void paint(QPainter *painter);
     virtual void paintBuffered(QPainter *p);
 
+    virtual QObject* jsProxy() const;
+/*
     virtual void mouseDoubleClickEvent ( QPoint pos );
     virtual void mousePressEvent( QPoint pos );
     virtual void mouseReleaseEvent( QPoint pos );
     virtual void mouseMoveEvent( QPoint pos );
 
     virtual void keyPressEvent(int key, QString val);
-    virtual void keyReleaseEvent(int key, QString val);
+    virtual void keyReleaseEvent(int key, QString val);*/
 
-/*signals:
+    virtual bool eventFilter(QObject *p, QEvent *ev);
+
+/*public slots:
+    void setTextLine(QString str);*/
+
+    void setText(QString str);
+
+public slots:
+
+    void setValue(QString s);
+
+signals:
 
     void createTextField();
     void updateWidgetGeometry(QRect r);
     void showWidget();
     void hideWidget();
-    void destroyWidget();*/
+    void destroyWidget();
+    void textChanged(QString str);
 
 private:
     bool m_bHasFocus;
     QString m_sValue;
     QElapsedTimer m_HoldTimer;
+    QMutex m_mValueMutex;
+    JSTextFieldObjectProxy* m_pJSProxy;
 };
 
 #endif // CTextFieldOBJECT_H

@@ -9,12 +9,15 @@
 #include "../../src/cbaseobject.h"
 #include "../../src/cdocument.h"
 //#include "clineedit.h"
+#include <QLineEdit>
+#include "ctextfieldobject.h"
 
-QMap<CEPFView*,CWidgetHandler*> g_handlers;
+QMap<QWidget*,CWidgetHandler*> g_handlers;
 
-CWidgetHandler::CWidgetHandler(CEPFView* p, QObject *parent) :
-    QObject(parent), m_pView(p)
+CWidgetHandler::CWidgetHandler(QWidget *parent) :
+    QWidget(parent)
 {
+    setGeometry(parent->geometry());
 }
 
 CWidgetHandler* CWidgetHandler::get(CEPFView* p)
@@ -35,7 +38,7 @@ void CWidgetHandler::destroy()
     {
         it.value()->deleteLater();
     }
-    g_handlers.remove(m_pView);
+    g_handlers.remove(parentWidget());
     deleteLater();
 }
 
@@ -47,14 +50,26 @@ void CWidgetHandler::createTextField()
     connect(w,SIGNAL(redrawNeeded()),m_pView,SLOT(updateView()));
     w->show();
     m_widgets.insert(s,w);*/
+    QObject* s = sender();
+    CTextFieldObject* tfo = dynamic_cast<CTextFieldObject*>(s);
+    if (!tfo)
+        return;
+    QLineEdit* w = new QLineEdit(this);
+    connect(w,SIGNAL(textChanged(QString)),tfo,SLOT(setValue(QString)));
+    connect(tfo,SIGNAL(textChanged(QString)),w,SLOT(setText(QString)));
+    w->installEventFilter(s);
+    m_widgets.insert(s,w);
+    w->show();
 }
 
 void CWidgetHandler::updateWidgetGeometry(QRect r)
 {
+    qDebug() << "setza" << r;
     QObject* s = sender();
     if (m_widgets.contains(s))
     {
         QWidget* w = m_widgets[s];
+        qDebug() << "setza" << r;
         w->setGeometry(r);
     }
 }
@@ -92,57 +107,15 @@ void CWidgetHandler::destroyWidget()
 
 bool CWidgetHandler::eventFilter(QObject *p, QEvent *ev)
 {
-    if (p == m_pView)
+    QWidget* widget = dynamic_cast<QWidget*>(p);
+    if (widget && ev->type() == QEvent::Resize)
     {
-        QMap<QObject*,QWidget*>::iterator it;
-        QRect r;
+        setGeometry(widget->geometry());
+    }
 
-        for (it = m_widgets.begin();it != m_widgets.end();it++)
-        {
-            if (!isActiveObject(it.key()))
-                continue;
-            CBaseObject* obj = dynamic_cast<CBaseObject*>(it.key());
-            r = obj->boundingRect().toRect();
-            /*if (it.value()->event(ev))
-                return true;*/
-            /*if (QApplication::sendEvent(it.value(),ev))
-                return true;*/
-            if (ev->type() == QEvent::MouseButtonPress || ev->type() == QEvent::MouseButtonRelease
-                    || ev->type() == QEvent::MouseMove || ev->type() == QEvent::MouseButtonDblClick)
-            {
-                QMouseEvent* mev = dynamic_cast<QMouseEvent*>(ev);
-                //qDebug()() << "mouse ev" << mev->pos() << r;
-                if (mev && r.contains(mev->pos()))
-                {
-                    //qDebug() << "mouse ev pos";
-                    QPoint lpos(mev->pos().x() - r.x(),mev->pos().y() - r.y());
-                    QMouseEvent* nme = new QMouseEvent(ev->type(),lpos,mev->button(),mev->buttons(),mev->modifiers());
-                    QApplication::sendEvent(it.value(),nme);
-                    delete nme;
-                    //it.value()->setFocus();
-                }
-            }
-            else if ((ev->type() == QEvent::KeyPress || QEvent::KeyRelease) && it.value()->hasFocus())
-            {
-                QKeyEvent* kev = dynamic_cast<QKeyEvent*>(ev);
-                if (kev)
-                {
-                    QKeyEvent* nke = new QKeyEvent(ev->type(),kev->key(),kev->modifiers(),kev->text(),kev->isAutoRepeat(),kev->count());
-                    QApplication::sendEvent(it.value(),nke);
-                    delete nke;
-                }
-            }
-        }
-        return false;
-    }
-    else if (dynamic_cast<QWidget*>(p))
-    {
-        //qDebug() << "event intercepted";
-        return false;
-    }
     return false;
 }
-
+/*
 bool CWidgetHandler::isActiveObject(QObject *p)
 {
     CBaseObject* obj = dynamic_cast<CBaseObject*>(p);
@@ -154,11 +127,16 @@ bool CWidgetHandler::isActiveObject(QObject *p)
 
     return false;
 }
-
+*/
 void CWidgetHandler::renderWidget(QObject *obj, QPainter *p)
 {
     if (!m_widgets.contains(obj))
         return;
     QWidget* w = m_widgets[obj];
     w->render(p);
+}
+
+bool CWidgetHandler::event(QEvent *ev)
+{
+    return false;
 }

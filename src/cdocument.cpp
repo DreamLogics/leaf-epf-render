@@ -83,6 +83,9 @@ CDocument::~CDocument()
     if (m_pJS)
         delete m_pJS;
 
+    if (m_pStylesheet)
+        delete m_pStylesheet;
+
     //QFontDatabase::removeAllApplicationFonts();
 
 }

@@ -32,7 +32,7 @@
 #include "canimator.h"
 #include "css/css_transition.h"
 #include <QGLPixelBuffer>
-
+#include <QGuiApplication>
 
 CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_sID(id), m_pLayer(layer)
@@ -52,6 +52,8 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_iInTransition = 0;
     m_iTransitionStarted = 0;
 
+    m_pJSProxy =  new JSBaseObjectProxy(this);
+
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
 
@@ -59,6 +61,7 @@ CBaseObject::~CBaseObject()
 {
     //if (m_pBuffer)
     //    delete m_pBuffer;
+    delete m_pJSProxy;
 
     //unregister from animator
     if (m_iAnimation != -1)
@@ -438,7 +441,7 @@ void CBaseObject::mousePressEvent(QPoint contentpos)
 void CBaseObject::mouseReleaseEvent(QPoint contentpos)
 {
     sendEvent("clicked");
-    emit clicked();
+    m_pJSProxy->_clicked();
 }
 void CBaseObject::mouseMoveEvent(QPoint contentpos)
 {
@@ -913,7 +916,8 @@ void CBaseObject::paintBuffered(QPainter *p)
     }
     else*/
     {
-        if (m_qiRenderBuffer.width() <= dw && m_qiRenderBuffer.height() <= dh)
+        p->drawPixmap(0,0,m_qiRenderBuffer);
+        /*if (m_qiRenderBuffer.width() <= dw && m_qiRenderBuffer.height() <= dh)
             p->drawImage(0,0,m_qiRenderBuffer);
         else
         {
@@ -942,7 +946,7 @@ void CBaseObject::paintBuffered(QPainter *p)
                     //p->drawImage(x,y,m_qiRenderBuffer,x,y,1024,1024);
                 }
             }
-        }
+        }*/
     }
     //paint(p);
 
@@ -994,8 +998,21 @@ void CBaseObject::buffer()
 
     //m_pBuffer = new QGLFramebufferObject();
 
-    m_qiRenderBuffer = QImage(m_rRect.size().toSize(),QImage::Format_ARGB32_Premultiplied);
-    m_qiRenderBuffer.fill(0x00000000);
+    if (useDevicePixels())
+    {
+        qreal dpr = qApp->devicePixelRatio();
+        m_qiRenderBuffer = QPixmap(m_rRect.size().toSize()*dpr);
+        //m_qiRenderBuffer = QImage(m_rRect.size().toSize()*dpr,QImage::Format_ARGB32_Premultiplied);
+        m_qiRenderBuffer.setDevicePixelRatio(dpr);
+    }
+    else
+    {
+        m_qiRenderBuffer = QPixmap(m_rRect.size().toSize());
+        //m_qiRenderBuffer = QImage(m_rRect.size().toSize(),QImage::Format_ARGB32_Premultiplied);
+    }
+
+    m_qiRenderBuffer.fill(QColor(0,0,0,0));
+    //m_qiRenderBuffer.fill(0x00000000);
     //QGLFormat glf(QGLFormat::defaultFormat());
     //glf.setRgba(true);
     //QGLPixelBuffer glpb(m_rRect.size().toSize(),glf);
@@ -1063,7 +1080,8 @@ bool CBaseObject::changed()
 void CBaseObject::clearBuffers()
 {
     m_RenderMutex.lock();
-    m_qiRenderBuffer = QImage();
+    m_qiRenderBuffer = QPixmap();
+    //m_qiRenderBuffer = QImage();
     m_RenderMutex.unlock();
 }
 
@@ -1135,4 +1153,86 @@ void CBaseObject::onStylesheetChange()
 void CBaseObject::transitionStarted()
 {
     m_iTransitionStarted--;
+}
+
+QObject* CBaseObject::jsProxy() const
+{
+    return m_pJSProxy;
+}
+
+bool CBaseObject::useDevicePixels() const
+{
+    return true;
+}
+
+JSBaseObjectProxy::JSBaseObjectProxy(CBaseObject* obj) : QObject(obj), m_pObject(obj)
+{
+
+}
+
+void JSBaseObjectProxy::_clicked()
+{
+    emit clicked();
+}
+void JSBaseObjectProxy::_onMouseDown(int posx, int posy)
+{
+    emit onMouseDown( posx,  posy);
+}
+void JSBaseObjectProxy::_onMouseMove(int posx, int posy)
+{
+    emit onMouseMove( posx,  posy);
+}
+void JSBaseObjectProxy::_onMouseUp(int posx, int posy)
+{
+    emit onMouseUp( posx,  posy);
+}
+void JSBaseObjectProxy::_onMouseEnter()
+{
+    emit onMouseEnter();
+}
+void JSBaseObjectProxy::_onMouseLeave()
+{
+    emit onMouseLeave();
+}
+void JSBaseObjectProxy::_onSwipe(int direction)
+{
+    emit onSwipe( direction);
+}
+void JSBaseObjectProxy::_onFocus()
+{
+    emit onFocus();
+}
+void JSBaseObjectProxy::_onLoseFocus()
+{
+    emit onLoseFocus();
+}
+
+QStringList JSBaseObjectProxy::styleClasses() const
+{
+    return m_pObject->styleClasses();
+}
+void JSBaseObjectProxy::addStyleClass(QString classname)
+{
+    m_pObject->addStyleClass(classname);
+}
+void JSBaseObjectProxy::setStyleClass(QString classname)
+{
+    m_pObject->setStyleClass(classname);
+}
+void JSBaseObjectProxy::toggleStyleClass(QString classname)
+{
+    m_pObject->toggleStyleClass(classname);
+}
+void JSBaseObjectProxy::removeStyleClass(QString classname)
+{
+    m_pObject->removeStyleClass(classname);
+}
+
+void JSBaseObjectProxy::setBoundingRect(const QRectF &r)
+{
+    m_pObject->setBoundingRect(r);
+}
+QRectF JSBaseObjectProxy::boundingRect() const
+{
+    return m_pObject->boundingRect();
 }

@@ -51,6 +51,8 @@ public:
 
     virtual void onEPFEvent(EPFEvent *ev);
 
+    virtual bool useDevicePixels() const;
+
 private:
 
     QString css();

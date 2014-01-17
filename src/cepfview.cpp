@@ -336,6 +336,9 @@ void CEPFView::setDocument(CDocument *doc)
     connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
     connect(this,SIGNAL(clearBuffers()),doc,SLOT(clearBuffers()));
     connect(this,SIGNAL(sectionChange(QString)),doc,SLOT(sectionChange(QString)));
+    
+    //QString msg = QString::number(height()) + " x " + QString::number(width());
+    //Device::currentDevice()->alert("screensize", msg.toUtf8().constData());
 
     emit loadDocument(height(),width(),first);
 }

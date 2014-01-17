@@ -44,6 +44,7 @@ class CViewportItem
 {
 public:
     CViewportItem();
+    virtual ~CViewportItem();
 
     void setSize(int height,int width);
     virtual void paint(QPainter *painter);
@@ -55,6 +56,24 @@ protected:
 
 private:
     QRectF m_qrRect;
+};
+
+class CSection;
+
+class JSSectionProxy : public QObject
+{
+    Q_OBJECT
+public:
+    JSSectionProxy(CSection* section);
+
+
+public slots:
+
+    QObjectList layers();
+    QObject* getObjectByID(QString id);
+
+private:
+    CSection* m_pSection;
 };
 
 class CSection : public QObject, public EPFComponent, public CScrollArea
@@ -205,6 +224,8 @@ private:
     QPoint m_ClickStartPoint;
 
     TransitionFx m_iTransitionFx;
+
+    JSSectionProxy* m_pJSProxy;
 
 };
 

@@ -484,3 +484,7 @@ void CTextObject::paintBuffered(QPainter *p)
     svg.render(p);
 }
 */
+bool CTextObject::useDevicePixels() const
+{
+    return true;
+}

@@ -32,10 +32,28 @@
 #include <QApplication>
 #include "../../src/idevice.h"
 #include <QMenu>
+#include "textinputview.h"
+#include <QLineEdit>
+#include <QKeyEvent>
 
 CBaseObject* CTextFieldObjectFactory::create(QString id, CLayer *layer)
 {
     return new CTextFieldObject(id,layer);
+}
+
+JSTextFieldObjectProxy::JSTextFieldObjectProxy(CTextFieldObject *obj) : JSBaseObjectProxy(obj), m_pObject(obj)
+{
+
+}
+
+void JSTextFieldObjectProxy::setText(QString str)
+{
+    m_pObject->setText(str);
+}
+
+void JSTextFieldObjectProxy::_textChanged(QString str)
+{
+    emit textChanged(str);
 }
 
 CTextFieldObject::CTextFieldObject(QString id, CLayer *layer) : CBaseObject(id,layer)
@@ -46,19 +64,19 @@ CTextFieldObject::CTextFieldObject(QString id, CLayer *layer) : CBaseObject(id,l
 
 CTextFieldObject::~CTextFieldObject()
 {
-    //emit destroyWidget();
+    emit destroyWidget();
 }
 
 void CTextFieldObject::preload()
 {
-    /*CWidgetHandler* h = CWidgetHandler::get(document()->renderview());
+    CWidgetHandler* h = CWidgetHandler::get(document()->renderview());
     connect(this,SIGNAL(createTextField()),h,SLOT(createTextField()));
-    connect(this,SIGNAL(updateWidgetGeometry()),h,SLOT(updateWidgetGeometry()));
+    connect(this,SIGNAL(updateWidgetGeometry(QRect)),h,SLOT(updateWidgetGeometry(QRect)));
     connect(this,SIGNAL(showWidget()),h,SLOT(showWidget()));
     connect(this,SIGNAL(hideWidget()),h,SLOT(hideWidget()));
     connect(this,SIGNAL(destroyWidget()),h,SLOT(destroyWidget()));
 
-    emit createTextField();*/
+    emit createTextField();
 }
 
 void CTextFieldObject::paint(QPainter *painter)
@@ -68,6 +86,7 @@ void CTextFieldObject::paint(QPainter *painter)
 
 void CTextFieldObject::paintBuffered(QPainter *p)
 {
+    return;
     //CWidgetHandler::get(document()->renderview())->renderWidget(this,p);
     //TODO: multithreaded
     QRectF r(0,0,boundingRect().width(),boundingRect().height());
@@ -86,13 +105,44 @@ void CTextFieldObject::paintBuffered(QPainter *p)
     p->drawText(textbox,m_sValue);
 }
 
-void CTextFieldObject::layout(QRectF relativeTo)
+void CTextFieldObject::layout(QRectF relativeTo,QList<CBaseObject*> updatelist)
 {
-    CBaseObject::layout(relativeTo);
-
-    //emit updateWidgetGeometry(boundingRect().toRect());
+    CBaseObject::layout(relativeTo,updatelist);
+    qDebug() << "setzb" << boundingRect();
+    //if (updatelist.contains(this))
+        emit updateWidgetGeometry(boundingRect().toRect());
 }
 
+bool CTextFieldObject::eventFilter(QObject *p, QEvent *ev)
+{
+    QLineEdit* le = dynamic_cast<QLineEdit*>(p);
+    if (le && ev->type() == QEvent::KeyPress)
+    {
+        QKeyEvent* kev = dynamic_cast<QKeyEvent*>(ev);
+        if (kev->key() == Qt::Key_Return)
+        {
+            QApplication::inputMethod()->hide();
+        }
+    }
+    return false;
+}
+
+void CTextFieldObject::setValue(QString s)
+{
+    m_sValue = s;
+}
+
+QObject* CTextFieldObject::jsProxy() const
+{
+    return m_pJSProxy;
+}
+
+void CTextFieldObject::setText(QString str)
+{
+    m_pJSProxy->_textChanged(str);
+}
+
+/*
 void CTextFieldObject::mouseDoubleClickEvent ( QPoint pos )
 {
 
@@ -107,7 +157,11 @@ void CTextFieldObject::mousePressEvent( QPoint pos )
         {
             section()->releaseControl(this);
             m_bHasFocus = false;
+#if defined(IOS) || defined(ANDROID)
+            emit getLine();
+#else
             QApplication::inputMethod()->hide();
+#endif
             document()->updateRenderView();
             section()->mousePressEvent(pos.x(),pos.y());
         }
@@ -124,7 +178,11 @@ void CTextFieldObject::mouseReleaseEvent( QPoint pos )
 
         }
     }
-    QApplication::inputMethod()->show();
+#if defined(IOS) || defined(ANDROID)
+            emit getLine();
+#else
+            QApplication::inputMethod()->show();
+#endif
     if (!section()->hasControl(this))
     {
         section()->takeControl(this);
@@ -142,6 +200,9 @@ void CTextFieldObject::mouseMoveEvent( QPoint pos )
 void CTextFieldObject::keyPressEvent(int key, QString val)
 {
     //qDebug()() << "press" << key << val;
+#if defined(IOS) || defined(ANDROID)
+     return;
+#endif
     if (key == Qt::Key_Return)
     {
         QApplication::inputMethod()->hide();
@@ -166,4 +227,13 @@ void CTextFieldObject::keyPressEvent(int key, QString val)
 void CTextFieldObject::keyReleaseEvent(int key, QString val)
 {
     //qDebug()() << "release" << key;
+}*/
+/*
+void CTextFieldObject::setTextLine(QString str)
+{
+    m_sValue = str;
+    section()->releaseControl(this);
+    m_bHasFocus = false;
+    document()->updateRenderView();
 }
+*/

@@ -56,6 +56,9 @@ public:
     virtual int getYaw() = 0;
     virtual int getRoll() = 0;
 
+    virtual void getLine(const char* label) = 0;
+    virtual void alert(const char* title, const char* msg) = 0;
+
     enum devFlags
     {
         dfTouchScreen = 0x1,
