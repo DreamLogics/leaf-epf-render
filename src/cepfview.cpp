@@ -647,7 +647,10 @@ void CEPFView::paint(QPainter *p)
     else
     {
         //p->setRenderHint(QPainter::HighQualityAntialiasing);
-        p->setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing);
+        p->setRenderHint(QPainter::Antialiasing, true);
+        p->setRenderHint(QPainter::TextAntialiasing, true);
+        p->setRenderHint(QPainter::SmoothPixmapTransform, true);
+        p->setRenderHint(QPainter::HighQualityAntialiasing, true);
 
         CSection* s = m_pDocument->section(m_iCurrentSection);
         int nx,ny,psx,psy,sx,sy;

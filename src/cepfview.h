@@ -74,11 +74,11 @@ protected:
 private:
     CEPFView* m_pView;
 };*/
-#ifdef ANDROID
+//#ifdef ANDROID
 #define WIDGETBASE QWidget
-#else
-#define WIDGETBASE QGLWidget
-#endif
+//#else
+//#define WIDGETBASE QGLWidget
+//#endif
 
 class LEAFEPFRENDERSHARED_EXPORT CEPFView : public WIDGETBASE//QGLWidget
 {

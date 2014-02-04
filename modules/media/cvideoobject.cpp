@@ -21,11 +21,17 @@
 ****************************************************************************/
 
 #include "cvideoobject.h"
-#include "cavdecoder.h"
+//#include "cavdecoder.h"
 #include "../../src/css/css_style.h"
 #include "../../src/cdocument.h"
 #include <QPainter>
 #include <QDebug>
+#include <QtAV/QtAV.h>
+#include <QTimer>
+
+static QTimer* g_postimer = 0;
+
+using namespace QtAV;
 
 CBaseObject* CVideoObjectFactory::create(QString id, CLayer *layer)
 {
@@ -34,16 +40,21 @@ CBaseObject* CVideoObjectFactory::create(QString id, CLayer *layer)
 
 CVideoObject::CVideoObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 {
-    m_pAV = 0;
-    m_pPrivate = new CVideoPrivate(this);
-    m_iCurTime = 0;
+    m_dPos = 0;
+    m_pAVPlayer = new AVPlayer();
+    m_pAVPlayer->setRenderer(this);
+    if (!g_postimer)
+    {
+        g_postimer = new QTimer();
+        g_postimer->setInterval(40);
+        g_postimer->start();
+    }
+    connect(g_postimer,SIGNAL(timeout()),this,SLOT(updateTime()));
 }
 
 CVideoObject::~CVideoObject()
 {
-    delete m_pPrivate;
-    if (m_pAV)
-        delete m_pAV;
+    delete m_pAVPlayer;
 }
 
 void CVideoObject::preload()
@@ -58,9 +69,18 @@ void CVideoObject::paint(QPainter *painter)
 
 void CVideoObject::paintBuffered(QPainter *p)
 {
-    if (m_pAV)
+    DPTR_D(CVideoObject);
+    if (m_pAVPlayer->isLoaded())
     {
-        m_pAV->drawFrame(p,boundingRect().height(),boundingRect().width());
+        //m_pAV->drawFrame(p,boundingRect().height(),boundingRect().width());
+        if (d.image.isNull()) {
+            //TODO: when setInSize()?
+            d.image = QImage(rendererSize(), QImage::Format_RGB32);
+            d.image.fill(Qt::black); //maemo 4.7.0: QImage.fill(uint)
+        }
+        if (d.image.size() != rendererSize())
+            d.image = d.image.scaled(rendererSize());
+        p->drawImage(0,0,d.image);
         drawAVControls(p);
     }
     else
@@ -92,26 +112,45 @@ void CVideoObject::layout(QRectF relativeTo, QList<CBaseObject*> updatelist)
 
             if (!io)
             {
-                if (m_pAV)
-                    delete m_pAV;
-                m_pAV = 0;
+                m_pAVPlayer->setIODevice(0);
                 return;
             }
 
-            if (m_pAV)
+            /*if (m_pAV)
                 delete m_pAV;
             m_pAV = new AV::CAVDecoder();
             connect(m_pAV,SIGNAL(update()),document(),SLOT(updateRenderView()));
             connect(m_pAV,SIGNAL(updateTime(int)),m_pPrivate,SLOT(updateTime(int)));
-            m_pAV->init(io);
+            m_pAV->init(io);*/
+            //connect(m_pAVPlayer,SIGNAL(positionChanged(qint64)),this,SLOT(updateTime(qint64)));
+
+            m_pAVPlayer->setIODevice(io);
         }
 
+        resizeRenderer(boundingRect().size().toSize());
     }
+}
+
+void CVideoObject::updateTime()
+{
+    if (!m_pAVPlayer->isLoaded())
+        return;
+    m_dPos = (double)m_pAVPlayer->position() / (double)m_pAVPlayer->duration();
+    document()->updateRenderView();
 }
 
 void CVideoObject::mouseReleaseEvent(QPoint pos)
 {
-    if (m_pAV)
+    if (m_pAVPlayer->isPlaying())
+    {
+        m_pAVPlayer->pause(!m_pAVPlayer->isPaused());
+        document()->updateRenderView();
+    }
+    else
+    {
+        m_pAVPlayer->play();
+    }
+    /*if (m_pAV)
     {
         if (m_pAV->isPlaying())
         {
@@ -123,7 +162,7 @@ void CVideoObject::mouseReleaseEvent(QPoint pos)
             m_pAV->play();
 
         }
-    }
+    }*/
 }
 
 void CVideoObject::drawAVControls(QPainter *p)
@@ -138,7 +177,7 @@ void CVideoObject::drawAVControls(QPainter *p)
     p->setBrush(QColor(255,255,255,200));
     p->setPen(pen);
 
-    if (m_pAV->isPlaying())
+    if (!m_pAVPlayer->isPaused())
     {
         QPolygonF pause1;
         pause1.append(QPointF(10,boundingRect().height()-18));
@@ -170,18 +209,49 @@ void CVideoObject::drawAVControls(QPainter *p)
     p->setPen(pen);
 
     p->drawRoundedRect(30,boundingRect().height()-16,boundingRect().width()-40,12,6,6);
-    double pos = (double)m_iCurTime / (double)m_pAV->duration();
     p->setBrush(br);
-    p->drawRoundedRect(30,boundingRect().height()-16,(double)(boundingRect().width()-40)*pos,12,6,6);
+    p->drawRoundedRect(30,boundingRect().height()-16,(double)(boundingRect().width()-40)*m_dPos,12,6,6);
     //qDebug() << m_iCurTime << m_pAV->duration() << pos;
 }
 
-CVideoPrivate::CVideoPrivate(CVideoObject *p) : m_pObject(p)
+bool CVideoObject::receiveFrame(const VideoFrame &frame)
 {
-
+    prepareFrame(frame);
+    //call update
+    document()->updateRenderView();
+    return true;
 }
 
-void CVideoPrivate::updateTime(int time)
+bool CVideoObject::needUpdateBackground() const
 {
-    m_pObject->m_iCurTime = time;
+    DPTR_D(const CVideoObject);
+    return d.out_rect != boundingRect().toRect();
+}
+
+void CVideoObject::drawBackground()
+{
+    //DPTR_D(CVideoObject);
+    //d.painter->fillRect(rect(), QColor(0, 0, 0));
+}
+
+void CVideoObject::drawFrame()
+{
+    /*DPTR_D(CVideoObject);
+    if (d.image.isNull()) {
+        //TODO: when setInSize()?
+        d.image = QImage(rendererSize(), QImage::Format_RGB32);
+        d.image.fill(Qt::black); //maemo 4.7.0: QImage.fill(uint)
+    }
+    QRect roi = realROI();
+    //assume that the image data is already scaled to out_size(NOT renderer size!)
+    if (!d.scale_in_renderer || roi.size() == d.out_rect.size()) {
+        //d.preview = d.image;
+        d.painter->drawImage(d.out_rect.topLeft(), d.image, roi);
+    } else {
+        //qDebug("size not fit. may slow. %dx%d ==> %dx%d"
+        //       , d.image.size().width(), image.size().height(), d.renderer_width, d.renderer_height);
+        d.painter->drawImage(d.out_rect, d.image, roi);
+        //what's the difference?
+        //d.painter->drawImage(QPoint(), image.scaled(d.renderer_width, d.renderer_height));
+    }*/
 }

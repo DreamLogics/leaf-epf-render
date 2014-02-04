@@ -25,6 +25,8 @@
 
 #include "../../src/cbaseobject.h"
 #include "../../src/iepfobjectfactory.h"
+#include <QtAV/QPainterRenderer.h>
+#include <QtAV/private/QPainterRenderer_p.h>
 
 class CVideoObjectFactory : public IEPFObjectFactory
 {
@@ -36,19 +38,20 @@ namespace AV {
 }
 class CAVDecoder;
 class CVideoObject;
+class QResizeEvent;
 
-class CVideoPrivate : public QObject
+namespace QtAV
 {
-    Q_OBJECT
+    class AVPlayer;
+}
+
+class CVideoObjectPrivate : public QtAV::QPainterRendererPrivate
+{
 public:
-    CVideoPrivate(CVideoObject *p);
-public slots:
-    void updateTime(int time);
-private:
-    CVideoObject* m_pObject;
+    virtual ~CVideoObjectPrivate(){}
 };
 
-class CVideoObject : public CBaseObject
+class CVideoObject : public CBaseObject, public QtAV::QPainterRenderer
 {
     Q_OBJECT
 public:
@@ -64,15 +67,27 @@ public:
 
     virtual void mouseReleaseEvent(QPoint pos);
 
+protected:
+    virtual bool receiveFrame(const QtAV::VideoFrame& frame);
+    virtual bool needUpdateBackground() const;
+    //called in paintEvent before drawFrame() when required
+    virtual void drawBackground();
+    //draw the current frame using the current paint engine. called by paintEvent()
+    virtual void drawFrame();
+
 private:
 
     void drawAVControls(QPainter* p);
 
+private slots:
+
+    void updateTime();
+
 private:
-    AV::CAVDecoder* m_pAV;
+    //AV::CAVDecoder* m_pAV;
+    QtAV::AVPlayer* m_pAVPlayer;
     QString m_sVideo;
-    int m_iCurTime;
-    CVideoPrivate* m_pPrivate;
+    double m_dPos;
     friend class CVideoPrivate;
 };
 
