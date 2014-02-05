@@ -41,8 +41,7 @@ CBaseObject* CVideoObjectFactory::create(QString id, CLayer *layer)
 CVideoObject::CVideoObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 {
     m_dPos = 0;
-    m_pAVPlayer = new AVPlayer();
-    m_pAVPlayer->setRenderer(this);
+    m_pAVPlayer = 0;
     if (!g_postimer)
     {
         g_postimer = new QTimer();
@@ -59,7 +58,8 @@ CVideoObject::~CVideoObject()
 
 void CVideoObject::preload()
 {
-
+    m_pAVPlayer = new AVPlayer();
+    m_pAVPlayer->setRenderer(this);
 }
 
 void CVideoObject::paint(QPainter *painter)
@@ -133,6 +133,8 @@ void CVideoObject::layout(QRectF relativeTo, QList<CBaseObject*> updatelist)
 
 void CVideoObject::updateTime()
 {
+    if (!m_pAVPlayer)
+        return;
     if (!m_pAVPlayer->isLoaded())
         return;
     m_dPos = (double)m_pAVPlayer->position() / (double)m_pAVPlayer->duration();

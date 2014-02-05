@@ -100,6 +100,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
         {
             //error
             (*error) = "Filetype not supported.";
+            f.close();
             return 0;
         }
 
@@ -108,6 +109,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
         if (version > 1)
         {
             (*error) = "The version is too new.";
+            f.close();
             return 0;
         }
 
@@ -120,6 +122,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
         if (!(containersize > 0 && filesizecompressed >= 0 && ((filesizecompressed > 0 && dataoffset + filesizecompressed < f.size()) || (filesizecompressed == 0 && dataoffset + containersize < f.size()))))
         {
             (*error) = "File corruption detected (container xml).";
+            f.close();
             return 0;
         }
 
@@ -134,6 +137,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
         if (!f.seek(offsetind))
         {
             (*error) = "This file is damaged.";
+            f.close();
             return 0;
         }
 
@@ -147,6 +151,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
             {
                 (*error) = "File corruption detected (file entry header).";
                 delete document;
+                f.close();
                 return 0;
             }
 
@@ -158,6 +163,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
             {
                 (*error) = "File corruption detected (entry offset: "+QString::number(f.pos()-18)+" data offset: "+QString::number(dataoffset)+").";
                 delete document;
+                f.close();
                 return 0;
             }
             data = f.read(resnamesize);
