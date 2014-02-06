@@ -1077,7 +1077,7 @@ bool CBaseObject::changed()
     return b;
 }
 
-void CBaseObject::clearBuffers()
+void CBaseObject::unload()
 {
     m_RenderMutex.lock();
     m_qiRenderBuffer = QPixmap();

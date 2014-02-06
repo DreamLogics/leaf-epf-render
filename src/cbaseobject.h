@@ -118,6 +118,7 @@ public:
     //void sheduleRepaint();
     virtual void paintBuffered(QPainter* p);
     virtual void buffer();
+    virtual void unload();
 
     virtual void layout(QRectF relativeTo, QList<CBaseObject*> updatelist = QList<CBaseObject*>());
     /*virtual CBaseObject* relative();
@@ -180,8 +181,6 @@ public:
     void saveBuffer();
 
     bool changed();
-
-    virtual void clearBuffers();
 
     enum StyleState
     {

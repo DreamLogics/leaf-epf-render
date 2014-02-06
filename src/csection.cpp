@@ -411,6 +411,19 @@ void CSection::layout(QList<CBaseObject*> updatelist)
     layout(m_iLayoutHeight,m_iLayoutWidth,updatelist);
 }
 
+void CSection::unload()
+{
+    for (int il=0;il<layerCount();il++)
+    {
+        CLayer* l = layer(il);
+        for (int io=0;io<l->objectCount();io++)
+        {
+            CBaseObject* obj = l->object(io);
+            obj->unload();
+        }
+    }
+}
+
 int CSection::x()
 {
     return m_iX;

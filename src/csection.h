@@ -108,6 +108,8 @@ public:
     virtual void layout(QList<CBaseObject*> updatelist = QList<CBaseObject*>());
     CViewportItem* viewportItem();
 
+    virtual void unload();
+
     virtual void render(QPainter* p, QRectF region);
 
     enum TransitionFx
