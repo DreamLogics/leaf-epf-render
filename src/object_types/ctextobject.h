@@ -47,8 +47,6 @@ public:
     virtual void layout(QRectF relativeTo,QList<CBaseObject*> updatelist = QList<CBaseObject*>());
     QString overflow();
 
-    virtual void clearBuffers();
-
     virtual void onEPFEvent(EPFEvent *ev);
 
     virtual bool useDevicePixels() const;

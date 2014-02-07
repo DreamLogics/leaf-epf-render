@@ -178,8 +178,6 @@ public:
 
     bool fixedParent();
 
-    void saveBuffer();
-
     bool changed();
 
     enum StyleState

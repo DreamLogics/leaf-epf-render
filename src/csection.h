@@ -124,8 +124,6 @@ public:
     void setFocus(CBaseObject* obj);
     CBaseObject* focus();
 
-    void clearBuffers();
-
     void takeControl(CBaseObject* obj);
     void releaseControl(CBaseObject* obj);
     bool hasControl(CBaseObject* obj);

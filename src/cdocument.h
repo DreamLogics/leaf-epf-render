@@ -170,9 +170,6 @@ private slots:
     void load(int height, int width, int sectionid);
     void layout(int height, int width, int section, bool bCurrentSectionOnly);
 
-    void saveBuffers();
-    void clearBuffers();
-
     void sectionChange(QString id);
 
 private:

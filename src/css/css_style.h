@@ -78,6 +78,7 @@ enum ValueType
     vtInt,
     vtDouble,
     vtColor,
+    vtMixed,
     vtUndefined
 };
 
@@ -118,9 +119,9 @@ private:
 class Property
 {
 public:
-    Property(QString name, QString value, Stylesheet* css, /*bool scales*/ScaleMode scale, bool isHeightProp, bool null=false);
+    Property(QString name, QString value, Stylesheet* css, ValueType vt,  /*bool scales*/ScaleMode scale, bool isHeightProp, bool null=false);
     Property(const Property&);
-    Property(QString name, Stylesheet* css);
+    Property(QString name, Stylesheet* css, ValueType vt);
     Property();
     virtual ~Property();
 
@@ -128,11 +129,13 @@ public:
     void update(Stylesheet*) const;
     QString name() const;
 
-    QString toString(bool scale=true) const;
-    int toInt(bool scale=true) const;
-    double toDouble(bool scale=true) const;
-    QColor toColor() const;
-    bool toBool() const;
+    QString toString(int part=-1,bool scale=true) const;
+    int toInt(int part=-1,bool scale=true) const;
+    double toDouble(int part=-1,bool scale=true) const;
+    QColor toColor(int part=-1) const;
+    bool toBool(int part=-1) const;
+
+    int partCount() const;
 
     QString value() const; //raw
 
@@ -142,14 +145,15 @@ public:
     /*void setValue(QString val, bool scale=false);
     void setValue(int val, bool scale=false);
     void setValue(double val, bool scale=false);*/
-    void setValue(QString val, ScaleMode scale) const;
-    void setValue(QString val) const;
-    void setValue(int val, ScaleMode scale=smNone) const;
-    void setValue(double val, ScaleMode scale=smNone) const;
-    void setValue(QColor val, ColorFormat format=cfHex) const;
+    void setValue(QString val, int part, ScaleMode scale) const;
+    void setValue(QString val, int part=-1) const;
+    void setValue(int val, int part=-1, ScaleMode scale=smNone) const;
+    void setValue(double val, int part=-1, ScaleMode scale=smNone) const;
+    void setValue(QColor val, int part=-1, ColorFormat format=cfHex) const;
 
     //bool scales();
     ScaleMode scaleMode() const;
+    ValueType valueType() const;
 
     virtual bool operator==(const Property&);
     virtual Property& operator=(const Property&);
@@ -158,6 +162,7 @@ public:
 private:
 
     QString m_sName;
+    ValueType m_eValueType;
     PropertyPrivate* m_pPrivate;
 
     friend class Stylesheet;

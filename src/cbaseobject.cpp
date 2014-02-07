@@ -467,7 +467,7 @@ void CBaseObject::setCSSOverride(QString ss)
         if (propv.size() == 2)
         {
             //qDebug()() << "add override prop" << propv[0] << propv[1];
-            prop = CSS::Property(propv[0],propv[1],css,css->property(this,propv[0]).scaleMode(),CSS::height_props.contains(propv[0]));
+            prop = CSS::Property(propv[0],propv[1],css,CSS::valueTypeFromString(propv[1]),css->property(this,propv[0]).scaleMode(),CSS::height_props.contains(propv[0]));
             m_CSSOverrideProps.insert(propv[0],prop);
         }
         else
@@ -1058,13 +1058,6 @@ bool CBaseObject::fixedParent()
     bool b = m_bFixedParent;
     m_FPMutex.unlock();
     return b;
-}
-
-void CBaseObject::saveBuffer()
-{
-    m_RenderMutex.lock();
-    m_qiRenderBuffer.save("buffer/"+section()->id()+"-"+id()+".png","PNG");
-    m_RenderMutex.unlock();
 }
 
 bool CBaseObject::changed()

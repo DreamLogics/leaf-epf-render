@@ -977,23 +977,6 @@ void CSection::drawScrollbar(QPainter *p)
 
 }
 
-
-
-void CSection::clearBuffers()
-{
-    CLayer* l;
-    CBaseObject* obj;
-    for (int i=0;i<layerCount();i++)
-    {
-        l = layer(i);
-        for (int n=0;n<l->objectCount();n++)
-        {
-            obj = l->object(n);
-            obj->clearBuffers();
-        }
-    }
-}
-
 void CSection::takeControl(CBaseObject *obj)
 {
     m_pControlObj = obj;

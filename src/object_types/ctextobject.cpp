@@ -447,13 +447,6 @@ int CTextObject::pointFromPixel(int px)
     return px * 72 / dpi;
 }
 
-void CTextObject::clearBuffers()
-{
-    CBaseObject::clearBuffers();
-    delete m_pTextDoc;
-    m_pTextDoc = new QTextDocument();
-}
-
 void CTextObject::onEPFEvent(EPFEvent *ev)
 {
     CBaseObject::onEPFEvent(ev);

@@ -769,26 +769,6 @@ void CDocument::updateRenderView()
     emit _updateRenderView();
 }
 
-void CDocument::saveBuffers()
-{
-    CSection* s;
-    CLayer* l;
-    CBaseObject* obj;
-    for (int i=0;i<sectionCount();i++)
-    {
-        s = section(i);
-        for (int n=0;n<s->layerCount();n++)
-        {
-            l=s->layer(n);
-            for (int c=0;c<l->objectCount();c++)
-            {
-                obj = l->object(c);
-                obj->saveBuffer();
-            }
-        }
-    }
-}
-
 bool CDocument::shouldStopLayout()
 {
     m_mShouldStopLayoutMutex.lock();
@@ -802,18 +782,6 @@ void CDocument::stopLayout(bool b)
     m_mShouldStopLayoutMutex.lock();
     m_bShouldStopLayout = b;
     m_mShouldStopLayoutMutex.unlock();
-}
-
-void CDocument::clearBuffers()
-{
-    for (int i=0;i<sectionCount();i++)
-    {
-        section(i)->clearBuffers();
-    }
-    m_pCurrentLayout = 0;
-    if (m_pStylesheet)
-        delete m_pStylesheet;
-    m_pStylesheet = 0;
 }
 
 void CDocument::registerFont(int id)

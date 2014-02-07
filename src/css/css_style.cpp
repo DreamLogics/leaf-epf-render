@@ -89,7 +89,7 @@ Property Stylesheet::property(QString selector, QString key)
         bool hp = false;
         if (height_props.contains(key))
             hp = true;
-        Property prop = Property(key,"",this,smNone,hp,true);
+        Property prop = Property(key,"",this,vtUndefined,smNone,hp,true);
         Selector* s = new Selector(this);
         s->setProperty(key,prop);
         m_selectors.insert(selector,s);
@@ -365,7 +365,7 @@ Property Selector::property(QString key)
         return m_props[key];
 
     //create prop
-    Property prop = Property(key,"",m_pCSS,smNone,height_props.contains(key),true);
+    Property prop = Property(key,"",m_pCSS,vtUndefined,smNone,height_props.contains(key),true);
     m_props.insert(key,prop);
     return prop;
 }
@@ -381,7 +381,7 @@ void Selector::setProperty(QString key, const Property prop)
     m_props.insert(key,prop);
 }
 
-Property::Property(QString name, QString value, Stylesheet* css, ScaleMode scale, bool isHeightProp, bool null) : m_sName(name)
+Property::Property(QString name, QString value, Stylesheet* css, ValueType vt, ScaleMode scale, bool isHeightProp, bool null) : m_sName(name), m_eValueType(vt)
 {
     m_pPrivate = new PropertyPrivate();
     m_pPrivate->m_sValue = value;
@@ -392,7 +392,7 @@ Property::Property(QString name, QString value, Stylesheet* css, ScaleMode scale
     m_pPrivate->m_bReadOnly = false;
 }
 
-Property::Property(QString name, Stylesheet* css) : m_sName(name)
+Property::Property(QString name, Stylesheet* css, ValueType vt) : m_sName(name), m_eValueType(vt)
 {
     m_pPrivate = new PropertyPrivate();
     m_pPrivate->m_sValue = QString();
@@ -417,6 +417,7 @@ Property::Property() : m_sName(QString())
 Property::Property(const Property &p)
 {
     m_sName = p.m_sName;
+    m_eValueType = p.m_eValueType;
     m_pPrivate = p.m_pPrivate;
     m_pPrivate->registerUse();
 
@@ -433,7 +434,7 @@ Property::Property(const Property &p)
 
 Property Property::clone() const
 {
-    return Property(name(),value(),m_pPrivate->m_pCSS,scaleMode(),m_pPrivate->m_bHeightProp,isNull());
+    return Property(name(),value(),m_pPrivate->m_pCSS,valueType(),scaleMode(),m_pPrivate->m_bHeightProp,isNull());
 }
 
 bool Property::operator ==(const Property& other)
@@ -471,6 +472,11 @@ ScaleMode Property::scaleMode() const
     return m_pPrivate->m_eScale;
 }
 
+ValueType Property::valueType() const
+{
+    return m_eValueType;
+}
+
 bool Property::isNull() const
 {
     return m_pPrivate->m_bNull;
@@ -503,11 +509,11 @@ void Property::update(Stylesheet *css) const
     m_pPrivate->m_pCSS = css;
 }
 
-QString Property::toString(bool scale) const
+QString Property::toString(int part,bool scale) const
 {
     if (m_pPrivate->m_eScale != smNone && scale)
     {
-        QRegExp n("[0-9]+\\.*[0-9]*");
+        /*QRegExp n("[0-9]+\\.*[0-9]*");
         int o = n.indexIn(value());
         double v = n.cap(0).toDouble();
 
@@ -531,10 +537,48 @@ QString Property::toString(bool scale) const
             return value().mid(0,o) + QString::number(qCeil(v)) + value().mid(o+n.cap(0).size());
         }
 
-        return value().mid(0,o) + QString::number(v) + value().mid(o+n.cap(0).size());
+        return value().mid(0,o) + QString::number(v) + value().mid(o+n.cap(0).size());*/
+        QRegExp n("[0-9]+\\.*[0-9]*");
+        QString val = value();
+        if (partCount() > 0)
+        {
+            QStringList parts = val.split(QRegExp(" +"));
+        }
+        else
+        {
+            int o = n.indexIn(val);
+            double v = n.cap(0).toDouble();
+
+            if (o == -1)
+                return val;
+
+            if (m_pPrivate->m_eScale == smScale)
+            {
+                if (m_pPrivate->m_bHeightProp)
+                    v *= m_pPrivate->m_pCSS->heightScaleFactor();
+                else
+                    v *= m_pPrivate->m_pCSS->widthScaleFactor();
+            }
+            else if (m_pPrivate->m_eScale == smScaleWidth)
+                v *= m_pPrivate->m_pCSS->widthScaleFactor();
+            else if (m_pPrivate->m_eScale == smScaleHeight)
+                v *= m_pPrivate->m_pCSS->heightScaleFactor();
+
+            if (n.cap(0).indexOf(".") == -1)
+            {
+                return val.mid(0,o) + QString::number(qCeil(v)) + val.mid(o+n.cap(0).size());
+            }
+
+            return val.mid(0,o) + QString::number(v) + val.mid(o+n.cap(0).size());
+        }
 
     }
     return value();
+}
+
+int Property::partCount() const
+{
+    return value().split(QRegExp(" +")).size();
 }
 
 QString Property::value() const
@@ -575,7 +619,7 @@ QString Property::value() const
     return val;
 }
 
-int Property::toInt(bool scale) const
+int Property::toInt(int part,bool scale) const
 {
     QString val = toString(scale);
     QRegExp nr("([0-9]+)");
@@ -589,7 +633,7 @@ int Property::toInt(bool scale) const
     return i;
 }
 
-bool Property::toBool() const
+bool Property::toBool(int part) const
 {
     QString val = m_pPrivate->m_sValue;
     if (val == "true" || val == "1")
@@ -597,7 +641,7 @@ bool Property::toBool() const
     return false;
 }
 
-double Property::toDouble(bool scale) const
+double Property::toDouble(int part,bool scale) const
 {
     QString val = toString(scale);
     QRegExp nr("([0-9\\.]+)");
@@ -611,7 +655,7 @@ QColor Property::toColor() const
     return stringToColor(value());
 }
 
-void Property::setValue(double val, ScaleMode scale) const
+void Property::setValue(double val, int part, ScaleMode scale) const
 {
     if (m_pPrivate->m_bReadOnly)
         return;
@@ -626,7 +670,7 @@ void Property::setValue(double val, ScaleMode scale) const
         m_pPrivate->m_sValue = QString::number(val);
 }
 
-void Property::setValue(int val, ScaleMode scale) const
+void Property::setValue(int val, int part, ScaleMode scale) const
 {
     m_pPrivate->m_bNull = false;
     m_pPrivate->m_eScale = scale;
@@ -639,20 +683,20 @@ void Property::setValue(int val, ScaleMode scale) const
     m_pPrivate->m_sValue = QString::number(val);
 }
 
-void Property::setValue(QString val, ScaleMode scale) const
+void Property::setValue(QString val, int part, ScaleMode scale) const
 {
     m_pPrivate->m_bNull = false;
     m_pPrivate->m_eScale = scale;
     m_pPrivate->m_sValue = val;
 }
 
-void Property::setValue(QString val) const
+void Property::setValue(QString val, int part) const
 {
     m_pPrivate->m_bNull = false;
     m_pPrivate->m_sValue = val;
 }
 
-void Property::setValue(QColor val, ColorFormat format) const
+void Property::setValue(QColor val, int part, ColorFormat format) const
 {
     m_pPrivate->m_bNull = false;
     m_pPrivate->m_eScale = smNone;
