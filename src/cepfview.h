@@ -93,8 +93,6 @@ public:
 
     CDocument* document();
 
-    void clearDocBuffers();
-
     COverlay* activeOverlay();
 
 public slots:
@@ -142,7 +140,7 @@ signals:
     void keyReleaseEvent(int key, QString val);
 
 
-    void clearBuffers();
+    void unloadSection();
 
 protected:
 

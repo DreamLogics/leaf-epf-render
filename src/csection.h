@@ -108,8 +108,6 @@ public:
     virtual void layout(QList<CBaseObject*> updatelist = QList<CBaseObject*>());
     CViewportItem* viewportItem();
 
-    virtual void unload();
-
     virtual void render(QPainter* p, QRectF region);
 
     enum TransitionFx
@@ -153,6 +151,8 @@ public slots:
     //void scrollSection(int dx, int dy);
     //void updateRendered(QRectF view);
     //void updateRendered();
+
+    void unload();
 
     void mouseDoubleClickEvent ( int x, int y );
     void mousePressEvent( int x, int y );
@@ -207,7 +207,7 @@ private:
     int m_iLayoutHeight;
     int m_iLayoutWidth;
 
-    QMutex m_mRectMutex;
+    QMutex m_mRenderMutex;
 
     QMutex m_mTransitionFxMutex;
     QMutex m_mScrollStyleMutex;

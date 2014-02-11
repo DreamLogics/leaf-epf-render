@@ -339,7 +339,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
         {
             //section maken
             s = new CSection(section.attribute("id").value(),document,section.attribute("hidden").as_bool(),section.attribute("x").as_int(),section.attribute("y").as_int());
-            m_objectmap.insert(section.attribute("id").value(),o);
+            m_objectmap.insert(section.attribute("id").value(),s);
 
             qDebug() << "section" << s->id();
 

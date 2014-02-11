@@ -261,6 +261,7 @@ int CSection::height() const
 
 void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
 {
+    m_mRenderMutex.lock();
     m_iLayoutWidth = width;
     m_iLayoutHeight = height;
 
@@ -379,9 +380,9 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
     m_gRenderMutex.unlock();
 */
     //document()->updateRenderView();
-    m_mRectMutex.lock();
+    //m_mRectMutex.lock();
     m_rRect = QRectF(m_iX*width,m_iY*height,width,height);
-    m_mRectMutex.unlock();
+    //m_mRectMutex.unlock();
 
     QString type = css->property(this,"section-transition").toString();
 
@@ -394,13 +395,17 @@ void CSection::layout(int height, int width, QList<CBaseObject *> updatelist)
         m_iTransitionFx = NoneFx;
     m_mTransitionFxMutex.unlock();
 
-    //qDebug()() << "scrollmax" << docheight - height;
+    //qDebug() << "scrollmax" << docheight << height;
+    int scrollymax = docheight - height;
+    if (scrollymax < 0)
+        scrollymax = 0;
     if (updatelist.size() == 0)
-        setScrollYMax(docheight - height);
+        setScrollYMax(scrollymax);
 
     qDebug() << "time elapsed: " << t.nsecsElapsed();
 
     document()->updateRenderView();
+    m_mRenderMutex.unlock();
 }
 
 void CSection::layout(QList<CBaseObject*> updatelist)
@@ -451,21 +456,21 @@ void CSection::scrollSection(int dx, int dy)
 */
 void CSection::render(QPainter *p,QRectF region)
 {
-    //m_mRenderMutex.lock();
+    m_mRenderMutex.lock();
     QRectF sectionrect;
     QElapsedTimer t;
     t.start();
 
-    m_mRectMutex.lock();
+    //m_mRectMutex.lock();
     if (!region.intersects(m_rRect))
     {
-        m_mRectMutex.unlock();
+        m_mRenderMutex.unlock();
         return;
     }
 
     sectionrect = m_rRect;
     //p->setClipRect(region);
-    m_mRectMutex.unlock();
+    //m_mRectMutex.unlock();
 
 
 
@@ -546,7 +551,7 @@ void CSection::render(QPainter *p,QRectF region)
 
     //qDebug() << "Section render time elapsed: " << t.nsecsElapsed();
 
-    //m_mRenderMutex.unlock();
+    m_mRenderMutex.unlock();
 }
 
 CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *pIgnore)

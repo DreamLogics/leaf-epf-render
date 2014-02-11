@@ -376,6 +376,7 @@ void CEPFView::setSection(int index)
     disconnect(ps,SIGNAL(nextSection()),0,0);
     disconnect(ps,SIGNAL(previousSection()),0,0);
     disconnect(ps,SIGNAL(unhandledClick(int,int)),0,0);
+    //disconnect(this,SIGNAL(unload()),0,0);
 
     connect(this,SIGNAL(mouseDoubleClickEvent(int,int)),s,SLOT(mouseDoubleClickEvent(int,int)));
     connect(this,SIGNAL(mouseMoveEvent(int,int)),s,SLOT(mouseMoveEvent(int,int)));
@@ -386,6 +387,12 @@ void CEPFView::setSection(int index)
     connect(s,SIGNAL(nextSection()),this,SLOT(nextSection()));
     connect(s,SIGNAL(previousSection()),this,SLOT(previousSection()));
     connect(s,SIGNAL(unhandledClick(int,int)),this,SLOT(unhandledClick(int,int)));
+
+    /*if (m_iCurrentSection-1 >= 0)
+        connect(this,SIGNAL(unload()),m_pDocument->section(m_iCurrentSection-1),SLOT(unload()));
+    connect(this,SIGNAL(unload()),ps,SLOT(unload()));
+    if (m_iCurrentSection+1 < m_pDocument->sectionCount())
+        connect(this,SIGNAL(unload()),m_pDocument->section(m_iCurrentSection+1),SLOT(unload()));*/
 
     m_iPreviousSection = m_iCurrentSection;
     m_iCurrentSection = index;
@@ -905,11 +912,6 @@ bool CEPFView::event(QEvent *ev)
             emit sectionChange(m_pDocument->section(m_iCurrentSection)->id());
     }
     return b;
-}
-
-void CEPFView::clearDocBuffers()
-{
-    emit clearBuffers();
 }
 
 void CEPFView::unhandledClick(int x, int y)
