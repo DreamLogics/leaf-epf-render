@@ -53,13 +53,24 @@ CVideoObject::CVideoObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 
 CVideoObject::~CVideoObject()
 {
-    delete m_pAVPlayer;
+    if (m_pAVPlayer)
+        delete m_pAVPlayer;
 }
 
 void CVideoObject::preload()
 {
     m_pAVPlayer = new AVPlayer();
     m_pAVPlayer->setRenderer(this);
+}
+
+void CVideoObject::unload()
+{
+    CBaseObject::unload();
+    if (m_pAVPlayer)
+    {
+        m_pAVPlayer->stop();
+        m_pAVPlayer->removeVideoRenderer(this);
+    }
 }
 
 void CVideoObject::paint(QPainter *painter)
@@ -72,6 +83,7 @@ void CVideoObject::paintBuffered(QPainter *p)
     DPTR_D(CVideoObject);
     if (m_pAVPlayer->isLoaded())
     {
+        QMutexLocker locker(&d.img_mutex);
         //m_pAV->drawFrame(p,boundingRect().height(),boundingRect().width());
         if (d.image.isNull()) {
             //TODO: when setInSize()?

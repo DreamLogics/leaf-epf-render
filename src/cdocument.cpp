@@ -51,11 +51,11 @@ CDocument::CDocument(QString filename, QStringList platforms, QString language) 
 
 CDocument::~CDocument()
 {
-    for (int i=0;i<m_Sections.size();i++)
-        delete m_Sections[i];
+    //for (int i=0;i<m_Sections.size();i++)
+    //    delete m_Sections[i];
 
-    for (int i=0;i<m_Overlays.size();i++)
-        delete m_Overlays[i];
+    //for (int i=0;i<m_Overlays.size();i++)
+    //    delete m_Overlays[i];
 
     for (int i=0;i<m_Layouts.size();i++)
         delete m_Layouts[i];
@@ -871,4 +871,9 @@ void CDocument::sectionChange(QString id)
 QString CDocument::filename() const
 {
     return m_sFileName;
+}
+void CDocument::close()
+{
+    for (int i=0;i<m_Sections.size();i++)
+        m_Sections[i]->unload();
 }

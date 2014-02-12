@@ -59,6 +59,7 @@ public:
     virtual ~CVideoObject();
 
     virtual void preload();
+    virtual void unload();
 
     virtual void layout(QRectF relativeTo, QList<CBaseObject*> updatelist);
 

@@ -164,6 +164,7 @@ public slots:
     QString stylesheetVariable(QString key);
 
     //void setActiveOverlay(QString overlay_id);
+    void close();
 
 private slots:
 

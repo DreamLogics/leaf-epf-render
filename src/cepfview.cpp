@@ -334,8 +334,8 @@ void CEPFView::setDocument(CDocument *doc)
     connect(doc,SIGNAL(finishedLoading()),this,SLOT(ready()));
     connect(doc,SIGNAL(_updateRenderView()),this,SLOT(updateView()));
     connect(doc,SIGNAL(setSection(int)),this,SLOT(setSection(int)));
-    connect(this,SIGNAL(clearBuffers()),doc,SLOT(clearBuffers()));
     connect(this,SIGNAL(sectionChange(QString)),doc,SLOT(sectionChange(QString)));
+    connect(this,SIGNAL(closeDocument()),doc,SLOT(close()));
     
     //QString msg = QString::number(height()) + " x " + QString::number(width());
     //Device::currentDevice()->alert("screensize", msg.toUtf8().constData());
@@ -348,6 +348,7 @@ void CEPFView::unload()
     disconnect(this,SIGNAL(loadDocument()),0,0);
     disconnect(this,SIGNAL(layout(int,int)),0,0);
     disconnect(this,SIGNAL(sectionChange(QString)),0,0);
+    disconnect(this,SIGNAL(closeDocument()),0,0);
     m_bIsLoading = true;
 }
 

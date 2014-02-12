@@ -199,8 +199,26 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
     }
 }
 
-void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QColor strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
+void paintOuterGlow(QPainter* pPainter, QImage mask, QImage src, QColor strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
 {
+    QPainter p;
+    QImage buffer(mask.size()+iSpread,QImage::Format_ARGB32_Premultiplied);
+    buffer.fill(QColor(0,0,0,0));
+
+    double opac = dOpacity / iSize;
+
+    p.begin(&buffer);
+
+    p.setOpacity(opac);
+
+    for (int i=0;i<iSpread;i++)
+    {
+        //TODO: impl
+    }
+
+    p.end();
+
+
     QPainter::CompositionMode compmode = pPainter->compositionMode();
     switch (iRenderMode)
     {
@@ -224,7 +242,7 @@ void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QColor strColor, RenderMo
         break;
     }
 
-    QColor c(strColor);
+    /*QColor c(strColor);
     QPen p(c);
     p.setWidth(iSpread);
     pPainter->setPen(p);
@@ -244,7 +262,10 @@ void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QColor strColor, RenderMo
         pPainter->setOpacity(steps);
         pPainter->drawRect(drawrect);
         drawrect.adjust(-1,-1,1,1);
-    }
+    }*/
+
+    pPainter->drawImage(-(iSpread/2),-(iSpread/2),buffer);
+    pPainter->drawImage(0,0,src);
 
     pPainter->setCompositionMode(compmode);
 }

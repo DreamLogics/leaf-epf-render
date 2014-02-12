@@ -98,6 +98,7 @@ public:
     virtual void preload();
 
     virtual void paint(QPainter *painter) = 0;
+    virtual void paintPost(QPainter *painter, QImage &mask, QImage &source);
 
     virtual QString id() const;
     virtual const char* objectType() const;

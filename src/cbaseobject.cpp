@@ -900,59 +900,14 @@ void CBaseObject::paintBuffered(QPainter *p)
 
     m_RenderPropsMutex.unlock();
 
-    int cx = p->transform().dx();
+    /*int cx = p->transform().dx();
     int dw = p->device()->width();
     int cy = p->transform().dy();
-    int dh = p->device()->height();
+    int dh = p->device()->height();*/
 
-    //draw in chunks
-    //int chunksize = 512;
-    //qDebug()() << "drawing" << id();
-    //QTime t = QTime::currentTime();
 
-    /*if (m_iInTransition > 0)
-    {
-        paint(p);
-    }
-    else*/
-    {
-        p->drawPixmap(0,0,m_qiRenderBuffer);
-        /*if (m_qiRenderBuffer.width() <= dw && m_qiRenderBuffer.height() <= dh)
-            p->drawImage(0,0,m_qiRenderBuffer);
-        else
-        {
-            QImage chunk;
-            //const uchar* bufferdata = m_qiRenderBuffer.bits();
-            for (int x=0;x<m_qiRenderBuffer.width();x+=dw)
-            {
-                if (cx + x+dw < 0)
-                    continue;
-                if (cx + x > dw)
-                    break;
-                for (int y=0;y<m_qiRenderBuffer.height();y+=dh)
-                {
-                    if (cy + y+dh < 0)
-                        continue;
-                    if (cy + y > dh)
-                        break;
+    p->drawPixmap(0,0,m_qiRenderBuffer);
 
-                    chunk = m_qiRenderBuffer.copy(x,y,dw,dh);
-                    //for (int line=0;line<dh;line++)
-                    {
-                        //const uchar* buffer = bufferdata + (4 * (x + (m_qiRenderBuffer.width()*(y+line))));
-                        //chunk = QImage(buffer,dw,1,m_qiRenderBuffer.format());
-                        p->drawImage(x,y,chunk);
-                    }
-                    //p->drawImage(x,y,m_qiRenderBuffer,x,y,1024,1024);
-                }
-            }
-        }*/
-    }
-    //paint(p);
-
-    //p->drawText(2,20,id());
-
-    //qDebug() << "rendertime:" << t.msecsTo(QTime::currentTime());
 
     m_RenderMutex.unlock();
 
@@ -1029,6 +984,24 @@ void CBaseObject::buffer()
 
     bp.end();
 
+    //create mask
+    QImage src(m_qiRenderBuffer);
+    QImage mask(src.size(),QImage::Format_ARGB32_Premultiplied);
+
+    bp.begin(&mask);
+    bp.drawImage(0,0,src);
+    bp.setCompositionMode(QPainter::CompositionMode_SourceIn);
+    bp.fillRect(src.rect(),QColor(0,0,0));
+    bp.end();
+
+    //determine size for post proccessed image
+    //TODO: resize
+
+    //post proccessing
+    bp.begin(&m_qiRenderBuffer);
+    paintPost(&bp,mask,src);
+    bp.end();
+
     qDebug() << "buffertime" << t.nsecsElapsed();
 
     //m_qiRenderBuffer = glpb.toImage();
@@ -1040,6 +1013,11 @@ void CBaseObject::buffer()
 
     //m_qiRenderBuffer = fbo.toImage();
     m_RenderMutex.unlock();
+}
+
+void CBaseObject::paintPost(QPainter *painter, QImage &mask, QImage &source)
+{
+
 }
 
 void CBaseObject::keyPressEvent(int key, QString val)

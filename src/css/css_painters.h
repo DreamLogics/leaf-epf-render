@@ -35,7 +35,7 @@ namespace CSS
 void paintBorder(QPainter* pPainter, QRectF qrBorderRect, CSS::Property bordertop, CSS::Property borderbottom, CSS::Property borderleft, CSS::Property borderright);
 void paintBackgroundColor(QPainter* pPainter, QRectF qrBgRect, QColor color);
 void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, QString strSrc, CDocument* pDocument);
-void paintOuterGlow(QPainter* pPainter, QRectF qrRect, QColor cColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize);
+void paintOuterGlow(QPainter* pPainter, QImage &mask, QImage &src, QColor cColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize);
 void paintInnerGlow(QPainter* pPainter, QRectF qrRect, QColor cColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize);
 void paintDropShadow(QPainter* pPainter, QRectF qrRect, QColor cColor, RenderMode iRenderMode, double dOpacity, int iLightDir, int iDistance, int iSpread, int iSize);
 void paintColorOverlay(QPainter* pPainter, QRectF qrRect, QColor cColor, RenderMode iRenderMode);
@@ -46,7 +46,7 @@ void paintBorder(QPainter* pPainter, CBaseObject* pObj);
 void paintBackgroundColor(QPainter* pPainter, CBaseObject* pObj);
 void paintBackgroundGradient(QPainter* pPainter, CBaseObject* pObj);
 void paintBackgroundImage(QPainter* pPainter, CBaseObject* pObj);
-void paintOuterGlow(QPainter* pPainter, CBaseObject* pObj);
+void paintOuterGlow(QPainter* pPainter, CBaseObject* pObj, QImage &mask, QImage &src);
 void paintInnerGlow(QPainter* pPainter, CBaseObject* pObj);
 void paintDropShadow(QPainter* pPainter, CBaseObject* pObj);
 void paintColorOverlay(QPainter* pPainter, CBaseObject* pObj);

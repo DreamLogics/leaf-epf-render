@@ -105,7 +105,7 @@ CSection::CSection(QString id, CDocument* doc,bool hidden,int x, int y) : QObjec
 
     if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
-        m_MomentumTimer = new QTimer();
+        m_MomentumTimer = new QTimer(this);
 
         connect(m_MomentumTimer,SIGNAL(timeout()),this,SLOT(momentum()));
 
