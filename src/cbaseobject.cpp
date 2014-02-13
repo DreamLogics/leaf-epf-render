@@ -985,7 +985,7 @@ void CBaseObject::buffer()
     bp.end();
 
     //create mask
-    QImage src(m_qiRenderBuffer);
+    /*QImage src(m_qiRenderBuffer.toImage());
     QImage mask(src.size(),QImage::Format_ARGB32_Premultiplied);
 
     bp.begin(&mask);
@@ -1000,7 +1000,7 @@ void CBaseObject::buffer()
     //post proccessing
     bp.begin(&m_qiRenderBuffer);
     paintPost(&bp,mask,src);
-    bp.end();
+    bp.end();*/
 
     qDebug() << "buffertime" << t.nsecsElapsed();
 

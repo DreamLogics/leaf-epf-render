@@ -202,7 +202,7 @@ void paintBackgroundImage(QPainter* pPainter, QRectF qrBgRect, QString strSize, 
 void paintOuterGlow(QPainter* pPainter, QImage mask, QImage src, QColor strColor, RenderMode iRenderMode, double dOpacity, int iSpread, int iSize)
 {
     QPainter p;
-    QImage buffer(mask.size()+iSpread,QImage::Format_ARGB32_Premultiplied);
+    QImage buffer(mask.size().width()+iSpread,mask.size().height()+iSpread,QImage::Format_ARGB32_Premultiplied);
     buffer.fill(QColor(0,0,0,0));
 
     double opac = dOpacity / iSize;

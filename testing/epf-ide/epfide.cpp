@@ -1,0 +1,330 @@
+#include "epfide.h"
+#include "ui_epfide.h"
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QDir>
+#include "cprojectviewitem.h"
+#include <QIcon>
+#include <QProcess>
+#include <QScrollBar>
+
+#include "cepfhl.h"
+
+EpfIDE::EpfIDE(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::EpfIDE)
+{
+    ui->setupUi(this);
+    ui->editview->setTabStopWidth(40);
+    m_pProjectItem = 0;
+    m_pEPFSyntax = new CEPFHL(ui->editview->document());
+
+    connect(ui->editview,SIGNAL(textChanged()),this,SLOT(createOutline()));
+
+    m_pExternal = new QProcess(this);
+    connect(m_pExternal,SIGNAL(readyReadStandardOutput()),this,SLOT(stdOut()));
+    connect(m_pExternal,SIGNAL(readyReadStandardError()),this,SLOT(stdErr()));
+    connect(m_pExternal,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(stdClose()));
+}
+
+EpfIDE::~EpfIDE()
+{
+    delete ui;
+    delete m_pEPFSyntax;
+}
+
+void EpfIDE::stdOut()
+{
+    QByteArray data = m_pExternal->readAllStandardOutput();
+    print(QString::fromUtf8(data));
+}
+
+void EpfIDE::stdErr()
+{
+    QByteArray data = m_pExternal->readAllStandardError();
+    print(QString::fromUtf8(data),Qt::red);
+}
+
+void EpfIDE::stdClose()
+{
+    m_pExternal->close();
+}
+
+void EpfIDE::open(QString path)
+{
+    if (!QFile::exists(path))
+        return;
+
+    if (!m_sPath.isNull())
+    {
+        //close
+    }
+
+    m_sPath = path;
+
+    QFileInfo pf(path);
+    QFileInfo pd(pf.path());
+
+    ui->projectview->clear();
+
+    m_pProjectItem = new CProjectViewItem("");
+    m_pProjectItem->setText(0,pd.fileName());
+    m_pProjectItem->setIcon(0,QIcon::fromTheme("package-x-generic"));
+    ui->projectview->addTopLevelItem(m_pProjectItem);
+
+    m_pContentItem = new CProjectViewItem(m_sPath);
+    m_pContentItem->setText(0,pf.fileName());
+    m_pContentItem->setIcon(0,QIcon::fromTheme("text-x-generic"));
+    m_pProjectItem->addChild(m_pContentItem);
+
+    m_pScriptsItem = new CProjectViewItem("");
+    m_pScriptsItem->setText(0,"Scripts");
+    m_pScriptsItem->setIcon(0,QIcon::fromTheme("folder"));
+    m_pProjectItem->addChild(m_pScriptsItem);
+
+    m_pTextItem = new CProjectViewItem("");
+    m_pTextItem->setText(0,"Text");
+    m_pTextItem->setIcon(0,QIcon::fromTheme("folder"));
+    m_pProjectItem->addChild(m_pTextItem);
+
+    m_pStylesheetsItem = new CProjectViewItem("");
+    m_pStylesheetsItem->setText(0,"CSS");
+    m_pStylesheetsItem->setIcon(0,QIcon::fromTheme("folder"));
+    m_pProjectItem->addChild(m_pStylesheetsItem);
+
+    m_pResourcesItem = new CProjectViewItem("");
+    m_pResourcesItem->setText(0,"Resources");
+    m_pResourcesItem->setIcon(0,QIcon::fromTheme("folder"));
+    m_pProjectItem->addChild(m_pResourcesItem);
+
+    scanProject();
+
+    m_pProjectItem->setExpanded(true);
+}
+
+void EpfIDE::scanProject()
+{
+    if (m_sPath.isNull() || !m_pProjectItem)
+        return;
+
+    QList<QTreeWidgetItem*> todelete;
+
+    todelete << m_pResourcesItem->takeChildren();
+    todelete << m_pStylesheetsItem->takeChildren();
+    todelete << m_pScriptsItem->takeChildren();
+    todelete << m_pTextItem->takeChildren();
+
+    for (int i=0;i<todelete.size();i++)
+        delete todelete[i];
+
+    QFileInfo pf(m_sPath);
+    QDir contentdir = pf.dir();
+
+    if (!contentdir.cd("content"))
+    {
+        contentdir.mkdir("content");
+        if (!contentdir.cd("content"))
+            return;
+    }
+
+    QStringList mediafiles = QStringList() << "webm" << ".ogv";
+    QStringList imgfiles = QStringList() << ".png" << ".svg" << ".jpg";
+
+    CProjectViewItem* item;
+
+    QFileInfoList info = contentdir.entryInfoList();
+
+    for (int i=0;i<info.size();i++)
+    {
+        if (info.at(i).isFile())
+        {
+            item = new CProjectViewItem(info.at(i).absoluteFilePath());
+            item->setText(0,info.at(i).fileName());
+            QString ext = info.at(i).fileName().right(4);
+            if (info.at(i).fileName().right(2) == "js")
+            {
+                item->setIcon(0,QIcon::fromTheme("text-x-script"));
+                m_pScriptsItem->addChild(item);
+            }
+            else if (mediafiles.contains(ext))
+            {
+                item->setIcon(0,QIcon::fromTheme("video-x-generic"));
+                m_pResourcesItem->addChild(item);
+            }
+            else if (imgfiles.contains(ext))
+            {
+                item->setIcon(0,QIcon::fromTheme("image-x-generic"));
+                m_pResourcesItem->addChild(item);
+            }
+            else if (ext == "html")
+            {
+                item->setIcon(0,QIcon::fromTheme("text-html"));
+                m_pTextItem->addChild(item);
+            }
+            else if (ext == ".css")
+            {
+                item->setIcon(0,QIcon::fromTheme("text-x-generic"));
+                m_pStylesheetsItem->addChild(item);
+            }
+            else
+            {
+                item->setIcon(0,QIcon::fromTheme("text-x-generic"));
+                m_pResourcesItem->addChild(item);
+            }
+        }
+    }
+}
+
+void EpfIDE::editFile(QString path)
+{
+    bool bLoad = false;
+    if (path.endsWith(".js"))
+    {
+        m_pEPFSyntax->setMode(CEPFHL::modeJS);
+        bLoad = true;
+    }
+    else if (path.endsWith(".xml"))
+    {
+        m_pEPFSyntax->setMode(CEPFHL::modeXML);
+        bLoad = true;
+    }
+    else if (path.endsWith(".css"))
+    {
+        m_pEPFSyntax->setMode(CEPFHL::modeCSS);
+        bLoad = true;
+    }
+    else if (path.endsWith(".html"))
+    {
+        m_pEPFSyntax->setMode(CEPFHL::modeHTML);
+        bLoad = true;
+    }
+
+    if (bLoad)
+    {
+        if (!m_sOpenFile.isNull())
+        {
+            if (m_sOpenFile.contains(m_sOpenFile))
+                m_FileBuffer[m_sOpenFile] = ui->editview->toPlainText();
+            else
+                m_FileBuffer.insert(m_sOpenFile,ui->editview->toPlainText());
+        }
+
+        if (m_FileBuffer.contains(path))
+        {
+            ui->editview->setText(m_FileBuffer[path]);
+        }
+        else
+        {
+            QFile f(path);
+            if (f.open(QIODevice::ReadOnly))
+            {
+                ui->editview->setText(QString::fromUtf8(f.readAll()));
+                f.close();
+            }
+        }
+        m_sOpenFile = path;
+    }
+}
+
+void EpfIDE::createOutline()
+{
+
+}
+
+void EpfIDE::print(QString &str, QColor color)
+{
+    bool bScroll = false;
+    if (ui->console->verticalScrollBar()->value() == ui->console->verticalScrollBar()->maximum())
+        bScroll = true;
+
+    QTextBlockFormat format;
+    format.foreground(color);
+    ui->console->append(str+"\n");
+    ui->console->moveCursor(QTextCursor::End);
+    ui->console->textCursor().setBlockFormat(format);
+
+    if (bScroll)
+        ui->console->verticalScrollBar()->setValue(ui->console->verticalScrollBar()->maximum());
+}
+
+void EpfIDE::build()
+{
+    QFileInfo f(m_sPath);
+    QFileInfo fd(f.path());
+    QDir d = f.dir();
+    d.cdUp();
+    m_pExternal->setProgram("epf-create");
+    m_pExternal->setWorkingDirectory(d.absolutePath());
+    m_pExternal->setArguments(QStringList() << fd.fileName());
+    m_pExternal->open();
+}
+
+void EpfIDE::run()
+{
+    QFileInfo f(m_sPath);
+    QFileInfo fd(f.path());
+    QDir d = f.dir();
+    d.cdUp();
+    m_pExternal->setProgram("epf-view");
+    m_pExternal->setWorkingDirectory(d.absolutePath());
+    m_pExternal->setArguments(QStringList() << fd.fileName());
+    m_pExternal->open();
+}
+
+void EpfIDE::on_action_New_triggered()
+{
+
+}
+
+void EpfIDE::on_action_Open_triggered()
+{
+    open(QFileDialog::getOpenFileName(this,"Open content.xml EPF file.",QDir::homePath(),"EPF File (content.xml)"));
+}
+
+void EpfIDE::on_action_Save_triggered()
+{
+
+}
+
+void EpfIDE::on_action_Build_triggered()
+{
+
+}
+
+void EpfIDE::on_action_Run_triggered()
+{
+
+}
+
+void EpfIDE::on_projectview_itemChanged(QTreeWidgetItem *pitem, int column)
+{
+
+}
+
+void EpfIDE::on_projectview_customContextMenuRequested(const QPoint &pos)
+{
+
+}
+
+void EpfIDE::on_projectview_itemSelectionChanged()
+{
+    QList<QTreeWidgetItem*> selection = ui->projectview->selectedItems();
+
+    if (selection.size() == 0)
+        return;
+
+    QTreeWidgetItem* pitem = selection.at(0);
+
+    CProjectViewItem* item = static_cast<CProjectViewItem*>(pitem);
+    editFile(item->path());
+}
+
+void EpfIDE::on_editsearch_textChanged(const QString &arg1)
+{
+    //mark
+}
+
+void EpfIDE::on_outlinesearch_textChanged(const QString &arg1)
+{
+
+}
