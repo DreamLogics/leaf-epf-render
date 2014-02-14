@@ -7,6 +7,7 @@
 #include <QIcon>
 #include <QProcess>
 #include <QScrollBar>
+#include <QDebug>
 
 #include "cepfhl.h"
 
@@ -15,6 +16,9 @@ EpfIDE::EpfIDE(QWidget *parent) :
     ui(new Ui::EpfIDE)
 {
     ui->setupUi(this);
+
+    ui->editview->setIde(this);
+
     ui->editview->setTabStopWidth(40);
     m_pProjectItem = 0;
     m_pEPFSyntax = new CEPFHL(ui->editview->document());
@@ -25,6 +29,9 @@ EpfIDE::EpfIDE(QWidget *parent) :
     connect(m_pExternal,SIGNAL(readyReadStandardOutput()),this,SLOT(stdOut()));
     connect(m_pExternal,SIGNAL(readyReadStandardError()),this,SLOT(stdErr()));
     connect(m_pExternal,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(stdClose()));
+
+    m_bIsRunning = false;
+    m_bNoChange = true;
 }
 
 EpfIDE::~EpfIDE()
@@ -42,12 +49,13 @@ void EpfIDE::stdOut()
 void EpfIDE::stdErr()
 {
     QByteArray data = m_pExternal->readAllStandardError();
-    print(QString::fromUtf8(data),Qt::red);
+    print(QString::fromUtf8(data),QColor(255,0,0));
 }
 
 void EpfIDE::stdClose()
 {
     m_pExternal->close();
+    m_bIsRunning = false;
 }
 
 void EpfIDE::open(QString path)
@@ -100,6 +108,36 @@ void EpfIDE::open(QString path)
     scanProject();
 
     m_pProjectItem->setExpanded(true);
+}
+
+void EpfIDE::save()
+{
+    QList<QTreeWidgetItem*> selection = ui->projectview->selectedItems();
+
+    if (selection.size() == 0)
+        return;
+
+    QTreeWidgetItem* pitem = selection.at(0);
+
+    CProjectViewItem* item = static_cast<CProjectViewItem*>(pitem);
+
+    QFile f(item->path());
+    if (f.open(QIODevice::WriteOnly))
+    {
+        f.write(ui->editview->toPlainText().toUtf8());
+        f.close();
+        item->setAltered(false);
+        QString name = item->text(0);
+        name.chop(1);
+        item->setText(0,name);
+    }
+    else
+        print("Can't write to file: "+item->path(),QColor(255,0,0));
+}
+
+void EpfIDE::saveAll()
+{
+
 }
 
 void EpfIDE::scanProject()
@@ -209,19 +247,28 @@ void EpfIDE::editFile(QString path)
                 m_FileBuffer.insert(m_sOpenFile,ui->editview->toPlainText());
         }
 
+        QFileInfo fi(path);
+        m_bNoChange = true;
+
+        ui->action_Save->setText("&Save \""+fi.fileName()+"\"");
+
         if (m_FileBuffer.contains(path))
         {
-            ui->editview->setText(m_FileBuffer[path]);
+            ui->editview->setPlainText(m_FileBuffer[path]);
         }
         else
         {
             QFile f(path);
             if (f.open(QIODevice::ReadOnly))
             {
-                ui->editview->setText(QString::fromUtf8(f.readAll()));
+                ui->editview->setPlainText(QString::fromUtf8(f.readAll()));
                 f.close();
             }
         }
+
+        ui->editview->scanID();
+        ui->editview->scanVars();
+
         m_sOpenFile = path;
     }
 }
@@ -231,14 +278,14 @@ void EpfIDE::createOutline()
 
 }
 
-void EpfIDE::print(QString &str, QColor color)
+void EpfIDE::print(QString str, QColor color)
 {
     bool bScroll = false;
     if (ui->console->verticalScrollBar()->value() == ui->console->verticalScrollBar()->maximum())
         bScroll = true;
 
     QTextBlockFormat format;
-    format.foreground(color);
+    format.setForeground(color);
     ui->console->append(str+"\n");
     ui->console->moveCursor(QTextCursor::End);
     ui->console->textCursor().setBlockFormat(format);
@@ -261,14 +308,25 @@ void EpfIDE::build()
 
 void EpfIDE::run()
 {
+    if (m_pExternal->isOpen())
+    {
+        if (m_bIsRunning)
+        {
+            m_pExternal->kill();
+            m_pExternal->close();
+        }
+        else
+            return;
+    }
     QFileInfo f(m_sPath);
     QFileInfo fd(f.path());
     QDir d = f.dir();
     d.cdUp();
     m_pExternal->setProgram("epf-view");
     m_pExternal->setWorkingDirectory(d.absolutePath());
-    m_pExternal->setArguments(QStringList() << fd.fileName());
+    m_pExternal->setArguments(QStringList() << fd.fileName() + ".epf");
     m_pExternal->open();
+    m_bIsRunning = true;
 }
 
 void EpfIDE::on_action_New_triggered()
@@ -283,17 +341,17 @@ void EpfIDE::on_action_Open_triggered()
 
 void EpfIDE::on_action_Save_triggered()
 {
-
+    save();
 }
 
 void EpfIDE::on_action_Build_triggered()
 {
-
+    build();
 }
 
 void EpfIDE::on_action_Run_triggered()
 {
-
+    run();
 }
 
 void EpfIDE::on_projectview_itemChanged(QTreeWidgetItem *pitem, int column)
@@ -303,7 +361,20 @@ void EpfIDE::on_projectview_itemChanged(QTreeWidgetItem *pitem, int column)
 
 void EpfIDE::on_projectview_customContextMenuRequested(const QPoint &pos)
 {
+    QPoint globalPos = ui->projectview->mapFromGlobal(pos);
 
+    QMenu menu;
+    menu.addAction("Refresh");
+    menu.addSeparator();
+    menu.addAction("Add new...");
+    menu.addAction("Add Existing Files...");
+
+    QAction* selectedItem = menu.exec(globalPos);
+    if (selectedItem)
+    {
+        if (selectedItem->text() == "Refresh")
+            scanProject();
+    }
 }
 
 void EpfIDE::on_projectview_itemSelectionChanged()
@@ -327,4 +398,34 @@ void EpfIDE::on_editsearch_textChanged(const QString &arg1)
 void EpfIDE::on_outlinesearch_textChanged(const QString &arg1)
 {
 
+}
+
+void EpfIDE::on_editsearch_returnPressed()
+{
+    ui->editview->find(ui->editsearch->text(),0);
+}
+
+void EpfIDE::on_editview_textChanged()
+{
+    if (m_bNoChange)
+    {
+        m_bNoChange = false;
+        return;
+    }
+    QList<QTreeWidgetItem*> selection = ui->projectview->selectedItems();
+
+    if (selection.size() == 0)
+        return;
+
+    QTreeWidgetItem* pitem = selection.at(0);
+
+    CProjectViewItem* item = static_cast<CProjectViewItem*>(pitem);
+
+    ui->action_Save->setEnabled(true);
+
+    if (!item->altered())
+    {
+        item->setAltered(true);
+        item->setText(0,item->text(0)+"*");
+    }
 }

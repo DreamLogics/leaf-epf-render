@@ -15,10 +15,12 @@ TEMPLATE = app
 SOURCES += main.cpp\
         epfide.cpp \
     cprojectviewitem.cpp \
-    cepfhl.cpp
+    cepfhl.cpp \
+    ceditor.cpp
 
 HEADERS  += epfide.h \
     cprojectviewitem.h \
-    cepfhl.h
+    cepfhl.h \
+    ceditor.h
 
 FORMS    += epfide.ui

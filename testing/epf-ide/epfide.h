@@ -22,6 +22,8 @@ public:
     ~EpfIDE();
 
     void open(QString path);
+    void save();
+    void saveAll();
 
     void scanProject();
 
@@ -33,7 +35,7 @@ public:
 public slots:
 
     void createOutline();
-    void print(QString &str, QColor color = Qt::black);
+    void print(QString str, QColor color = QColor(0,0,0));
 
     void stdOut();
     void stdErr();
@@ -60,6 +62,14 @@ private slots:
 
     void on_outlinesearch_textChanged(const QString &arg1);
 
+    void on_editsearch_returnPressed();
+
+    void on_editview_textChanged();
+
+private:
+
+
+
 private:
     Ui::EpfIDE *ui;
     QString m_sPath;
@@ -73,6 +83,11 @@ private:
     CEPFHL* m_pEPFSyntax;
     QMap<QString,QString> m_FileBuffer;
     QProcess* m_pExternal;
+    bool m_bIsRunning;
+    bool m_bNoChange;
+
+
+    friend class CEditor;
 };
 
 #endif // EPFIDE_H

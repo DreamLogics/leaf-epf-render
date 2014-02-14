@@ -19,6 +19,7 @@ public:
     };
 
     void setMode(Mode m);
+    Mode mode();
 
 protected:
     enum State
