@@ -260,7 +260,7 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
 
     for (i=0;i<m_Layouts.size();i++)
     {
-        if (!m_Platforms.contains(m_Layouts[i]->platform()))
+        if (!m_Platforms.contains(m_Layouts[i]->platform()) && !m_Platforms.contains("*"))
             continue;
 
         if (m_sLanguage != m_Layouts[i]->language())

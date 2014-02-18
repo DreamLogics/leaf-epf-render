@@ -361,7 +361,10 @@ void EpfIDE::on_projectview_itemChanged(QTreeWidgetItem *pitem, int column)
 
 void EpfIDE::on_projectview_customContextMenuRequested(const QPoint &pos)
 {
-    QPoint globalPos = ui->projectview->mapFromGlobal(pos);
+    if (m_sPath.isNull())
+        return;
+
+    QPoint globalPos = ui->projectview->mapToGlobal(pos);
 
     QMenu menu;
     menu.addAction("Refresh");

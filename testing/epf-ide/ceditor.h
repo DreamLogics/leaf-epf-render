@@ -17,6 +17,8 @@ public:
     void scanID();
     void scanVars();
 
+    void cleanTabs();
+
 signals:
 
 public slots:

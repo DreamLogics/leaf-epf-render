@@ -25,8 +25,39 @@ void CEditor::setIde(EpfIDE *ide)
 
 void CEditor::keyPressEvent(QKeyEvent *ev)
 {
-    if (ev->key() == Qt::Key_Return)
+    QList<QListWidgetItem*> selection = m_pMatchList->selectedItems();
+    if (m_pMatchList->isVisible() && selection.size() == 1)
     {
+        if (ev->key() == Qt::Key_Return)
+        {
+
+            QTextCursor cursor = textCursor();
+            cursor.movePosition(QTextCursor::StartOfWord,QTextCursor::KeepAnchor);
+            cursor.removeSelectedText();
+            cursor.insertText(selection[0]->text());
+            cursor.movePosition(QTextCursor::EndOfWord,QTextCursor::MoveAnchor);
+            m_pMatchList->hide();
+            ev->accept();
+            return;
+        }
+        else if (ev->key() == Qt::Key_Up)
+        {
+            int row = m_pMatchList->currentRow();
+            row--;
+            if (row >= 0)
+                m_pMatchList->setCurrentRow(row);
+            ev->accept();
+            return;
+        }
+        else if (ev->key() == Qt::Key_Down)
+        {
+            int row = m_pMatchList->currentRow();
+            row++;
+            if (row < m_pMatchList->count())
+                m_pMatchList->setCurrentRow(row);
+            ev->accept();
+            return;
+        }
 
     }
 
@@ -35,10 +66,41 @@ void CEditor::keyPressEvent(QKeyEvent *ev)
 
 void CEditor::keyReleaseEvent(QKeyEvent *ev)
 {
-    scanID();
-    scanVars();
-    autoComplete();
     QTextEdit::keyReleaseEvent(ev);
+    if (!(ev->key() == Qt::Key_Return || ev->key() == Qt::Key_Up || ev->key() == Qt::Key_Down))
+    {
+        scanID();
+        scanVars();
+        autoComplete();
+    }
+    else if (ev->key() == Qt::Key_Tab)
+    {
+        cleanTabs();
+    }
+    else if (ev->key() == Qt::Key_Return)
+    {
+        //auto indent
+        QRegExp indent("^([ \t]+)");
+        QTextCursor cursor = textCursor();
+        cursor.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor);
+        cursor.movePosition(QTextCursor::EndOfLine,QTextCursor::KeepAnchor);
+        if (indent.indexIn(cursor.selectedText()) != -1)
+        {
+            textCursor().insertText(indent.cap(1));
+        }
+
+        //auto bracket
+        /*QTextCursor cursor = textCursor();
+        QTextCursor curcursor = cursor;
+        cursor.movePosition(QTextCursor::Left,QTextCursor::MoveAnchor,2);
+        cursor.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+        if (cursor.selectedText() == "{")
+        {
+            setTextCursor(curcursor);
+            curcursor.insertText("\n    \n}");
+        }*/
+
+    }
 }
 
 void CEditor::autoComplete()
@@ -80,7 +142,7 @@ void CEditor::autoComplete()
         m_pMatchList->clear();
 
         QListWidgetItem *first =  new QListWidgetItem(m_Matches[0]);
-        first->setSelected(true);
+        //first->setSelected(true);
 
         for (int i=0;i<m_Matches.size();i++)
         {
@@ -91,6 +153,7 @@ void CEditor::autoComplete()
         }
 
         m_pMatchList->show();
+        m_pMatchList->setCurrentItem(first);
         int height = m_Matches.size()*16;
         if (height > 400)
             height = 400;
@@ -159,4 +222,11 @@ void CEditor::scanVars()
         }
     }
 
+}
+
+void CEditor::cleanTabs()
+{
+    QString text = toPlainText();
+    text.replace("\t","    ");
+    setPlainText(text);
 }
