@@ -16,7 +16,7 @@ public:
 
     virtual int addApplicationFont(const QByteArray &data)
     {
-
+        return -1;
     }
 
     virtual void removeApplicationFont(int)

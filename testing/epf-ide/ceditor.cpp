@@ -181,6 +181,14 @@ void CEditor::scanID()
     if (m_pIDE->m_pEPFSyntax->mode() == CEPFHL::modeXML)
     {
         QString text = toPlainText();
+        int start,end;
+        QRegExp startreg("< *sections *>",Qt::CaseInsensitive);
+        QRegExp stopreg("< */ *sections *>",Qt::CaseInsensitive);
+        start = text.indexOf(startreg);
+        end = text.indexOf(stopreg);
+        if (start == -1 || end == -1)
+            return;
+        text = text.mid(start,end-start);
         m_IDNames.clear();
         QRegExp varreg("id *= *\"([^\"]+)\"");
         int offset = 0;
@@ -201,7 +209,7 @@ void CEditor::scanVars()
     m_Varlist.clear();
     if (m_pIDE->m_pEPFSyntax->mode() == CEPFHL::modeCSS)
     {
-        QRegExp varreg("$([a-zA_Z0-9_-]+)[^;\n\r]+");
+        QRegExp varreg("\\$([a-zA_Z0-9_-]+) *= *[^;\n\r]+;");
         int offset = 0;
         int index;
         while ((index = varreg.indexIn(text,offset)) != -1)
@@ -209,6 +217,7 @@ void CEditor::scanVars()
             m_Varlist.append(varreg.cap(1));
             offset = index + varreg.cap(0).size();
         }
+        //qDebug() << m_Varlist;
     }
     else if (m_pIDE->m_pEPFSyntax->mode() == CEPFHL::modeJS)
     {
