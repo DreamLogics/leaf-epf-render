@@ -382,6 +382,8 @@ QString CTextObject::css()
     s.replace(newlines,"");
     s.replace(tabs," ");
 
+    s = CSS::Stylesheet::parseGroup(s);
+
     CSS::Selector* csel;
 
     QStringList proplist;
@@ -404,7 +406,7 @@ QString CTextObject::css()
             {
                 bInSel = true;
                 sel.replace(outerspaces,"");
-                //qDebug()() << sel << "#"+section()->id()+"::"+id();
+                qDebug() << sel << "#"+section()->id()+"::"+id();
                 if ((sel.startsWith("#"+section()->id()+"::"+id()) || sel.startsWith("#"+section()->id()+":"+layer()->id()+":"+id()))
                         && !(sel == "#"+section()->id()+"::"+id() || sel == "#"+section()->id()+":"+layer()->id()+":"+id()))
                 {
@@ -435,7 +437,7 @@ QString CTextObject::css()
         }
     }
 
-    //qDebug()() << newcss;
+    //qDebug() << "newcss" << newcss;
 
     return newcss;
 

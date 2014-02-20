@@ -1466,10 +1466,13 @@ QString Stylesheet::parseGroup(QString gcss)
             p = "";
             if (ps > 0)
             {
-                //the group also has properties
+                //the group also has properties?
                 p = g.mid(goff,ps);
-                p = "#" + ss + "{" + p + "}";
-                pd = p.size() - ps;
+                if (p.indexOf(QRegExp("^[\t ]+$")) == -1)
+                {
+                    p = "#" + ss + "{" + p + "}";
+                    pd = p.size() - ps;
+                }
             }
 
             if (gg[0] == '#')

@@ -218,11 +218,11 @@ public:
 
     void invalidateCache(CBaseObject* obj=0);
 
+    static QString parseGroup(QString css);
+
 private:
 
     void parse(QString css);
-    QString parseGroup(QString css);
-
 
 private:
     QHash<QString,Selector*> m_selectors;

@@ -168,7 +168,7 @@ private slots:
 
 private:
 
-    void drawScrollbar(QPainter* p);
+    //void drawScrollbar(QPainter* p);
 
 private:
     QList<CLayer*> m_Layers;
@@ -215,11 +215,11 @@ private:
     QColor m_qcScrollbarColor;
     QColor m_qcScrollerColor;
 
-    QRectF m_rVertScroller;
+    /*QRectF m_rVertScroller;
     QRectF m_rHorScroller;
 
     QRectF m_rVertScrollerBar;
-    QRectF m_rHorScrollerBar;
+    QRectF m_rHorScrollerBar;*/
 
     QPoint m_ClickStartPoint;
 

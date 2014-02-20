@@ -207,7 +207,7 @@ void CBaseObject::layout(QRectF relrect, QList<CBaseObject*> updatelist)
         else
         {
             newrect.moveTop(relrect.top()+marginTop());
-            newrect.moveLeft(marginLeft());
+            newrect.moveLeft(relrect.left()+marginLeft());
         }
 
         //qDebug() << "t3" << bitch.nsecsElapsed();
@@ -869,12 +869,9 @@ void CBaseObject::sheduleRepaint()
 */
 void CBaseObject::paintBuffered(QPainter *p)
 {
-    m_RenderMutex.lock();
     if (m_iRenderMode == CSS::rmNone)
-    {
-        m_RenderMutex.unlock();
         return;
-    }
+
     switch (m_iRenderMode)
     {
     case CSS::rmOverlay:
@@ -895,10 +892,8 @@ void CBaseObject::paintBuffered(QPainter *p)
     }
     p->rotate(m_iRotation);
 
-    m_RenderPropsMutex.lock();
     p->setOpacity(p->opacity() * m_dOpacity);
 
-    m_RenderPropsMutex.unlock();
 
     /*int cx = p->transform().dx();
     int dw = p->device()->width();
@@ -908,8 +903,6 @@ void CBaseObject::paintBuffered(QPainter *p)
 
     p->drawPixmap(0,0,m_qiRenderBuffer);
 
-
-    m_RenderMutex.unlock();
 
     //paint children
     QString pos;
@@ -928,7 +921,7 @@ void CBaseObject::paintBuffered(QPainter *p)
             pos = document()->stylesheet()->property(cobj,"position").toString();
             //qDebug()() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
-            if (!(pos == "fixed" || cobj->fixedParent()))
+            if (!(pos == "fixed"/* || cobj->fixedParent()*/))
             {
                 p->save();
                 p->translate(cobj->boundingRect().x() - section()->scrollX(),cobj->boundingRect().y() - section()->scrollY());

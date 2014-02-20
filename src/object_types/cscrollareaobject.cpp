@@ -63,8 +63,9 @@ void CScrollAreaObject::layout(QRectF relativeTo, QList<CBaseObject *> updatelis
             pos = document()->stylesheet()->property(cobj,"position").toString();
             //qDebug()() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
-            if (!(pos == "fixed" || cobj->fixedParent()))
+            if (!(pos == "fixed"/* || cobj->fixedParent()*/))
             {
+                //qDebug() << "height for" << cobj->id() << cobj->boundingRect().height();
                 if (h<cobj->boundingRect().height())
                     h = cobj->boundingRect().height();
                 if (w<cobj->boundingRect().width())
@@ -72,6 +73,8 @@ void CScrollAreaObject::layout(QRectF relativeTo, QList<CBaseObject *> updatelis
             }
         }
     }
+
+    //qDebug() << "tha height" << h << boundingRect().height() << h-boundingRect().height();
 
     if (w > boundingRect().width())
         setScrollXMax(w-boundingRect().width());
@@ -105,6 +108,8 @@ void CScrollAreaObject::paintBuffered(QPainter *p)
     CBaseObject* cobj;
     QRectF clipping = r;
 
+    p->save();
+
     p->resetTransform();
 
 
@@ -117,9 +122,9 @@ void CScrollAreaObject::paintBuffered(QPainter *p)
         if (cobj)
         {
             pos = document()->stylesheet()->property(cobj,"position").toString();
-            //qDebug()() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
+            //qDebug() << "CScrollAreaObject::paintBuffered" << "#"+section()->id()+"::"+cobj->id() << pos;
 
-            if (!(pos == "fixed" || cobj->fixedParent()))
+            if (!(pos == "fixed"/* || cobj->fixedParent()*/))
             {
                 p->save();
                 p->setClipRect(clipping);
@@ -130,7 +135,46 @@ void CScrollAreaObject::paintBuffered(QPainter *p)
         }
     }
 
+    p->restore();
     CSS::paintBorder(p,r,styleProperty("border-top"),styleProperty("border-bottom"),styleProperty("border-left"),styleProperty("border-right"));
+
+    int shadeheight = 45;
+
+    //draw shades
+    if (scrollYMax() > 0)
+    {
+        CSS::Property bggradtop("background-gradient","(0,rgba(24,24,24,128)) (1,rgba(24,24,24,0))",0,CSS::vtMixed,CSS::smNone,false);
+        CSS::Property bggradbottom("background-gradient","(0,rgba(24,24,24,0)) (1,rgba(24,24,24,128))",0,CSS::vtMixed,CSS::smNone,false);
+        CSS::Property gradtype("background-gradient-type","linear",0,CSS::vtString,CSS::smNone,false);
+        CSS::Property gradspread("background-gradient-spread","pad",0,CSS::vtString,CSS::smNone,false);
+        CSS::Property anglegrad("background-gradient-angle","0",0,CSS::vtInt,CSS::smNone,false);
+        CSS::Property gradcenter("background-gradient-center","0 0",0,CSS::vtMixed,CSS::smNone,false);
+        CSS::Property gradfocal("background-gradient-focal","0 0",0,CSS::vtMixed,CSS::smNone,false);
+
+        QRectF topshade(0,0,r.width(),shadeheight);
+        QRectF bottomshade(0,0,r.width(),shadeheight);
+
+        p->save();
+        if (scrollY() > 0)
+        {
+            if (scrollY() < shadeheight)
+                p->setOpacity((double)scrollY() / (double)shadeheight);
+            CSS::paintBackgroundGradient(p,topshade,bggradtop,gradtype,gradspread,anglegrad,gradcenter,gradfocal);
+        }
+        if (scrollY() < scrollYMax())
+        {
+            if (scrollY() > scrollYMax()-shadeheight)
+                p->setOpacity((double)(scrollYMax()-scrollY())/(double)shadeheight);
+            else
+                p->setOpacity(1.0);
+            p->translate(0,r.height()-shadeheight);
+            CSS::paintBackgroundGradient(p,bottomshade,bggradbottom,gradtype,gradspread,anglegrad,gradcenter,gradfocal);
+        }
+        p->restore();
+
+    }
+
+    drawScrollbar(p,r.width(),r.height());
 }
 
 void CScrollAreaObject::mousePressEvent( QPoint pos )
@@ -140,14 +184,13 @@ void CScrollAreaObject::mousePressEvent( QPoint pos )
     m_ClickStartPoint.setX(x);
     m_ClickStartPoint.setY(y);
 
-    //qDebug() << "scrollarea press" << pos;
+    //qDebug() << "scrollarea press" << pos << verticalScroller().toRect() << m_ClickStartPoint;
 
     x += scrollX();
     y += scrollY();
 
     if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
-
         m_iMomentumPos = -1;
         m_SwipeTimer.start();
         m_iScrollYStart = scrollY();
@@ -155,20 +198,20 @@ void CScrollAreaObject::mousePressEvent( QPoint pos )
     }
     else
     {
-        /*if (scrollYMax() > 0 && m_rVertScroller.contains(m_ClickStartPoint))
+        if (scrollYMax() > 0 && verticalScroller().contains(m_ClickStartPoint))
         {
             m_iScrollYStart = scrollY();
             return;
         }
-        else if (scrollYMax() > 0 && m_rVertScrollerBar.contains(m_ClickStartPoint))
+        else if (scrollYMax() > 0 && verticalScrollerBar().contains(m_ClickStartPoint))
         {
             m_iScrollYStart = -2;
             return;
         }
         else
-            m_iScrollYStart = -1;*/
+            m_iScrollYStart = -1;
 
-        //m_iScrollXStart = scrollX();
+        m_iScrollXStart = scrollX();
     }
 
     CBaseObject* obj = section()->objectOnPos(x,y,this,this);
@@ -186,8 +229,6 @@ void CScrollAreaObject::mouseReleaseEvent( QPoint pos )
     int x = pos.x();
     int y = pos.y();
     QPoint endpoint(pos);
-
-    //qDebug() << "scrollarea release";
 
     if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
     {
@@ -213,17 +254,17 @@ void CScrollAreaObject::mouseReleaseEvent( QPoint pos )
     }
     else
     {
-        /*if (m_iScrollYStart == -2)
+        if (m_iScrollYStart == -2)
         {
-            if (m_ClickStartPoint.y() < m_rVertScroller.top())
-                setScrollY(scrollY() - m_rRect.height()/5);
+            if (m_ClickStartPoint.y() < verticalScroller().top())
+                setScrollY(scrollY() - boundingRect().height()/5);
             else
-                setScrollY(scrollY() + m_rRect.height()/5);
+                setScrollY(scrollY() + boundingRect().height()/5);
             document()->updateRenderView();
             return;
         }
         else if (m_iScrollYStart >= 0)
-            return;*/
+            return;
     }
 
     x += scrollX();
@@ -268,13 +309,14 @@ void CScrollAreaObject::mouseMoveEvent( QPoint pos )
     }
     else
     {
-        /*if (scrollYMax() > 0 && m_iScrollYStart >= 0)
+        if (scrollYMax() > 0 && m_iScrollYStart >= 0)
         {
             int delta = y - m_ClickStartPoint.y();
+            delta = delta * (scrollYMax()+boundingRect().height()) / boundingRect().height();
             setScrollY(m_iScrollYStart + delta);
             document()->updateRenderView();
             return;
-        }*/
+        }
     }
 
     x += scrollX();

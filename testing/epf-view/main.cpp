@@ -45,7 +45,7 @@ public:
     }
     virtual int deviceFlags() const
     {
-        return 0;
+        return 0/*IDevice::dfTouchScreen*/;
     }
 
     virtual double getAccelerationX()
