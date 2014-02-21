@@ -38,7 +38,32 @@ public:
     CImageObject(QString id, CLayer* layer);
 
     virtual void preload();
+    virtual void layout(QRectF relativeTo, QList<CBaseObject *> updatelist);
     virtual void paint(QPainter *painter);
+
+    void setImage(QString src);
+
+protected:
+
+    virtual QObject* makeJsProxy();
+
+private:
+    QImage m_Image;
+    QString m_sImageSrc;
+};
+
+class JSImageObjectProxy : public JSBaseObjectProxy
+{
+    Q_OBJECT
+public:
+    JSImageObjectProxy(CImageObject* obj);
+
+public slots:
+
+    void setImage(QString src);
+
+private:
+    CImageObject* m_pImageObject;
 };
 
 #endif // CIMAGEOBJECT_H

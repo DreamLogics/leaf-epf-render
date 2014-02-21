@@ -72,6 +72,9 @@ public slots:
     virtual void setBoundingRect(const QRectF&);
     virtual QRectF boundingRect() const;
 
+    virtual void setStyleProperty(QString prop, QString value);
+    virtual QString getStyleProperty(QString prop);
+
 signals:
 
     void clicked();
@@ -110,7 +113,8 @@ public:
     CSection* section();
     CDocument* document();
 
-    virtual QObject* jsProxy() const;
+    QObject* jsProxy() const;
+    JSBaseObjectProxy* jsBaseObjectProxy() const;
 
     int renderMode();
     void updateRenderMode();
@@ -200,7 +204,7 @@ public:
 
 protected:
 
-    //virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    virtual QObject* makeJsProxy();
 
 public slots:
 
@@ -286,7 +290,7 @@ private:
     bool m_bChanged;
     QMutex m_mChangedMutex;
 
-    JSBaseObjectProxy* m_pJSProxy;
+    QObject* m_pJSProxy;
 };
 
 #endif // CBASEOBJECT_H

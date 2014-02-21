@@ -124,7 +124,14 @@ void CScrollAreaObject::paintBuffered(QPainter *p)
             pos = document()->stylesheet()->property(cobj,"position").toString();
             //qDebug() << "CScrollAreaObject::paintBuffered" << "#"+section()->id()+"::"+cobj->id() << pos;
 
-            if (!(pos == "fixed"/* || cobj->fixedParent()*/))
+            if (pos == "fixed")
+            {
+                p->save();
+                p->translate(cobj->boundingRect().x(),cobj->boundingRect().y());
+                cobj->paintBuffered(p);
+                p->restore();
+            }
+            else
             {
                 p->save();
                 p->setClipRect(clipping);

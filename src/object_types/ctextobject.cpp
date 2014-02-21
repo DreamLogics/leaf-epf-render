@@ -455,12 +455,18 @@ void CTextObject::onEPFEvent(EPFEvent *ev)
     if (ev->event() == "setText")
     {
         //qDebug()() << "set text shizzle" << ev->parameter(0);
-        m_sOverrideHTML = "<p>" + ev->parameter(0) + "</p>";
-        m_bTextChanged = true;
-        section()->layout();
+        setText(ev->parameter(0));
         //document()->updateRenderView();
     }
 }
+
+void CTextObject::setText(QString html)
+{
+    m_sOverrideHTML = html;
+    m_bTextChanged = true;
+    section()->layout();
+}
+
 /*
 void CTextObject::buffer()
 {
@@ -482,4 +488,14 @@ void CTextObject::paintBuffered(QPainter *p)
 bool CTextObject::useDevicePixels() const
 {
     return true;
+}
+
+JSTextObjectProxy::JSTextObjectProxy(CTextObject *obj) : JSBaseObjectProxy(obj), m_pTextObject(obj)
+{
+
+}
+
+void JSTextObjectProxy::setText(QString html)
+{
+    m_pTextObject->setText(html);
 }

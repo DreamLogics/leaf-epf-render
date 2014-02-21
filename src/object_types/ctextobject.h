@@ -51,6 +51,8 @@ public:
 
     virtual bool useDevicePixels() const;
 
+    void setText(QString html);
+
 private:
 
     QString css();
@@ -69,6 +71,19 @@ private:
     bool m_bTextChanged;
     QByteArray m_baSVG;
     
+};
+
+class JSTextObjectProxy : public JSBaseObjectProxy
+{
+    Q_OBJECT
+public:
+    JSTextObjectProxy(CTextObject* obj);
+
+public slots:
+    void setText(QString html);
+
+private:
+    CTextObject* m_pTextObject;
 };
 
 #endif // CTEXTOBJECT_H

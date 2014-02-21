@@ -52,7 +52,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_iInTransition = 0;
     m_iTransitionStarted = 0;
 
-    m_pJSProxy =  new JSBaseObjectProxy(this);
+    m_pJSProxy = makeJsProxy();
 
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
@@ -441,12 +441,18 @@ void CBaseObject::mousePressEvent(QPoint contentpos)
 void CBaseObject::mouseReleaseEvent(QPoint contentpos)
 {
     sendEvent("clicked");
-    m_pJSProxy->_clicked();
+    if (jsBaseObjectProxy())
+        jsBaseObjectProxy()->_clicked();
 }
 void CBaseObject::mouseMoveEvent(QPoint contentpos)
 {
 
 
+}
+
+JSBaseObjectProxy* CBaseObject::jsBaseObjectProxy() const
+{
+    return dynamic_cast<JSBaseObjectProxy*>(jsProxy());
 }
 
 void CBaseObject::setCSSOverride(QString ss)
@@ -921,7 +927,14 @@ void CBaseObject::paintBuffered(QPainter *p)
             pos = document()->stylesheet()->property(cobj,"position").toString();
             //qDebug()() << "CBaseObject::layout" << "#"+section()->id()+"::"+cobj->id() << pos;
 
-            if (!(pos == "fixed"/* || cobj->fixedParent()*/))
+            if (pos == "fixed")
+            {
+                p->save();
+                p->translate(cobj->boundingRect().x(),cobj->boundingRect().y());
+                cobj->paintBuffered(p);
+                p->restore();
+            }
+            else
             {
                 p->save();
                 p->translate(cobj->boundingRect().x() - section()->scrollX(),cobj->boundingRect().y() - section()->scrollY());
@@ -1124,6 +1137,11 @@ QObject* CBaseObject::jsProxy() const
     return m_pJSProxy;
 }
 
+QObject* CBaseObject::makeJsProxy()
+{
+    return new JSBaseObjectProxy(this);
+}
+
 bool CBaseObject::useDevicePixels() const
 {
     return true;
@@ -1199,4 +1217,20 @@ void JSBaseObjectProxy::setBoundingRect(const QRectF &r)
 QRectF JSBaseObjectProxy::boundingRect() const
 {
     return m_pObject->boundingRect();
+}
+
+void JSBaseObjectProxy::setStyleProperty(QString prop, QString value)
+{
+    CSS::Property p(m_pObject->styleProperty(prop).clone());
+    p.setValue(value);
+    m_pObject->setCSSOverrideProp(prop,p);
+    m_pObject->document()->updateRenderView();
+}
+
+QString JSBaseObjectProxy::getStyleProperty(QString prop)
+{
+    CSS::Property p(m_pObject->styleProperty(prop));
+    if (p.isNull())
+        return "";
+    return p.toString();
 }

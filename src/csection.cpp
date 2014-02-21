@@ -500,7 +500,7 @@ void CSection::render(QPainter *p,QRectF region)
             }
 
 
-            if (css->property(obj,"position").toString() == "fixed" && obj->boundingRect().intersects(absreg))
+            if (css->property(obj,"position").toString() == "fixed" && obj->boundingRect().intersects(absreg) && dynamic_cast<CLayer*>(obj->parent()))
             {
                 p->save();
                 p->translate(obj->boundingRect().x(),obj->boundingRect().y());
