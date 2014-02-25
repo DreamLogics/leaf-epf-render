@@ -74,7 +74,7 @@ protected:
 private:
     CEPFView* m_pView;
 };*/
-#ifdef ANDROID
+#ifdef NO_OPENGL
 #define WIDGETBASE QWidget
 #else
 #define WIDGETBASE QGLWidget

@@ -30,7 +30,7 @@ void CEPFJS::run()
     m_pEngine->evaluate(m_sScript);
     if (m_pEngine->hasUncaughtException())
     {
-        //qDebug() << "javascript:" << m_pEngine->uncaughtExceptionBacktrace() << m_pEngine->uncaughtException().toString();
+        qDebug() << "javascript:" << m_pEngine->uncaughtExceptionBacktrace() << m_pEngine->uncaughtException().toString();
     }
 }
 

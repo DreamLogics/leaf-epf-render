@@ -34,11 +34,27 @@ class CTextObjectFactory : public IEPFObjectFactory
     virtual CBaseObject* create(QString id, CLayer *layer);
 };
 
+class CTextObject;
+
+class JSTextObjectProxy : public JSBaseObjectProxy
+{
+    Q_OBJECT
+public:
+    JSTextObjectProxy(CTextObject* obj);
+
+public slots:
+    void setText(QString html);
+
+private:
+    CTextObject* m_pTextObject;
+};
+
 class CTextObject : public CBaseObject
 {
     Q_OBJECT
 public:
     CTextObject(QString id, CLayer* layer);
+    virtual ~CTextObject();
 
     virtual void preload();
     virtual void paint(QPainter *painter);
@@ -52,6 +68,8 @@ public:
     virtual bool useDevicePixels() const;
 
     void setText(QString html);
+
+    virtual QObject* jsProxy() const;
 
 private:
 
@@ -70,20 +88,8 @@ private:
     int m_iRenderOffset;
     bool m_bTextChanged;
     QByteArray m_baSVG;
+    JSTextObjectProxy* m_pJSTextObjectProxy;
     
-};
-
-class JSTextObjectProxy : public JSBaseObjectProxy
-{
-    Q_OBJECT
-public:
-    JSTextObjectProxy(CTextObject* obj);
-
-public slots:
-    void setText(QString html);
-
-private:
-    CTextObject* m_pTextObject;
 };
 
 #endif // CTEXTOBJECT_H

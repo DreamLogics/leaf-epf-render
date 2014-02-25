@@ -559,7 +559,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
                 if (cobj)
                     return cobj;
             }
-            if (obj != pIgnore && obj->enabled())
+            if (obj != pIgnore && obj->enabled() && obj->isVisible())
             {
                 isfixed = false;
                 posi = css->property(obj,"position").toString();
@@ -593,7 +593,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
                         return cobj;
                 }
 
-                if (obj->enabled() && pIgnore != obj)
+                if (obj->enabled() && pIgnore != obj && obj->isVisible())
                 {
                     isfixed = false;
                     posi = css->property(obj,"position").toString();

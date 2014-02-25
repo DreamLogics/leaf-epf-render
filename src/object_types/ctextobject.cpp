@@ -53,6 +53,12 @@ CTextObject::CTextObject(QString id, CLayer* layer) :
     m_pTextDoc = 0;
     m_iRenderOffset = 0;
     m_bTextChanged = true;
+    m_pJSTextObjectProxy = new JSTextObjectProxy(this);
+}
+
+CTextObject::~CTextObject()
+{
+    delete m_pJSTextObjectProxy;
 }
 
 void CTextObject::preload()
@@ -488,6 +494,11 @@ void CTextObject::paintBuffered(QPainter *p)
 bool CTextObject::useDevicePixels() const
 {
     return true;
+}
+
+QObject* CTextObject::jsProxy() const
+{
+    return m_pJSTextObjectProxy;
 }
 
 JSTextObjectProxy::JSTextObjectProxy(CTextObject *obj) : JSBaseObjectProxy(obj), m_pTextObject(obj)

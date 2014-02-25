@@ -21,7 +21,7 @@
 ****************************************************************************/
 
 #include "cimageobject.h"
-#include "cdocument.h"
+#include "../cdocument.h"
 #include <QPainter>
 #include <QApplication>
 

@@ -113,7 +113,7 @@ public:
     CSection* section();
     CDocument* document();
 
-    QObject* jsProxy() const;
+    virtual QObject* jsProxy() const;
     JSBaseObjectProxy* jsBaseObjectProxy() const;
 
     int renderMode();
@@ -201,6 +201,8 @@ public:
 
     bool onStylesheetVariableChange(QString key, QString val, QString oldval);
     void onStylesheetChange();
+
+    bool isVisible();
 
 protected:
 

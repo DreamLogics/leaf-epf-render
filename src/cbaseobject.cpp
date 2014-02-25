@@ -1142,6 +1142,15 @@ QObject* CBaseObject::makeJsProxy()
     return new JSBaseObjectProxy(this);
 }
 
+bool CBaseObject::isVisible()
+{
+    if (renderMode() == CSS::rmNone)
+        return false;
+    if (styleProperty("opacity").toDouble() == 0.0)
+        return false;
+    return true;
+}
+
 bool CBaseObject::useDevicePixels() const
 {
     return true;
@@ -1224,7 +1233,7 @@ void JSBaseObjectProxy::setStyleProperty(QString prop, QString value)
     CSS::Property p(m_pObject->styleProperty(prop).clone());
     p.setValue(value);
     m_pObject->setCSSOverrideProp(prop,p);
-    m_pObject->document()->updateRenderView();
+    m_pObject->section()->layout();
 }
 
 QString JSBaseObjectProxy::getStyleProperty(QString prop)
