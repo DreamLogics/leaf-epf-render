@@ -41,7 +41,7 @@ CScrollAreaObject::~CScrollAreaObject()
 
 void CScrollAreaObject::preload()
 {
-
+    CBaseObject::preload();
 }
 
 void CScrollAreaObject::layout(QRectF relativeTo, QList<CBaseObject *> updatelist)

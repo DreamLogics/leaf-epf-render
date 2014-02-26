@@ -11,7 +11,7 @@ CAudioObject::CAudioObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 
 void CAudioObject::preload()
 {
-
+    CBaseObject::preload();
 }
 
 void CAudioObject::paint(QPainter *painter)

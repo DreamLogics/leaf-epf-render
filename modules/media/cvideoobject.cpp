@@ -59,6 +59,7 @@ CVideoObject::~CVideoObject()
 
 void CVideoObject::preload()
 {
+    CBaseObject::preload();
     m_pAVPlayer = new AVPlayer();
     m_pAVPlayer->setRenderer(this);
 }

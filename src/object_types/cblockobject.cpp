@@ -38,7 +38,7 @@ CBlockObject::CBlockObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 
 void CBlockObject::preload()
 {
-
+    CBaseObject::preload();
 }
 
 void CBlockObject::paint(QPainter *painter)

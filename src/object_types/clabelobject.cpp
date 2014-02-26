@@ -40,7 +40,7 @@ CLabelObject::CLabelObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 
 void CLabelObject::preload()
 {
-
+    CBaseObject::preload();
 }
 
 void CLabelObject::paint(QPainter *painter)

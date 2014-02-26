@@ -113,7 +113,7 @@ public:
     CSection* section();
     CDocument* document();
 
-    virtual QObject* jsProxy() const;
+    QObject* jsProxy() const;
     JSBaseObjectProxy* jsBaseObjectProxy() const;
 
     int renderMode();

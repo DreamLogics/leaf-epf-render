@@ -412,7 +412,7 @@ QByteArray CDocument::resource(QString resource)
     struct Resource res = m_Resources[resource];
     QByteArray data;
 
-    if (res.type == 0 || res.type == 1 || res.type == 3)
+    if (res.type == 0 || res.type == 1)
     {
 
         QFile f(res.container);
@@ -424,24 +424,30 @@ QByteArray CDocument::resource(QString resource)
 
         if (f.open(QIODevice::ReadOnly))
         {
-            if (res.type == 3)
+
+            if (f.seek(res.offset))
             {
-                data = f.readAll();
+                data = f.read(s);
 
                 if (res.size_compressed != 0)
                     CZLib::decompress(&data,res.size,res.checksum);
             }
-            else
-            {
-                if (f.seek(res.offset))
-                {
-                    data = f.read(s);
 
-                    if (res.size_compressed != 0)
-                        CZLib::decompress(&data,res.size,res.checksum);
-                }
-            }
 
+            f.close();
+        }
+    }
+    else if (res.type == 2)
+    {
+        qDebug() << "remote res not implemented";
+    }
+    else if (res.type == 3)
+    {
+        QFile f(res.extra);
+
+        if (f.open(QIODevice::ReadOnly))
+        {
+            data = f.readAll();
             f.close();
         }
     }

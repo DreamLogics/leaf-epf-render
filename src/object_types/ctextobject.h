@@ -69,7 +69,9 @@ public:
 
     void setText(QString html);
 
-    virtual QObject* jsProxy() const;
+protected:
+
+    virtual QObject* makeJsProxy();
 
 private:
 

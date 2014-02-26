@@ -35,6 +35,7 @@ CScriptObject::CScriptObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 
 void CScriptObject::preload()
 {
+    CBaseObject::preload();
     m_pScript = new QScriptEngine();
     QByteArray scriptfile = document()->resource(property("src"));
     if (scriptfile.size() > 0)

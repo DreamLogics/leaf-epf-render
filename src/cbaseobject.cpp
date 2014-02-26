@@ -52,7 +52,7 @@ CBaseObject::CBaseObject(QString id, CLayer* layer) : QObject(),
     m_iInTransition = 0;
     m_iTransitionStarted = 0;
 
-    m_pJSProxy = makeJsProxy();
+
 
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 }
@@ -109,6 +109,7 @@ QRectF CBaseObject::boundingRect() const
 
 void CBaseObject::preload()
 {
+    m_pJSProxy = makeJsProxy();
     //qDebug() << "preload func";
 }
 

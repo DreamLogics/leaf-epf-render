@@ -36,7 +36,7 @@ CImageObject::CImageObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 
 void CImageObject::preload()
 {
-
+    CBaseObject::preload();
 }
 
 void CImageObject::layout(QRectF relativeTo, QList<CBaseObject *> updatelist)
