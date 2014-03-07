@@ -30,6 +30,7 @@
 
 class CTextFieldObjectFactory : public IEPFObjectFactory
 {
+public:
     virtual CBaseObject* create(QString id, CLayer *layer);
 };
 

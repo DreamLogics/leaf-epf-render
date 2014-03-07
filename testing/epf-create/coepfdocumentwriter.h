@@ -19,7 +19,8 @@ public:
         qint32 filesize;
         qint32 filesizecompressed;
         qint32 dataoffset;
-        qint32 crc32;
+        //qint32 crc32;
+        unsigned char lzma2;
         QString resname;
         QString extra;
     };

@@ -23,7 +23,8 @@
 #include "cepfdocumentreader.h"
 #include <QFile>
 #include <QDataStream>
-#include "czlib.h"
+//#include "czlib.h"
+#include <QtLZMA/qlzma.h>
 #include "pugixml/src/pugixml.hpp"
 #include "csection.h"
 #include "clayer.h"
@@ -69,7 +70,7 @@ CEPFDocumentReader::~CEPFDocumentReader()
 CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bool ignore_modules, QThread* create_in_thread)
 {
     QFile f(filename);
-    QByteArray data,container;
+    QByteArray data,dataout,container,certdata;
     QDataStream ds;
     qint32 magic;
     qint16 version;
@@ -88,6 +89,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
     qint32 crc32;
     QString resname;
     QString extrafield;
+
+    qint32 certsize;
 
 
 
@@ -112,6 +115,8 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
             f.close();
             return 0;
         }
+
+        ds >>
 
         ds >> offsetind;
 

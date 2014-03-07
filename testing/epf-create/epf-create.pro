@@ -16,9 +16,9 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    coepfdocumentwriter.cpp \
-    czlib.cpp
+    coepfdocumentwriter.cpp
 
 HEADERS += \
-    coepfdocumentwriter.h \
-    czlib.h
+    coepfdocumentwriter.h
+
+LIBS += -lQtLzma

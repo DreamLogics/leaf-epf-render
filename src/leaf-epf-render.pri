@@ -20,7 +20,6 @@ SOURCES += $$PWD/cdocument.cpp \
     $$PWD/clayout.cpp \
     $$PWD/css/css_style.cpp \
     $$PWD/pugixml/src/pugixml.cpp \
-    $$PWD/czlib.cpp \
     $$PWD/css/css_painters.cpp \
     $$PWD/epfevent.cpp \
     $$PWD/object_types/clabelobject.cpp \
@@ -54,7 +53,6 @@ HEADERS += $$PWD/leaf-epf-render_global.h \
     $$PWD/css/istyleeffect.h \
     $$PWD/pugixml/src/pugixml.hpp \
     $$PWD/pugixml/src/pugiconfig.hpp \
-    $$PWD/czlib.h \
     $$PWD/css/css_painters.h \
     $$PWD/css/css_default.h \
     $$PWD/epfevent.h \
@@ -67,3 +65,5 @@ HEADERS += $$PWD/leaf-epf-render_global.h \
 
 OTHER_FILES += \
     $$PWD/license.txt
+
+LIBS += -lQtLZMA
