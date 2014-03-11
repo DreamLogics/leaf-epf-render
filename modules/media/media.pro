@@ -11,13 +11,7 @@ TEMPLATE = lib
 
 DEFINES += MEDIA_LIBRARY
 
-SOURCES += cavdecoder.cpp \
-    cvideoobject.cpp \
-    caudioobject.cpp
-
-HEADERS += cavdecoder.h \
-    cvideoobject.h \
-    caudioobject.h
+include(media.pri)
 
 linux-g++:LIBS += -L$$PWD/../../build-leaf-epf-render-Desktop_Qt_5_1_1_GCC_64bit-Debug/ -lleaf-epf-render
 macx:LIBS += -L$$PWD/../../build-leaf-epf-render-Desktop_Qt_5_1_0_clang_64bit-Debug/ -lleaf-epf-render

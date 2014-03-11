@@ -22,7 +22,8 @@
 
 #include "cdocument.h"
 #include <QFile>
-#include "czlib.h"
+//#include "czlib.h"
+#include <QtLZMA/qlzma.h>
 #include <QDebug>
 #include <QFontDatabase>
 #include "canimation.h"
@@ -430,7 +431,12 @@ QByteArray CDocument::resource(QString resource)
                 data = f.read(s);
 
                 if (res.size_compressed != 0)
-                    CZLib::decompress(&data,res.size,res.checksum);
+                {
+                    QByteArray dataout;
+                    //CZLib::decompress(&data,res.size,res.checksum);
+                    if (QLZMA::decode2(data,dataout,res.size,res.lzmaprop) == 0)
+                        data = dataout;
+                }
             }
 
 
@@ -518,7 +524,8 @@ int CDocument::resource(QString resource, char *buffer, int len, int offset)
 CDocument::Resource CDocument::resourceInfo(QString resource)
 {
     struct Resource res;
-    res.checksum = -1;
+    //res.checksum = -1;
+    res.lzmaprop = 0;
     res.container = "";
     res.extra = "";
     res.offset = -1;
@@ -536,7 +543,7 @@ CDocument::Resource CDocument::resourceInfo(QString resource)
     return res;
 }
 
-void CDocument::addResource(QString re, QString container_file, QString extra, qint32 checksum, qint32 offset, qint32 size, qint32 size_compressed, qint16 type)
+void CDocument::addResource(QString re, QString container_file, QString extra, unsigned char lzmaprop, qint32 offset, qint32 size, qint32 size_compressed, qint16 type)
 {
     struct Resource res;
     if (type == 1 || type == 3)
@@ -544,7 +551,7 @@ void CDocument::addResource(QString re, QString container_file, QString extra, q
     else
         res.container = container_file;
     res.extra = extra;
-    res.checksum = checksum;
+    res.lzmaprop = lzmaprop;
     res.type = type;
     res.offset = offset;
     res.size = size;

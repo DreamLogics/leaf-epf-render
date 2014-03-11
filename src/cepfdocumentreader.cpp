@@ -70,7 +70,7 @@ CEPFDocumentReader::~CEPFDocumentReader()
 CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bool ignore_modules, QThread* create_in_thread)
 {
     QFile f(filename);
-    QByteArray data,dataout,container,certdata;
+    QByteArray data,dataout,container,certdata,hash;
     QDataStream ds;
     qint32 magic;
     qint16 version;
@@ -86,12 +86,13 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
     qint32 filesize;
     qint32 filesizecompressed;
     qint32 dataoffset;
-    qint32 crc32;
+    //qint32 crc32;
     QString resname;
     QString extrafield;
 
     qint32 certsize;
-
+    qint16 hashsize;
+    unsigned char lzmaprop;
 
 
     if (f.open(QIODevice::ReadOnly))
@@ -116,12 +117,22 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
             return 0;
         }
 
-        ds >>
+        ds >> certsize;
+
+        certdata = f.read(certsize);
+
+        //TODO: validate certificate
+
+        ds >> hashsize;
+
+        hash = f.read(hashsize);
+
+        //TODO: validate hash
 
         ds >> offsetind;
 
         //container.xml
-        ds >> containersize >> filesizecompressed >> containercrc32;
+        ds >> containersize >> filesizecompressed >> lzmaprop;
         dataoffset = f.pos();
 
         if (!(containersize > 0 && filesizecompressed >= 0 && ((filesizecompressed > 0 && dataoffset + filesizecompressed < f.size()) || (filesizecompressed == 0 && dataoffset + containersize < f.size()))))
@@ -150,7 +161,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
 
         while (!f.atEnd())
         {
-            ds >> magic;
+            /*ds >> magic;
 
             if (magic != 0x44454945 ) //DEIE
             {
@@ -158,9 +169,10 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
                 delete document;
                 f.close();
                 return 0;
-            }
+            }*/
+            unsigned char reslzmaprop;
 
-            ds >> restype >> resnamesize >> resextrasize >> filesize >> filesizecompressed >> dataoffset >> crc32;
+            ds >> restype >> resnamesize >> resextrasize >> filesize >> filesizecompressed >> reslzmaprop >> dataoffset;
 
             //TODO empty files
             if (!(resnamesize > 0 && filesize > 0 && filesizecompressed >= 0 && dataoffset > 0 && dataoffset < offsetind
@@ -177,7 +189,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
             extrafield = QString::fromUtf8(data.constData(),data.size());
 
             //maak resource entry
-            document->addResource(resname,filename,extrafield,crc32,dataoffset,filesize,filesizecompressed,restype);
+            document->addResource(resname,filename,extrafield,reslzmaprop,dataoffset,filesize,filesizecompressed,restype);
 
 
         }
@@ -187,12 +199,15 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
         //lees de container.xml
         if (compressed)
         {
-            if(!CZLib::decompress(&container,containersize,containercrc32))
+            //if(!CZLib::decompress(&container,containersize,containercrc32))
+            if (QLZMA::decode2(container,dataout,containersize,lzmaprop) != 0)
             {
                 (*error) = "Compression error in container.xml.";
                 delete document;
                 return 0;
             }
+            container = dataout;
+            dataout.clear();
         }
 
         pugi::xml_document containerxml;
