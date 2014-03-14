@@ -11,10 +11,7 @@ TEMPLATE = lib
 
 DEFINES += GUI_LIBRARY
 
-SOURCES += gui.cpp
-
-HEADERS += gui.h\
-        gui_global.h
+include(gui.pri)
 
 unix:!symbian {
     maemo5 {

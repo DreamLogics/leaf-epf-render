@@ -46,10 +46,9 @@ bool COEPFDocumentWriter::writeDocument(QString dir, QString *err)
         ds << (qint32)(0x44455046); //magic
         ds << (qint16)(1); //version
 
-        ds << (qint16)(32); //signed hash size
-        ds << QByteArray(32,0); //sha-256 hash
-
         ds << (qint32)(0); //cert size
+
+        ds << (qint16)(0); //signed hash size
 
         ds << (qint32)(0); //temp offset
 

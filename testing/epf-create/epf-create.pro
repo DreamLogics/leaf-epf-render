@@ -21,4 +21,6 @@ SOURCES += main.cpp \
 HEADERS += \
     coepfdocumentwriter.h
 
-LIBS += -lQtLzma
+INCLUDEPATH += /usr/local/include/
+
+LIBS += -L/usr/local/lib/ -lQtLzma
