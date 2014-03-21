@@ -20,220 +20,81 @@
 **
 ****************************************************************************/
 
-#include "ctextfieldobject.h"
+#include "cmathmlobject.h"
 #include <QPainter>
 #include <QDebug>
-#include "../../src/cdocument.h"
-#include "../../src/cepfview.h"
-#include <QLayout>
-#include "cwidgethandler.h"
+#include <cdocument.h>
+#include <cepfview.h>
 #include <QDebug>
-#include <QInputMethod>
+#include "mathml/qwt_mml_document.h"
 #include <QApplication>
-#include "../../src/idevice.h"
-#include <QMenu>
-#include "textinputview.h"
-#include <QLineEdit>
-#include <QKeyEvent>
+#include <QDesktopWidget>
 
-CBaseObject* CTextFieldObjectFactory::create(QString id, CLayer *layer)
+static int pointFromPixel(int px)
 {
-    return new CTextFieldObject(id,layer);
+    int dpi=QApplication::desktop()->logicalDpiY();
+    return px * 72 / dpi;
 }
 
-JSTextFieldObjectProxy::JSTextFieldObjectProxy(CTextFieldObject *obj) : JSBaseObjectProxy(obj), m_pObject(obj)
+CBaseObject* CMathMLObjectFactory::create(QString id, CLayer *layer)
 {
-
+    return new CMathMLObject(id,layer);
 }
 
-void JSTextFieldObjectProxy::setText(QString str)
-{
-    m_pObject->setText(str);
-}
-
-void JSTextFieldObjectProxy::_textChanged(QString str)
-{
-    emit textChanged(str);
-}
-
-CTextFieldObject::CTextFieldObject(QString id, CLayer *layer) : CBaseObject(id,layer)
-{
-    m_bHasFocus = false;
-    //m_bEmbedded = false;
-}
-
-CTextFieldObject::~CTextFieldObject()
-{
-    emit destroyWidget();
-}
-
-void CTextFieldObject::preload()
-{
-    CWidgetHandler* h = CWidgetHandler::get(document()->renderview());
-    connect(this,SIGNAL(createTextField()),h,SLOT(createTextField()));
-    connect(this,SIGNAL(updateWidgetGeometry(QRect)),h,SLOT(updateWidgetGeometry(QRect)));
-    connect(this,SIGNAL(showWidget()),h,SLOT(showWidget()));
-    connect(this,SIGNAL(hideWidget()),h,SLOT(hideWidget()));
-    connect(this,SIGNAL(destroyWidget()),h,SLOT(destroyWidget()));
-
-    emit createTextField();
-}
-
-void CTextFieldObject::paint(QPainter *painter)
+JSMathMLObjectProxy::JSMathMLObjectProxy(CMathMLObject *obj) : JSBaseObjectProxy(obj), m_pObject(obj)
 {
 
 }
 
-void CTextFieldObject::paintBuffered(QPainter *p)
+CMathMLObject::CMathMLObject(QString id, CLayer *layer) : CBaseObject(id,layer)
 {
-    return;
-    //CWidgetHandler::get(document()->renderview())->renderWidget(this,p);
-    //TODO: multithreaded
-    QRectF r(0,0,boundingRect().width(),boundingRect().height());
-    p->fillRect(r,QColor("white"));
-    if (m_bHasFocus)
-    {
-        QPen pen("#ff0000");
-        p->setPen(pen);
-        p->drawRect(0,0,r.width(),r.height()-1);
-    }
-    QFont font;
-    QRectF textbox(4,4,r.width()-8,r.height()-8);
-    font.setPixelSize(textbox.height());
-    p->setFont(font);
-    p->setPen(QPen("#000000"));
-    p->drawText(textbox,m_sValue);
+
 }
 
-void CTextFieldObject::layout(QRectF relativeTo,QList<CBaseObject*> updatelist)
+CMathMLObject::~CMathMLObject()
+{
+
+}
+
+void CMathMLObject::preload()
+{
+    m_pMathMLDoc = new QwtMmlDocument();
+}
+
+void CMathMLObject::paint(QPainter *painter)
+{
+
+}
+
+void CMathMLObject::paintBuffered(QPainter *p)
+{
+
+}
+
+void CMathMLObject::layout(QRectF relativeTo,QList<CBaseObject*> updatelist)
 {
     CBaseObject::layout(relativeTo,updatelist);
-    qDebug() << "setzb" << boundingRect();
-    //if (updatelist.contains(this))
-        emit updateWidgetGeometry(boundingRect().toRect());
-}
 
-bool CTextFieldObject::eventFilter(QObject *p, QEvent *ev)
-{
-    QLineEdit* le = dynamic_cast<QLineEdit*>(p);
-    if (le && ev->type() == QEvent::KeyPress)
+    if (updatelist.contains(this))
     {
-        QKeyEvent* kev = dynamic_cast<QKeyEvent*>(ev);
-        if (kev->key() == Qt::Key_Return)
-        {
-            QApplication::inputMethod()->hide();
-        }
+        QByteArray data = document()->resource(styleProperty("mathml-src").toString());
+        QString xml = QString::fromUtf8(data);
+        int psi = 12;
+        CSS::Property sprop = styleProperty("font-size");
+        CSS::Property fontprop = styleProperty("font-family");
+        if (!sprop.isNull())
+            psi = pointFromPixel(sprop.toInt());
+        m_pMathMLDoc->setBaseFontPointSize(psi);
+        if (!fontprop.isNull())
+            m_pMathMLDoc->setFontName(QwtMmlDocument::NormalFont,fontprop.toString());
+        m_pMathMLDoc->setContent(xml);
+        m_pMathMLDoc->layout();
     }
-    return false;
 }
 
-void CTextFieldObject::setValue(QString s)
-{
-    m_sValue = s;
-}
 
-QObject* CTextFieldObject::jsProxy() const
+QObject* CMathMLObject::jsProxy() const
 {
     return m_pJSProxy;
 }
 
-void CTextFieldObject::setText(QString str)
-{
-    m_pJSProxy->_textChanged(str);
-}
-
-/*
-void CTextFieldObject::mouseDoubleClickEvent ( QPoint pos )
-{
-
-}
-
-void CTextFieldObject::mousePressEvent( QPoint pos )
-{
-    m_HoldTimer.start();
-    if (section()->hasControl(this))
-    {
-        if (!boundingRect().contains(pos))
-        {
-            section()->releaseControl(this);
-            m_bHasFocus = false;
-#if defined(IOS) || defined(ANDROID)
-            emit getLine();
-#else
-            QApplication::inputMethod()->hide();
-#endif
-            document()->updateRenderView();
-            section()->mousePressEvent(pos.x(),pos.y());
-        }
-    }
-}
-
-void CTextFieldObject::mouseReleaseEvent( QPoint pos )
-{
-    qint64 t = m_HoldTimer.elapsed();
-    if (Device::currentDevice()->deviceFlags() & IDevice::dfTouchScreen)
-    {
-        if (t >= 1000)
-        {
-
-        }
-    }
-#if defined(IOS) || defined(ANDROID)
-            emit getLine();
-#else
-            QApplication::inputMethod()->show();
-#endif
-    if (!section()->hasControl(this))
-    {
-        section()->takeControl(this);
-        m_bHasFocus = true;
-
-        document()->updateRenderView();
-    }
-}
-
-void CTextFieldObject::mouseMoveEvent( QPoint pos )
-{
-
-}
-
-void CTextFieldObject::keyPressEvent(int key, QString val)
-{
-    //qDebug()() << "press" << key << val;
-#if defined(IOS) || defined(ANDROID)
-     return;
-#endif
-    if (key == Qt::Key_Return)
-    {
-        QApplication::inputMethod()->hide();
-    }
-    else if (key == Qt::Key_Backspace)
-    {
-        if (m_sValue.size() > 0)
-            m_sValue = m_sValue.left(m_sValue.size()-1);
-    }
-    else
-    {
-        if (val.size() > 0)
-        {
-            QChar c = val[0];
-            if (c.isPrint())
-                m_sValue += c;
-        }
-    }
-    document()->updateRenderView();
-}
-
-void CTextFieldObject::keyReleaseEvent(int key, QString val)
-{
-    //qDebug()() << "release" << key;
-}*/
-/*
-void CTextFieldObject::setTextLine(QString str)
-{
-    m_sValue = str;
-    section()->releaseControl(this);
-    m_bHasFocus = false;
-    document()->updateRenderView();
-}
-*/

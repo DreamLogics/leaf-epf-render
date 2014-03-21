@@ -22,44 +22,7 @@ static const unsigned g_oper_spec_rows         = 9;
 
 static QwtMMLEntityTable mmlEntityTable;
 
-struct QwtMml
-{
-    enum NodeType
-    {
-        NoNode = 0, MiNode, MnNode, MfracNode, MrowNode, MsqrtNode,
-        MrootNode, MsupNode, MsubNode, MsubsupNode, MoNode,
-        MstyleNode, TextNode, MphantomNode, MfencedNode,
-        MtableNode, MtrNode, MtdNode, MoverNode, MunderNode,
-        MunderoverNode, MerrorNode, MtextNode, MpaddedNode,
-        MspaceNode, MalignMarkNode, UnknownNode
-    };
-
-    enum MathVariant
-    {
-        NormalMV       = 0x0000,
-        BoldMV         = 0x0001,
-        ItalicMV       = 0x0002,
-        DoubleStruckMV = 0x0004,
-        ScriptMV       = 0x0008,
-        FrakturMV      = 0x0010,
-        SansSerifMV    = 0x0020,
-        MonospaceMV    = 0x0040
-    };
-
-    enum FormType { PrefixForm, InfixForm, PostfixForm };
-    enum ColAlign { ColAlignLeft, ColAlignCenter, ColAlignRight };
-    enum RowAlign { RowAlignTop, RowAlignCenter, RowAlignBottom,
-                    RowAlignAxis, RowAlignBaseline
-                  };
-    enum FrameType { FrameNone, FrameSolid, FrameDashed };
-
-    struct FrameSpacing
-    {
-        FrameSpacing( qreal hor = 0.0, qreal ver = 0.0 )
-            : m_hor( hor ), m_ver( ver ) {}
-        qreal m_hor, m_ver;
-    };
-};
+//--
 
 struct QwtMmlOperSpec
 {
@@ -88,59 +51,8 @@ struct QwtMmlNodeSpec
     };
 };
 
-typedef QMap<QString, QString> QwtMmlAttributeMap;
-class QwtMmlNode;
 
-class QwtMmlDocument : public QwtMml
-{
-public:
-    QwtMmlDocument();
-    ~QwtMmlDocument();
-    void clear();
 
-    bool setContent( QString text, QString *errorMsg = 0,
-                     int *errorLine = 0, int *errorColumn = 0 );
-    void paint( QPainter *p, const QPointF &pos ) const;
-    void dump() const;
-    QSizeF size() const;
-    void layout();
-
-    QString fontName( QwtMathMLDocument::MmlFont type ) const;
-    void setFontName( QwtMathMLDocument::MmlFont type, const QString &name );
-
-    qreal baseFontPointSize() const { return m_base_font_point_size; }
-    void setBaseFontPointSize( qreal size ) { m_base_font_point_size = size; }
-
-    QColor foregroundColor() const { return m_foreground_color; }
-    void setForegroundColor( const QColor &color ) { m_foreground_color = color; }
-
-    QColor backgroundColor() const { return m_background_color; }
-    void setBackgroundColor( const QColor &color ) { m_background_color = color; }
-
-private:
-    void _dump( const QwtMmlNode *node, QString &indent ) const;
-    bool insertChild( QwtMmlNode *parent, QwtMmlNode *new_node, QString *errorMsg );
-
-    QwtMmlNode *domToMml( const QDomNode &dom_node, bool *ok, QString *errorMsg );
-    QwtMmlNode *createNode( NodeType type, const QwtMmlAttributeMap &mml_attr,
-                         const QString &mml_value, QString *errorMsg );
-    QwtMmlNode *createImplicitMrowNode( const QDomNode &dom_node, bool *ok,
-                                     QString *errorMsg );
-
-    void insertOperator( QwtMmlNode *node, const QString &text );
-
-    QwtMmlNode *m_root_node;
-
-    QString m_normal_font_name;
-    QString m_fraktur_font_name;
-    QString m_sans_serif_font_name;
-    QString m_script_font_name;
-    QString m_monospace_font_name;
-    QString m_doublestruck_font_name;
-    qreal m_base_font_point_size;
-    QColor m_foreground_color;
-    QColor m_background_color;
-};
 
 class QwtMmlNode : public QwtMml
 {
@@ -1022,48 +934,48 @@ static const uint g_oper_spec_count = sizeof( g_oper_spec_data ) / sizeof( QwtMm
 // QwtMmlDocument
 // *******************************************************************
 
-QString QwtMmlDocument::fontName( QwtMathMLDocument::MmlFont type ) const
+QString QwtMmlDocument::fontName( QwtMmlDocument::MmlFont type ) const
 {
     switch ( type )
     {
-        case QwtMathMLDocument::NormalFont:
+        case QwtMmlDocument::NormalFont:
             return m_normal_font_name;
-        case QwtMathMLDocument::FrakturFont:
+        case QwtMmlDocument::FrakturFont:
             return m_fraktur_font_name;
-        case QwtMathMLDocument::SansSerifFont:
+        case QwtMmlDocument::SansSerifFont:
             return m_sans_serif_font_name;
-        case QwtMathMLDocument::ScriptFont:
+        case QwtMmlDocument::ScriptFont:
             return m_script_font_name;
-        case QwtMathMLDocument::MonospaceFont:
+        case QwtMmlDocument::MonospaceFont:
             return m_monospace_font_name;
-        case QwtMathMLDocument::DoublestruckFont:
+        case QwtMmlDocument::DoublestruckFont:
             return m_doublestruck_font_name;
     };
 
     return QString::null;
 }
 
-void QwtMmlDocument::setFontName( QwtMathMLDocument::MmlFont type,
+void QwtMmlDocument::setFontName( QwtMmlDocument::MmlFont type,
                                   const QString &name )
 {
     switch ( type )
     {
-        case QwtMathMLDocument::NormalFont:
+        case QwtMmlDocument::NormalFont:
             m_normal_font_name = name;
             break;
-        case QwtMathMLDocument::FrakturFont:
+        case QwtMmlDocument::FrakturFont:
             m_fraktur_font_name = name;
             break;
-        case QwtMathMLDocument::SansSerifFont:
+        case QwtMmlDocument::SansSerifFont:
             m_sans_serif_font_name = name;
             break;
-        case QwtMathMLDocument::ScriptFont:
+        case QwtMmlDocument::ScriptFont:
             m_script_font_name = name;
             break;
-        case QwtMathMLDocument::MonospaceFont:
+        case QwtMmlDocument::MonospaceFont:
             m_monospace_font_name = name;
             break;
-        case QwtMathMLDocument::DoublestruckFont:
+        case QwtMmlDocument::DoublestruckFont:
             m_doublestruck_font_name = name;
             break;
     };
@@ -1852,7 +1764,7 @@ static QwtMmlAttributeMap collectFontAttributes( const QwtMmlNode *node )
 
 QFont QwtMmlNode::font() const
 {
-    QFont fn( document()->fontName( QwtMathMLDocument::NormalFont ) );
+    QFont fn( document()->fontName( QwtMmlDocument::NormalFont ) );
     fn.setPointSizeF( document()->baseFontPointSize() );
 
     qreal ps = fn.pointSizeF();
@@ -1886,19 +1798,19 @@ QFont QwtMmlNode::font() const
         if ( ok )
         {
             if ( mv & ScriptMV )
-                fn.setFamily( document()->fontName( QwtMathMLDocument::ScriptFont ) );
+                fn.setFamily( document()->fontName( QwtMmlDocument::ScriptFont ) );
 
             if ( mv & FrakturMV )
-                fn.setFamily( document()->fontName( QwtMathMLDocument::FrakturFont ) );
+                fn.setFamily( document()->fontName( QwtMmlDocument::FrakturFont ) );
 
             if ( mv & SansSerifMV )
-                fn.setFamily( document()->fontName( QwtMathMLDocument::SansSerifFont ) );
+                fn.setFamily( document()->fontName( QwtMmlDocument::SansSerifFont ) );
 
             if ( mv & MonospaceMV )
-                fn.setFamily( document()->fontName( QwtMathMLDocument::MonospaceFont ) );
+                fn.setFamily( document()->fontName( QwtMmlDocument::MonospaceFont ) );
 
             if ( mv & DoubleStruckMV )
-                fn.setFamily( document()->fontName( QwtMathMLDocument::DoublestruckFont ) );
+                fn.setFamily( document()->fontName( QwtMmlDocument::DoublestruckFont ) );
 
             if ( mv & BoldMV )
                 fn.setBold( true );
@@ -4127,120 +4039,3 @@ static QFont mmlInterpretMathSize( QString value, QFont &fn, int em, int ex, boo
     return fn;
 }
 
-/*!
-    \class QwtMathMLDocument
-
-    \brief The QwtMathMLDocument class renders mathematical formulas written in MathML 2.0.
-*/
-
-/*!
-  Constructs an empty MML document.
-*/
-QwtMathMLDocument::QwtMathMLDocument()
-{
-    m_doc = new QwtMmlDocument;
-}
-
-/*!
-  Destroys the MML document.
-*/
-QwtMathMLDocument::~QwtMathMLDocument()
-{
-    delete m_doc;
-}
-
-/*!
-    Clears the contents of this MML document.
-*/
-void QwtMathMLDocument::clear()
-{
-    m_doc->clear();
-}
-
-/*!
-    Sets the MathML expression to be rendered. The expression is given
-    in the string \a text. If the expression is successfully parsed,
-    this method returns true; otherwise it returns false. If an error
-    occured \a errorMsg is set to a diagnostic message, while \a
-    errorLine and \a errorColumn contain the location of the error.
-    Any of \a errorMsg, \a errorLine and \a errorColumn may be 0,
-    in which case they are not set.
-
-    \a text should contain MathML 2.0 presentation markup elements enclosed
-    in a <math> element.
-*/
-bool QwtMathMLDocument::setContent( QString text, QString *errorMsg,
-                                    int *errorLine, int *errorColumn )
-{
-    return m_doc->setContent( text, errorMsg, errorLine, errorColumn );
-}
-
-/*!
-  Renders this MML document with the painter \a painter at position \a pos.
-*/
-void QwtMathMLDocument::paint( QPainter *painter, const QPointF &pos ) const
-{
-    m_doc->paint( painter, pos );
-}
-
-/*!
-    Returns the size of this MML document, as rendered, in pixels.
-*/
-QSizeF QwtMathMLDocument::size() const
-{
-    return m_doc->size();
-}
-
-/*!
-    Returns the name of the font used to render the font \a type.
-
-    \sa setFontName()  setBaseFontPointSize() baseFontPointSize() QwtMathMLDocument::MmlFont
-*/
-QString QwtMathMLDocument::fontName( QwtMathMLDocument::MmlFont type ) const
-{
-    return m_doc->fontName( type );
-}
-
-/*!
-    Sets the name of the font used to render the font \a type to \a name.
-
-    \sa fontName() setBaseFontPointSize() baseFontPointSize() QwtMathMLDocument::MmlFont
-*/
-void QwtMathMLDocument::setFontName( QwtMathMLDocument::MmlFont type,
-                                     const QString &name )
-{
-    if ( name == m_doc->fontName( type ) )
-        return;
-
-    m_doc->setFontName( type, name );
-    m_doc->layout();
-}
-
-/*!
-    Returns the point size of the font used to render expressions
-    whose scriptlevel is 0.
-
-    \sa setBaseFontPointSize() fontName() setFontName()
-*/
-qreal QwtMathMLDocument::baseFontPointSize() const
-{
-    return m_doc->baseFontPointSize();
-}
-
-/*!
-    Sets the point \a size of the font used to render expressions
-    whose scriptlevel is 0.
-
-    \sa baseFontPointSize() fontName() setFontName()
-*/
-void QwtMathMLDocument::setBaseFontPointSize( qreal size )
-{
-    if ( size < g_min_font_point_size )
-        size = g_min_font_point_size;
-
-    if ( size == m_doc->baseFontPointSize() )
-        return;
-
-    m_doc->setBaseFontPointSize( size );
-    m_doc->layout();
-}

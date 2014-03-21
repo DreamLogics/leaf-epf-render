@@ -20,49 +20,45 @@
 **
 ****************************************************************************/
 
-#ifndef CTEXTFIELDOBJECT_H
-#define CTEXTFIELDOBJECT_H
+#ifndef CMATHMLOBJECT_H
+#define CMATHMLOBJECT_H
 
-#include "../../src/cbaseobject.h"
-#include "../../src/iepfobjectfactory.h"
-#include <QElapsedTimer>
-#include <QMutex>
+#include <cbaseobject.h>
+#include <iepfobjectfactory.h>
 
-class CTextFieldObjectFactory : public IEPFObjectFactory
+class CMathMLObjectFactory : public IEPFObjectFactory
 {
 public:
     virtual CBaseObject* create(QString id, CLayer *layer);
 };
 
-class QLineEdit;
+class QwtMmlDocument;
+class CMathMLObject;
 
-class CTextFieldObject;
-
-class JSTextFieldObjectProxy : public JSBaseObjectProxy
+class JSMathMLObjectProxy : public JSBaseObjectProxy
 {
     Q_OBJECT
 public:
-    JSTextFieldObjectProxy(CTextFieldObject* obj);
+    JSMathMLObjectProxy(CMathMLObject* obj);
 
-    void _textChanged(QString str);
 
 public slots:
-    void setText(QString str);
+
 
 signals:
 
-    void textChanged(QString str);
+
 
 private:
-    CTextFieldObject* m_pObject;
+    CMathMLObject* m_pObject;
 };
 
-class CTextFieldObject : public CBaseObject
+class CMathMLObject : public CBaseObject
 {
     Q_OBJECT
 public:
-    CTextFieldObject(QString id, CLayer* layer);
-    virtual ~CTextFieldObject();
+    CMathMLObject(QString id, CLayer* layer);
+    virtual ~CMathMLObject();
 
     virtual void preload();
 
@@ -81,32 +77,11 @@ public:
     virtual void keyPressEvent(int key, QString val);
     virtual void keyReleaseEvent(int key, QString val);*/
 
-    virtual bool eventFilter(QObject *p, QEvent *ev);
-
-/*public slots:
-    void setTextLine(QString str);*/
-
-    void setText(QString str);
-
-public slots:
-
-    void setValue(QString s);
-
-signals:
-
-    void createTextField();
-    void updateWidgetGeometry(QRect r);
-    void showWidget();
-    void hideWidget();
-    void destroyWidget();
-    void textChanged(QString str);
 
 private:
-    bool m_bHasFocus;
-    QString m_sValue;
-    QElapsedTimer m_HoldTimer;
-    QMutex m_mValueMutex;
-    JSTextFieldObjectProxy* m_pJSProxy;
+
+    JSMathMLObjectProxy* m_pJSProxy;
+    QwtMmlDocument* m_pMathMLDoc;
 };
 
-#endif // CTextFieldOBJECT_H
+#endif // CMATHMLOBJECT_H
