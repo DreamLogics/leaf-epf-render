@@ -68,27 +68,39 @@ void CMathMLObject::paint(QPainter *painter)
 
 void CMathMLObject::paintBuffered(QPainter *p)
 {
-
+    p->drawText(0,0,"mathml "+QString::number(m_pMathMLDoc->size().width()) + "x" + QString::number(m_pMathMLDoc->size().height()));
+    m_pMathMLDoc->paint(p,QPointF(0,0));
 }
 
 void CMathMLObject::layout(QRectF relativeTo,QList<CBaseObject*> updatelist)
 {
     CBaseObject::layout(relativeTo,updatelist);
 
-    if (updatelist.contains(this))
+    if ((updatelist.size() > 0 && updatelist.contains(this)) || updatelist.size() == 0)
     {
-        QByteArray data = document()->resource(styleProperty("mathml-src").toString());
+        QString src = styleProperty("mathml-src").toString();//property("src");
+        src = src.replace(QRegExp("[\"']+"),"");
+        QByteArray data = document()->resource(src);
         QString xml = QString::fromUtf8(data);
         int psi = 12;
         CSS::Property sprop = styleProperty("font-size");
         CSS::Property fontprop = styleProperty("font-family");
         if (!sprop.isNull())
             psi = pointFromPixel(sprop.toInt());
+        else
+            psi = 12;
         m_pMathMLDoc->setBaseFontPointSize(psi);
         if (!fontprop.isNull())
             m_pMathMLDoc->setFontName(QwtMmlDocument::NormalFont,fontprop.toString());
-        m_pMathMLDoc->setContent(xml);
+        QString error;
+        int l,c;
+        qDebug() << "setting content";
+        m_pMathMLDoc->setContent(xml,&error,&l,&c);
+        qDebug() << "content set";
+        if (!error.isNull())
+            qDebug() << error;
         m_pMathMLDoc->layout();
+        qDebug() << "layout";
     }
 }
 

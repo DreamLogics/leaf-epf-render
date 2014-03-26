@@ -552,6 +552,9 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
             obj = dynamic_cast<CBaseObject*>(children[i]);
             if (!obj)
                 continue;
+            if (!obj->isVisible())
+                continue;
+
             QObjectList cdd = obj->children();
             if (cdd.size() > 0)
             {
@@ -567,7 +570,7 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
                     isfixed = true;
                 /*else if (obj->fixedParent())
                     isfixed = true;*/
-                //qDebug()() << obj->id() << obj->boundingRect() << pos << "yay";
+                qDebug() << obj->id() << obj->boundingRect() << pos << "yay";
                 if ((obj->boundingRect().contains(pos) && !isfixed) || (obj->boundingRect().contains(posfixed) && isfixed))
                     return obj;
             }
@@ -583,6 +586,8 @@ CBaseObject* CSection::objectOnPos(int x, int y, QObject *pParent, CBaseObject *
             {
                 obj = l->object(n);
                 if (!dynamic_cast<CLayer*>(obj->parent()))
+                    continue;
+                if (!obj->isVisible())
                     continue;
                 //qDebug()() << obj->id() << obj->boundingRect() << pos << (pIgnore != obj) << obj->enabled() << (!pParent && dynamic_cast<CLayer*>(obj->parent()));
                 QObjectList children = obj->children();
