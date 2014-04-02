@@ -336,7 +336,11 @@ void EpfIDE::on_action_New_triggered()
 
 void EpfIDE::on_action_Open_triggered()
 {
+#ifdef Q_OS_MACX
+    open(QFileDialog::getOpenFileName(this,"Open content.xml EPF file.",QDir::homePath(),"EPF File (*.xml)"));
+#else
     open(QFileDialog::getOpenFileName(this,"Open content.xml EPF file.",QDir::homePath(),"EPF File (content.xml)"));
+#endif
 }
 
 void EpfIDE::on_action_Save_triggered()

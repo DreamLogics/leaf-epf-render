@@ -1101,7 +1101,10 @@ bool QwtMmlDocument::setContent( QString text, QString *errorMsg,
     }
 
     QDomDocument dom;
-    if ( !dom.setContent( prefix + text, false, errorMsg, errorLine, errorColumn ) )
+
+    //qDebug() << prefix + text;
+
+    if ( !dom.setContent( /*prefix +*/ text, false, errorMsg, errorLine, errorColumn ) ) //TODO: met prefix
     {
         if ( errorLine != 0 )
             *errorLine -= prefix_lines;

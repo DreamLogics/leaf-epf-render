@@ -29,6 +29,7 @@
 #include "mathml/qwt_mml_document.h"
 #include <QApplication>
 #include <QDesktopWidget>
+#include <css/css_painters.h>
 
 static int pointFromPixel(int px)
 {
@@ -61,15 +62,21 @@ void CMathMLObject::preload()
     m_pMathMLDoc = new QwtMmlDocument();
 }
 
-void CMathMLObject::paint(QPainter *painter)
+void CMathMLObject::paint(QPainter *p)
 {
 
 }
 
 void CMathMLObject::paintBuffered(QPainter *p)
 {
-    p->drawText(0,0,"mathml "+QString::number(m_pMathMLDoc->size().width()) + "x" + QString::number(m_pMathMLDoc->size().height()));
+    //p->drawText(0,0,"mathml "+QString::number(m_pMathMLDoc->size().width()) + "x" + QString::number(m_pMathMLDoc->size().height()));
+    CSS::paintBackgroundColor(p,this);
+    CSS::paintBackgroundGradient(p,this);
+    CSS::paintBackgroundImage(p,this);
+
     m_pMathMLDoc->paint(p,QPointF(0,0));
+    CSS::paintColorOverlay(p,this);
+    CSS::paintBorder(p,this);
 }
 
 void CMathMLObject::layout(QRectF relativeTo,QList<CBaseObject*> updatelist)
@@ -92,6 +99,8 @@ void CMathMLObject::layout(QRectF relativeTo,QList<CBaseObject*> updatelist)
         m_pMathMLDoc->setBaseFontPointSize(psi);
         if (!fontprop.isNull())
             m_pMathMLDoc->setFontName(QwtMmlDocument::NormalFont,fontprop.toString());
+        else
+            m_pMathMLDoc->setFontName(QwtMmlDocument::NormalFont,"Arial");
         QString error;
         int l,c;
         qDebug() << "setting content";
@@ -101,6 +110,13 @@ void CMathMLObject::layout(QRectF relativeTo,QList<CBaseObject*> updatelist)
             qDebug() << error;
         m_pMathMLDoc->layout();
         qDebug() << "layout";
+
+        QRectF r = boundingRect();
+        if (r.height() == 0)
+            r.setHeight(m_pMathMLDoc->size().height());
+        if (r.width() == 0)
+            r.setWidth(m_pMathMLDoc->size().width());
+        setBoundingRect(r);
     }
 }
 
