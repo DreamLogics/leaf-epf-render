@@ -157,7 +157,7 @@ CDocument* CEPFDocumentReader::loadFromFile(QString filename, QString* error, bo
             return 0;
         }
 
-        CDocument* document = new CDocument(filename,m_Platforms,m_sLanguage);
+        CDocument* document = new CDocument(filename,m_Platforms,m_Languages);
 
         while (!f.atEnd())
         {
@@ -531,9 +531,9 @@ void CEPFDocumentReader::addPlatform(QString platform)
     m_Platforms << platform;
 }
 
-void CEPFDocumentReader::setLanguage(QString language)
+void CEPFDocumentReader::addLanguage(QString language)
 {
-    m_sLanguage = language;
+    m_Languages.append(language);
 }
 
 void CEPFDocumentReader::parseObjectNode(pugi::xml_node *node, CLayer *layer, CSection* section,CBaseObject* parent)

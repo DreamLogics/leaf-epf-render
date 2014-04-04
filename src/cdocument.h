@@ -72,7 +72,7 @@ class CDocument : public QObject, public EPFComponent
 {
     Q_OBJECT
 public:
-    CDocument(QString filename, QStringList platforms, QString language);
+    CDocument(QString filename, QStringList platforms, QStringList languages);
     ~CDocument();
 
     int sectionCount();
@@ -181,7 +181,7 @@ private:
     QList<CLayout*> m_Layouts;
     CLayout* m_pCurrentLayout;
     QStringList m_Platforms;
-    QString m_sLanguage;
+    QStringList m_Languages;
     QMap<QString,CAnimation*> m_Animations;
     CEPFView* m_pRenderView;
     //COverlay* m_pActiveOverlay;

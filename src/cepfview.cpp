@@ -629,6 +629,18 @@ void CEPFView::paintEvent(QPaintEvent *ev)
 
 void CEPFView::paint(QPainter *p)
 {
+    if (!m_pDocument)
+    {
+        p->resetTransform();
+
+        p->setOpacity(1.0);
+
+
+        p->fillRect(0,0,width(),height(),QColor(200,200,200));
+
+        return;
+    }
+
     if (m_bIsLoading)
     {
         p->resetTransform();

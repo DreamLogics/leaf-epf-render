@@ -357,7 +357,7 @@ void CEPFHL::highlightCSS(const QString &text)
                                          "text-transform" << "unicode-bidi" << "unicode-range" << "units-per-em"
                                       << "vertical-align" << "visibility" << "voice-family" << "volume" <<
                                          "white-space" << "widows" << "width" << "widths" << "word-spacing"
-                                      << "x-height" << "z-index";
+                                      << "x-height" << "z-index" << "render-mode" << "inner-glow" << "outer-glow" << "color-overlay" << "drop-shadow";
 
     QTextCharFormat commentstyle;
     commentstyle.setForeground(QColor(0,200,0));
@@ -383,6 +383,21 @@ void CEPFHL::highlightCSS(const QString &text)
     style.format = QTextCharFormat();
     style.format.setForeground(QColor(100,0,200));
     style.rule = QRegExp("\\$[a-zA-Z0-9_-]+");
+    styles.append(style);
+
+    style.format = QTextCharFormat();
+    style.format.setForeground(QColor(200,0,100));
+    style.rule = QRegExp("\\@[a-zA-Z0-9_-]+");
+    styles.append(style);
+
+    style.format = QTextCharFormat();
+    style.format.setForeground(QColor(100,100,200));
+    style.rule = QRegExp("\\#[a-zA-Z0-9_-]+");
+    styles.append(style);
+
+    style.format = QTextCharFormat();
+    style.format.setForeground(QColor(100,200,200));
+    style.rule = QRegExp("\\::[a-zA-Z0-9_-]+");
     styles.append(style);
 
     //find props

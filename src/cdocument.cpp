@@ -40,7 +40,7 @@
 #include "canimator.h"
 #include <QElapsedTimer>
 
-CDocument::CDocument(QString filename, QStringList platforms, QString language) : m_sFileName(filename), m_Platforms(platforms), m_sLanguage(language)
+CDocument::CDocument(QString filename, QStringList platforms, QStringList languages) : m_sFileName(filename), m_Platforms(platforms), m_Languages(languages)
 {
     m_pCurrentLayout = 0;
     m_pRenderView = 0;
@@ -259,23 +259,31 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
     target = height / width;
     closest = 0;
 
-    for (i=0;i<m_Layouts.size();i++)
+    QString language;
+
+    for (int n=0;n<m_Languages.size();n++)
     {
-        if (!m_Platforms.contains(m_Layouts[i]->platform()) && !m_Platforms.contains("*"))
-            continue;
-
-        if (m_sLanguage != m_Layouts[i]->language())
-            continue;
-
-        r = m_Layouts[i]->height() / m_Layouts[i]->width();
-        dc = r - target;
-
-        if (dc == 0 || (dc < closest && closest != 0))
+        language = m_Languages[n];
+        for (i=0;i<m_Layouts.size();i++)
         {
-            match = i;
-            closest = dc;
-        }
+            if (!m_Platforms.contains(m_Layouts[i]->platform()) && !m_Platforms.contains("*"))
+                continue;
 
+            if (language != m_Layouts[i]->language())
+                continue;
+
+            r = m_Layouts[i]->height() / m_Layouts[i]->width();
+            dc = r - target;
+
+            if (dc == 0 || (dc < closest && closest != 0))
+            {
+                match = i;
+                closest = dc;
+            }
+
+        }
+        if (match != -1)
+            break;
     }
 
     if (match == -1)
@@ -283,7 +291,7 @@ void CDocument::layout(int height, int width, int sectionid, bool bCurrentSectio
         //zonder language preference
         for (i=0;i<m_Layouts.size();i++)
         {
-            if (!m_Platforms.contains(m_Layouts[i]->platform()))
+            if (!m_Platforms.contains(m_Layouts[i]->platform()) && !m_Platforms.contains("*"))
                 continue;
             r = m_Layouts[i]->height() / m_Layouts[i]->width();
             dc = r - target;

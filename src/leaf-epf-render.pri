@@ -66,4 +66,4 @@ HEADERS += $$PWD/leaf-epf-render_global.h \
 OTHER_FILES += \
     $$PWD/license.txt
 
-LIBS += -lQtLZMA
+LIBS += -lQtLzma

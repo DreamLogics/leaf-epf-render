@@ -44,7 +44,7 @@ public:
     CDocument* loadFromFile(QString filename, QString *error, bool ignore_modules=false, QThread* create_in_thread=0);
     void registerObjectType(QString type, IEPFObjectFactory* factory);
     void addPlatform(QString platform);
-    void setLanguage(QString language);
+    void addLanguage(QString language);
     void addModule(QString module);
 
 private:
@@ -56,7 +56,7 @@ private:
     QMap<QString,IEPFObjectFactory*> m_ObjectTypes;
     QStringList m_Platforms;
     QStringList m_Modules;
-    QString m_sLanguage;
+    QStringList m_Languages;
     QMap<QString,EPFComponent*> m_objectmap;
     //QThread* m_pCreateInThread;
 };

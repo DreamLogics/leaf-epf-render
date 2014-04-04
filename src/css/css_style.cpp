@@ -740,6 +740,7 @@ void Stylesheet::parse(QString css)
         if (atrulesfinder.cap(1).toLower() == "import")
         {
             QString fname = atrulesfinder.cap(2);
+            fname.replace("\"","");
             QByteArray data = m_pDocument->resource(fname);
             css.replace(atrulesfinder.cap(0),QString::fromUtf8(data));
         }
