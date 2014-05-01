@@ -22,21 +22,17 @@
 #ifndef BASEOBJECT_H
 #define BASEOBJECT_H
 
-#include <QObject>
-
 namespace LEAFEPF
 {
+class BaseObject_Private;
 
-class BaseObject : public QObject
+class BaseObject
 {
-    Q_OBJECT
 public:
-    explicit BaseObject(QObject *parent = 0);
 
-signals:
-
-public slots:
-
+protected:
+    virtual const void makePrivate(BaseObject_Private* p) const;
+    BaseObject_Private* m_p;
 };
 
 }

@@ -19,21 +19,21 @@
 ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **
 ****************************************************************************/
-#ifndef TEXTOBJECT_H
-#define TEXTOBJECT_H
-
-#include <baseobject.h>
+#ifndef BASEOBJECT_PRIVATE_H
+#define BASEOBJECT_PRIVATE_H
 
 namespace LEAFEPF
 {
 
-class TextObject : public BaseObject
+class BaseObject_Private
 {
 public:
+    BaseObject_Private();
 
+private:
 
 };
 
 }
 
-#endif // TEXTOBJECT_H
+#endif // BASEOBJECT_PRIVATE_H

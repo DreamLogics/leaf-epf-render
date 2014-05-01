@@ -9,6 +9,8 @@ QT       += opengl script
 TARGET = leaf-epf-render
 TEMPLATE = lib
 
+include(EPFText/src/EPFText.pri)
+
 DEFINES += LEAFEPFRENDER_LIBRARY
 
 SOURCES += leafepfrender.cpp \
@@ -19,7 +21,8 @@ SOURCES += leafepfrender.cpp \
     section.cpp \
     scrollarea.cpp \
     object-types/textobject.cpp \
-    object-types/blockobject.cpp
+    object-types/blockobject.cpp \
+    object-types/videoobject.cpp
 
 HEADERS += leafepfrender.h\
         leaf-epf-render_global.h \
@@ -30,7 +33,9 @@ HEADERS += leafepfrender.h\
     section.h \
     scrollarea.h \
     object-types/textobject.h \
-    object-types/blockobject.h
+    object-types/blockobject.h \
+    object-types/videoobject.h \
+    baseobject_private.h
 
 unix {
     target.path = /usr/lib

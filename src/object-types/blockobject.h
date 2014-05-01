@@ -29,13 +29,8 @@ namespace LEAFEPF
 
 class BlockObject : public BaseObject
 {
-    Q_OBJECT
 public:
-    explicit BlockObject(QObject *parent = 0);
 
-signals:
-
-public slots:
 
 };
 
