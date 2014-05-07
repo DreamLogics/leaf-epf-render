@@ -30,6 +30,7 @@ namespace LEAFEPF
 class BlockObject : public BaseObject
 {
 public:
+    BlockObject(QString id);
 
 
 };

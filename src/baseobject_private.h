@@ -22,6 +22,8 @@
 #ifndef BASEOBJECT_PRIVATE_H
 #define BASEOBJECT_PRIVATE_H
 
+#include <QString>
+
 namespace LEAFEPF
 {
 
@@ -31,6 +33,8 @@ public:
     BaseObject_Private();
 
 private:
+
+    QString sID;
 
 };
 
